@@ -20,7 +20,7 @@ class Register extends AuthRegister
 {
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
-    protected static string $view = 'filament.user.pages.auth.register';
+    protected static string $view = 'filament.user.pages.Auth.register';
 
     public ?array $data = [];
 
