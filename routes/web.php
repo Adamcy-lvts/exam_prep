@@ -1,6 +1,12 @@
 <?php
 
+use App\Livewire\ExamPage;
+use App\Livewire\TestPage;
+use Illuminate\Http\Request;
+use App\Livewire\SubjectsPage;
+use App\Livewire\StudyFieldPage;
 use App\Livewire\InstructionPage;
+use App\Livewire\SubjectsLessons;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,5 +34,24 @@ Route::middleware([
         return view('dashboard');
     })->name('dashboard');
 });
+
+
+Route::get('/field-of-study', StudyFieldPage::class)->name('study-fields');
+
+Route::get('/subjects', SubjectsPage::class)->name('subjects.page');
+
+Route::get('/subjects/lessons/{id}', SubjectsLessons::class)->name('subjects.lessons');
+
+Route::get('/subject/instructions-page/{id}', InstructionPage::class)->name('instructions.page');
+
+Route::get('/subject/questions/{id}', TestPage::class)->name('start.exam');
+
+Route::post('/update-theme', function (Request $request) {
+    // Update the session with the new theme preference
+    session(['dark_mode' => $request->input('dark') ? 'dark' : null]);
+    return response()->json(['success' => true]);
+});
+
+
 
 

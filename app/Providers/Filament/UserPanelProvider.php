@@ -26,10 +26,11 @@ class UserPanelProvider extends PanelProvider
         return $panel
             ->id('user')
             ->path('user')
+            ->login()
             ->colors([
                 'primary' => Color::Green,
             ])
-            ->login()
+           
             ->viteTheme('resources/css/filament/user/theme.css')
             ->discoverResources(in: app_path('Filament/User/Resources'), for: 'App\\Filament\\User\\Resources')
             ->discoverPages(in: app_path('Filament/User/Pages'), for: 'App\\Filament\\User\\Pages')

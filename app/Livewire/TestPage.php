@@ -1,31 +1,20 @@
 <?php
 
-namespace App\Filament\User\Resources\CourseResource\Pages;
+namespace App\Livewire;
 
 use App\Models\Course;
 use App\Models\Option;
-use App\Livewire\Timer;
+use Livewire\Component;
 use App\Models\Question;
 use App\Models\QuizAnswer;
 use App\Models\QuizAttempt;
 use App\Models\QuizSession;
-use Livewire\WithPagination;
 use App\Models\TopicPerformance;
-use Filament\Resources\Pages\Page;
-use Illuminate\Contracts\View\View;
-use Illuminate\Pagination\Paginator;
 use Filament\Notifications\Notification;
-use Illuminate\Contracts\Support\Htmlable;
-use App\Filament\User\Resources\CourseResource;
 
-class Questions extends Page
+class TestPage extends Component
 {
-    use WithPagination;
-    protected static string $resource = CourseResource::class;
 
-    // protected static string $view = 'filament.user.resources.course-resource.pages.questions';
-
-    // public $questions;
     public $course;
     public $answers = [];
     public $totalQuestions;
@@ -36,9 +25,6 @@ class Questions extends Page
     public $allowed_attempts;
     public $quizSession;
     public $remainingAttempts;
-
-    public $selectedNumberOfQuestions;
-    public $duration;
 
     protected $listeners = ['timesUp' => 'submitTest'];
 
@@ -68,10 +54,6 @@ class Questions extends Page
         }
         // Fetching the course details
 
-        // Check for session values and use them if available
-        $this->selectedNumberOfQuestions = session('selectedNumberOfQuestions', 100); // Default to 100 if not set in session
-        $this->duration = session('selectedDuration', $this->course->duration); // Use course duration as default
-// dd($this->duration);
         $this->totalQuestions = $this->course->questions->count();
 
         if (!$this->existingSession) {
@@ -79,12 +61,11 @@ class Questions extends Page
                 'user_id' => auth()->user()->id,
                 'course_id' => $this->course->id,
                 'start_time' => now(),
-                'duration' => $this->duration,
+                'duration' => $this->course->duration,
                 'allowed_attempts' => $this->course->max_attempts,
             ]);
         } else if ($this->existingSession->completed) {
             $this->existingSession->update([
-                'duration' => $this->duration,
                 'start_time' => now(),
                 'completed' => false,
             ]);
@@ -109,41 +90,6 @@ class Questions extends Page
 
         $this->remainingAttempts =  $latestSession->allowed_attempts - $numberofAttempts;
 
-        // if (!$this->ongoingAttempt && $this->remainingAttempts > 0) {
-        //     // Create a new attempt only if there's no ongoing attempt
-        //     $this->currentAttempt = QuizAttempt::create([
-        //         'user_id' => auth()->user()->id,
-        //         'course_id' => $this->course->id,
-        //         'quiz_session_id' => $this->quizSession->id,
-        //         'start_time' => now(),
-        //         'score' => 0
-        //     ]);
-
-        //     if ($this->course->questions->count() > 100) {
-        //         $randomQuestions = $this->course->questions()
-        //             ->inRandomOrder()
-        //             ->limit(100)
-        //             ->get();
-
-        //         // Store the random question IDs in the new table
-        //         foreach ($randomQuestions as $question) {
-        //             $this->currentAttempt->questions()->attach($question->id);
-        //         }
-        //     } else {
-        //         // If there are 100 or fewer questions, select all
-        //         foreach ($this->course->questions as $question) {
-        //             $this->currentAttempt->questions()->attach($question->id);
-        //         }
-        //     }
-        // } else {
-        //     $this->currentAttempt = $this->ongoingAttempt;
-        // }
-
-        // / Determine the number of questions for the quiz
-        // This number can be set dynamically or passed as a parameter
-        // For example, it can be a user preference or a setting in the course
-        // $this->selectedNumberOfQuestions = $numberOfQuestions; // Default value or retrieve from user preference or course setting
-
         if (!$this->ongoingAttempt && $this->remainingAttempts > 0) {
             // Create a new attempt only if there's no ongoing attempt
             $this->currentAttempt = QuizAttempt::create([
@@ -154,24 +100,26 @@ class Questions extends Page
                 'score' => 0
             ]);
 
-            // Retrieve either a random set of questions or all, based on the course's question count
-            if ($this->course->questions->count() > $this->selectedNumberOfQuestions) {
+            if ($this->course->questions->count() > 100) {
                 $randomQuestions = $this->course->questions()
                     ->inRandomOrder()
-                    ->limit($this->selectedNumberOfQuestions)
+                    ->limit(100)
                     ->get();
-            } else {
-                // If there are fewer questions than the limit, select all
-                $randomQuestions = $this->course->questions;
-            }
 
-            // Attach the selected questions to the current attempt
-            foreach ($randomQuestions as $question) {
-                $this->currentAttempt->questions()->attach($question->id);
+                // Store the random question IDs in the new table
+                foreach ($randomQuestions as $question) {
+                    $this->currentAttempt->questions()->attach($question->id);
+                }
+            } else {
+                // If there are 100 or fewer questions, select all
+                foreach ($this->course->questions as $question) {
+                    $this->currentAttempt->questions()->attach($question->id);
+                }
             }
         } else {
             $this->currentAttempt = $this->ongoingAttempt;
         }
+
 
         // Fetch the saved answers for the user
         if ($this->currentAttempt) {
@@ -346,145 +294,54 @@ class Questions extends Page
         return 0;  // Quiz session not found
     }
 
-    // public function clearSession()
-    // {
-    //     session()->forget('selected_answers');
-    // }
+    public function clearSession()
+    {
+        session()->forget('selected_answers');
+    }
 
     // Submitting the test and calculating the user's score
-    // public function submitTest()
-    // {
-    //     // dd($answerText);
-    //     $score = 0;
-    //     $topicPerformanceData = []; // Use to hold the performance data per topic
-
-    //     // $questions = $this->course->questions;
-
-    //     $questionIds = $this->currentAttempt->questions()->pluck('question_id');
-    //     // Retrieve paginated questions using the IDs from the attempt
-    //     $questions = Question::whereIn('id', $questionIds)->get();
-
-
-    //     foreach ($questions as $question) {
-    //         $userAnswer = QuizAnswer::where('user_id', auth()->user()->id)
-    //             ->where('question_id', $question->id)->where('quiz_attempt_id', $this->currentAttempt->id)
-    //             ->where('completed', false)
-    //             ->first();
-
-    //         // Initialize or update topic performance data
-    //         if ($question->topic_id) {
-    //             if (!isset($topicPerformanceData[$question->topic_id])) {
-    //                 $topicPerformanceData[$question->topic_id] = [
-    //                     'correct_answers_count' => 0,
-    //                     'questions_count' => 0,
-    //                 ];
-    //             }
-    //             $topicPerformanceData[$question->topic_id]['questions_count']++;
-    //         }
-
-    //         if ($userAnswer && $userAnswer->correct) {
-    //             $score += $question->marks;
-
-    //             // Increment the correct answer count for the topic
-    //             if ($question->topic_id) {
-    //                 $topicPerformanceData[$question->topic_id]['correct_answers_count']++;
-    //             }
-    //         } elseif (!$userAnswer) {
-    //             // If the user hasn't answered this question, create a record for it
-    //             QuizAnswer::create([
-    //                 'user_id' => auth()->user()->id,
-    //                 'question_id' => $question->id,
-    //                 'quiz_attempt_id' => $this->currentAttempt->id,
-    //                 'option_id' => null,  // No selected option
-    //                 'correct' => 0,       // Not correct since no answer was provided
-    //                 'completed' => false  // Mark it as not completed
-    //             ]);
-    //         }
-    //     }
-
-    //     // After submitting the test, save the topic performance data
-    //     foreach ($topicPerformanceData as $topicId => $performanceData) {
-    //         // Here you would save the performance data to the database
-    //         // For example:
-    //         TopicPerformance::create([
-    //             'quiz_attempt_id' => $this->currentAttempt->id,
-    //             'topic_id' => $topicId,
-    //             'correct_answers_count' => $performanceData['correct_answers_count'],
-    //             'questions_count' => $performanceData['questions_count'],
-    //         ]);
-    //     }
-
-
-    //     // Update the quiz session
-    //     $quizSession = $this->getLatestSession(); // Use the helper method
-
-    //     if ($quizSession) {
-    //         $quizSession->update(['completed' => true]);
-    //         $this->currentAttempt->update([
-    //             'end_time' => now(),
-    //             'score' => $score
-    //         ]);
-    //     }
-
-    //     // Once the quiz is submitted, delete the associated questions from quiz_attempt_questions table
-    //     $this->currentAttempt->questions()->detach();
-
-    //     QuizAnswer::where('user_id', auth()->user()->id)
-    //         ->where('quiz_attempt_id', $this->currentAttempt->id) // Ensure we only target answers from the current session
-    //         ->whereIn('question_id', $questions->pluck('id'))
-    //         ->update(['completed' => true]);
-
-
-    //     // Clear session after submission
-    //     $this->clearSession();
-
-    //     return redirect()->route('filament.user.resources.courses.result', ['attemptId' => $this->currentAttempt->id, 'courseId' => $this->course->id]);
-    // }
     public function submitTest()
     {
+        // dd($answerText);
         $score = 0;
-        $topicPerformanceData = [];
+        $topicPerformanceData = []; // Use to hold the performance data per topic
 
-        // Retrieve the questions associated with the current attempt
+        // $questions = $this->course->questions;
+
         $questionIds = $this->currentAttempt->questions()->pluck('question_id');
+        // Retrieve paginated questions using the IDs from the attempt
         $questions = Question::whereIn('id', $questionIds)->get();
+
 
         foreach ($questions as $question) {
             $userAnswer = QuizAnswer::where('user_id', auth()->user()->id)
-                ->where('question_id', $question->id)
-                ->where('quiz_attempt_id', $this->currentAttempt->id)
+                ->where('question_id', $question->id)->where('quiz_attempt_id', $this->currentAttempt->id)
                 ->where('completed', false)
                 ->first();
 
-            // Check if the question was answered
-            if ($userAnswer) {
-                // If the question has an associated topic
+            // Initialize or update topic performance data
+            if ($question->topic_id) {
+                if (!isset($topicPerformanceData[$question->topic_id])) {
+                    $topicPerformanceData[$question->topic_id] = [
+                        'correct_answers_count' => 0,
+                        'questions_count' => 0,
+                    ];
+                }
+                $topicPerformanceData[$question->topic_id]['questions_count']++;
+            }
+
+            if ($userAnswer && $userAnswer->correct) {
+                $score += $question->marks;
+
+                // Increment the correct answer count for the topic
                 if ($question->topic_id) {
-                    // Initialize or update topic performance data
-                    if (!isset($topicPerformanceData[$question->topic_id])) {
-                        $topicPerformanceData[$question->topic_id] = [
-                            'correct_answers_count' => 0,
-                            'questions_count' => 0,
-                        ];
-                    }
-
-                    $topicPerformanceData[$question->topic_id]['questions_count']++;
-
-                    if ($userAnswer->correct) {
-                        $score += $question->marks;
-                        $topicPerformanceData[$question->topic_id]['correct_answers_count']++;
-                    }
-
-                    // Update the user answer with the topic_id
-                    $userAnswer->topic_id = $question->topic_id;
-                    $userAnswer->save();
+                    $topicPerformanceData[$question->topic_id]['correct_answers_count']++;
                 }
             } elseif (!$userAnswer) {
-                // Create a record for unanswered questions
+                // If the user hasn't answered this question, create a record for it
                 QuizAnswer::create([
                     'user_id' => auth()->user()->id,
                     'question_id' => $question->id,
-                    'topic_id' => $question->topic_id, // Save the topic_id here
                     'quiz_attempt_id' => $this->currentAttempt->id,
                     'option_id' => null,  // No selected option
                     'correct' => 0,       // Not correct since no answer was provided
@@ -493,8 +350,10 @@ class Questions extends Page
             }
         }
 
-        // Save the topic performance data
+        // After submitting the test, save the topic performance data
         foreach ($topicPerformanceData as $topicId => $performanceData) {
+            // Here you would save the performance data to the database
+            // For example:
             TopicPerformance::create([
                 'quiz_attempt_id' => $this->currentAttempt->id,
                 'topic_id' => $topicId,
@@ -503,7 +362,8 @@ class Questions extends Page
             ]);
         }
 
-        //  Update the quiz session
+
+        // Update the quiz session
         $quizSession = $this->getLatestSession(); // Use the helper method
 
         if ($quizSession) {
@@ -524,7 +384,7 @@ class Questions extends Page
 
 
         // Clear session after submission
-        session()->forget(['selectedNumberOfQuestions', 'selectedDuration']);
+        $this->clearSession();
 
         return redirect()->route('filament.user.resources.courses.result', ['attemptId' => $this->currentAttempt->id, 'courseId' => $this->course->id]);
     }
@@ -534,28 +394,18 @@ class Questions extends Page
         $this->submitTest();
     }
 
-    public function getTitle(): string | Htmlable
-    {
-        return __($this->course->course_code . ' ' . $this->course->title);
-    }
 
-    public function render(): View
+    public function render()
     {
-        // $questions = $this->course->questions()->paginate(5);
-        // Retrieve question IDs associated with the attempt
+
         $questionIds = $this->currentAttempt->questions()->pluck('question_id');
         // Retrieve paginated questions using the IDs from the attempt
         $questions = Question::whereIn('id', $questionIds)->paginate(5);
         $allquestions = Question::whereIn('id', $questionIds)->get();
 
-        // dd($questions);
-        return view('filament.user.resources.course-resource.pages.questions', [
+        return view('livewire.test-page',[
             'questions' => $questions,
             'allquestions' => $allquestions,
-        ])->layout(static::$layout, [
-            'livewire' => $this,
-            'maxContentWidth' => $this->getMaxContentWidth(),
-            ...$this->getLayoutData(),
         ]);
     }
 }

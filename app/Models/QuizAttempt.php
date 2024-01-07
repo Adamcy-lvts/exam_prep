@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\User;
 use App\Models\Course;
+use App\Models\Question;
 use App\Models\TopicPerformance;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,4 +29,10 @@ class QuizAttempt extends Model
     {
         return $this->hasMany(TopicPerformance::class);
     }
+
+    public function questions()
+    {
+        return $this->belongsToMany(Question::class, 'quiz_attempt_questions');
+    }
+
 }

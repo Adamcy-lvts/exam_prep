@@ -35,14 +35,12 @@ class ResultPage extends Page
     public $attempts;
     public $remainingAttempts;
 
+    public $numberOfQuestions;
 
     public function mount($attemptId, $courseId): Void
     {
         $this->course = Course::find($courseId);
 
-        $totalM = $this->course->total_marks;
-
-        $this->totalMarks = $totalM;
         // dd($attemptId);
         $this->testAnswers = QuizAnswer::where('quiz_attempt_id', $attemptId)->where('completed', true)->get(); // Assuming you have a "TestAnswer" model for test answers
 
@@ -69,12 +67,32 @@ class ResultPage extends Page
         // Get the questions and options related to the test answers
         $this->questions = Question::whereIn('id', $this->testAnswers->pluck('question_id'))->with('options')->get(); // Assuming you have a "Question" model for questions and a relationship between Question and Option models
 
-        $startTime = Carbon::parse($this->currentAttempt->start_time);
-        $endTime = Carbon::parse($this->currentAttempt->end_time);
+        // dd($this->questions->sum('marks'));
 
-        if ($startTime && $endTime) {
-            $timeSpent = $startTime->diffInSeconds($endTime); // Get the time difference in seconds
-            $this->formattedTimeSpent = gmdate('H:i:s', $timeSpent); // Format as HH:MM:SS
+        // and sum their marks to get the total.
+        $this->totalMarks = $this->questions->sum('marks');
+
+        $this->numberOfQuestions = $this->questions->count();
+   
+
+        if ($session) {
+            $startTime = Carbon::parse($this->currentAttempt->start_time);
+            $now = Carbon::now();
+
+            // Retrieve the duration from the quiz session
+            $totalAllottedTime = $session->duration * 60; // Convert to milliseconds
+
+            // Calculate elapsed time based on the current time and start time.
+            $elapsedTime = $startTime->diffInSeconds($now); 
+
+            // Limit the elapsed time to the total allotted time.
+            $timeSpent = min($elapsedTime, $totalAllottedTime);
+
+            // Format the time spent as HH:MM:SS
+            $this->formattedTimeSpent = gmdate('H:i:s', $timeSpent);
+        } else {
+            // Handle the case where the quiz session is not found
+            $this->formattedTimeSpent = '00:00:00';
         }
 
         $quizAttemptId = $this->currentAttempt->id; // You would get the current attempt ID from the user's session or the page URL.

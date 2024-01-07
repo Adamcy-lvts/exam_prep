@@ -26,13 +26,8 @@ class InstructionPage extends Page
     public $remainingAttempts;
     public $attempts;
 
-    // public function mount($record): void
-
-    // {
-    //     // dd($record);
-    //     $this->course = Course::find($record);
-    // }
-
+    public $selectedNumberOfQuestions = 100;
+    public $duration; // To hold the dynamic duration based on the selected number of questions
 
     public function mount($record): void
     {
@@ -55,17 +50,41 @@ class InstructionPage extends Page
                 ->first();
         }
 
+        if ($this->ongoingAttempt) {
+            $this->selectedNumberOfQuestions = session('selectedNumberOfQuestions', 100); // Default to 100 if not set in session
+            $this->duration = session('selectedDuration', $this->course->duration); // Use course duration as default
+        }
+
         if ($this->existingSession) {
             $this->attempts = QuizAttempt::where('user_id', auth()->user()->id)->where('course_id', $this->course->id)
                 ->where('quiz_session_id', $this->existingSession->id)
                 ->count();
         }
-
-
+        $this->updateDuration();
         // Check if the user has exceeded the allowed attempts
         $this->remainingAttempts =  $this->allowed_attempts - $this->attempts;
     }
 
+    public function updatedSelectedNumberOfQuestions()
+    {
+        // Update the duration when the selected number of questions changes
+        $this->updateDuration();
+    }
+
+    protected function updateDuration()
+    {
+        // Mapping of number of questions to duration in minutes
+        $durationMapping = [
+            20 => 5,
+            50 => 30,
+            70 => 45,
+            100 => 60,
+            150 => 90,
+        ];
+
+        // Update the duration based on the selected number of questions
+        $this->duration = $durationMapping[$this->selectedNumberOfQuestions] ?? $this->course->duration; // Fallback to the course default duration
+    }
 
     private function getLatestSession()
     {
@@ -83,6 +102,13 @@ class InstructionPage extends Page
 
     public function startQuiz()
     {
+
+        // Store the selected number of questions and duration in the session
+        session([
+            'selectedNumberOfQuestions' => $this->selectedNumberOfQuestions,
+            'selectedDuration' => $this->duration,
+        ]);
+
         if (!$this->canAttemptQuiz()) {
 
             session()->flash('success_message', "You have exhausted your maximum of " . $this->allowed_attempts . " attempts for this quiz.");
@@ -106,11 +132,16 @@ class InstructionPage extends Page
         $this->showConfirmationModal = false;
 
         // Redirect to the specific question route
-        return redirect()->route('filament.user.resources.courses.questions', ['record' => $this->courseId]);
+        return redirect()->route('filament.user.resources.courses.questions', [
+            'record' => $this->courseId,
+            // 'numberOfQuestions' => $this->selectedNumberOfQuestions // Pass the selected number to the question component
+        ]);
     }
 
     public function continueLastAttempt()
     {
+
+
         // Redirecting the user based on the last answered question
         if (auth()->check()) {
             // Determine the total number of questions for the quiz

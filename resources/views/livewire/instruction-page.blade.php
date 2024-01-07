@@ -1,52 +1,39 @@
-<x-filament-panels::page>
-    <!-- Quiz Container -->
+<div>
     <div
         class="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-xl shadow-lg mx-auto my-10 max-w-full sm:max-w-md lg:max-w-lg xl:max-w-xl 2xl:max-w-2xl">
         <h1 class="text-xl sm:text-4xl font-extrabold text-gray-900 dark:text-white text-center mb-3">
-            {{ $course->course_code }}</h1>
-        <h3 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white text-center">{{ $course->title }}
+            Instructions</h1>
+        <h3 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white text-center">Comprehensive
+            Mathematics
         </h3>
         <div class="text-center my-8">
-            <h3 class="text-md sm:text-xl font-medium mb-2">Exam Instructions</h3>
-            <p class="text-gray-600 dark:text-gray-400 sm:text-lg text-sm mb-4">Ensure you've gone through the course
+            <h3 class="text-md sm:text-xl font-semibold mb-2">Exam Instructions</h3>
+            <p class="text-gray-600 dark:text-gray-400 md:text-md text-sm mb-4">Ensure you've gone through the course
                 material thoroughly
                 before attempting this exam.</p>
             <div class="flex justify-center gap-10 mb-4">
                 <div>
                     <p class="text-md sm:text-lg text-gray-500 ">Total Questions</p>
-                    <p class="text-md sm:text-3xl font-bold text-gray-800 dark:text-white">
-                        {{ $selectedNumberOfQuestions }}</p>
+                    <p class="text-md sm:text-3xl font-bold text-gray-800 dark:text-white">100</p>
                 </div>
                 <div>
                     <p class="text-md sm:text-lg text-gray-500">Time</p>
-                    <p class="text-md sm:text-3xl font-bold text-gray-800 dark:text-white">{{ $duration }}
-                        Minutes</p>
+                    <p class="text-md sm:text-3xl font-bold text-gray-800 dark:text-white">2 hours</p>
                 </div>
                 <div>
                     <p class="text-md sm:text-lg text-gray-500">Attempts</p>
-                    <p class="text-md sm:text-3xl font-bold text-gray-800 dark:text-white">{{ $remainingAttempts }}</p>
+                    <p class="text-md sm:text-3xl font-bold text-gray-800 dark:text-white">1</p>
                 </div>
             </div>
             <p class="md:text-md text-sm text-gray-500 dark:text-gray-400">Good luck, and remember to review your
                 answers before submitting
                 your final exam.</p>
         </div>
-        <div class="flex flex-col py-5 items-center space-x-4">
-            <label for="numberOfQuestions" class="text-md mb-4 font-medium text-gray-600 dark:text-gray-400">Select
-                number of questions:</label>
-            <div class="flex divide-x divide-gray-200 shadow-sm rounded-lg overflow-hidden">
-                @foreach ([20, 50, 70, 100, 150] as $number)
-                    <button wire:click="$set('selectedNumberOfQuestions', {{ $number }})"
-                        class="px-4 py-2 sm:px-6 sm:py-3 transition duration-150 ease-in-out focus:outline-none {{ $selectedNumberOfQuestions == $number ? 'bg-green-600 text-white' : 'bg-white text-gray-600 hover:bg-green-100' }}">
-                        {{ $number }}
-                    </button>
-                @endforeach
-            </div>
-        </div>
-
-
-
-        <div class="text-center">
+        <button wire:click="showStartQuizConfirmation"
+            class="w-full bg-green-700 text-white py-2 px-3  sm:py-3 sm:px-4 rounded-md sm:rounded-lg hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-700 focus:ring-opacity-50 dark:hover:bg-green-600 transition duration-300 ease-in-out shadow hover:shadow-lg">
+            Start Exam
+        </button>
+        {{-- <div class="text-center">
             @if (!$ongoingAttempt)
                 <button wire:click="showStartQuizConfirmation"
                     class="w-full bg-green-700 text-white py-2 px-3  sm:py-3 sm:px-4 rounded-md sm:rounded-lg hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-700 focus:ring-opacity-50 dark:hover:bg-green-600 transition duration-300 ease-in-out shadow hover:shadow-lg">
@@ -59,7 +46,7 @@
                 </button>
             @endif
 
-        </div>
+        </div> --}}
     </div>
 
 
@@ -84,8 +71,8 @@
             <div
                 class="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded shadow-lg max-w-full w-full md:w-1/2 lg:w-1/3 relative z-10">
                 <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Start the Exam?</h2>
-                <p class="text-gray-600 dark:text-gray-400 mb-4">You're about to start the {{ $course->title }}
-                    {{ $course->code }} Exam. Ensure
+                <p class="text-gray-600 dark:text-gray-400 mb-4">You're about to start the
+                    JAMB Exam. Ensure
                     you're prepared and have reviewed the course material.</p>
 
                 <div class="mt-4 flex justify-end space-x-4">
@@ -101,6 +88,4 @@
             </div>
         </div>
     </div>
-
-
-</x-filament-panels::page>
+</div>

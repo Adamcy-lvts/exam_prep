@@ -32,7 +32,7 @@ class QuestionResource extends Resource
                 //   TextInput::make('total_marks')->numeric(),
                 Select::make('subject_id')
                     ->required()
-                    ->relationship('subject', 'name'),
+                    ->relationship('course', 'title'),
                 Repeater::make('options')
                     ->schema([
                         TextInput::make('option')->required(),

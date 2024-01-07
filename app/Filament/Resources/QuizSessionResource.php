@@ -9,6 +9,7 @@ use Filament\Tables\Table;
 use App\Models\QuizSession;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ViewColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\ToggleColumn;
 use Illuminate\Database\Eloquent\Builder;
@@ -37,7 +38,7 @@ class QuizSessionResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('user.name'),
+                ViewColumn::make('User')->view('filament.tables.columns.full-name'),
                 TextColumn::make('course.title'),
                 TextColumn::make('course.course_code'),
                 TextColumn::make('start_time')->dateTime('g:i A'),

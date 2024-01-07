@@ -92,7 +92,7 @@
     <!-- Retake Exam Button -->
     <div class="mt-6 text-center">
         @if ($remainingAttempts > 0)
-            <a href="{{ route('filament.user.resources.courses.questions', $course->id) }}"
+            <a href="{{ route('filament.user.resources.courses.questions', ['record' => $course->id, 'numberOfQuestions' => $numberOfQuestions]) }}"
                 class="inline-block bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-700 focus:ring-opacity-75 hover:bg-green-700 transition duration-300 ease-in-out">
                 Retake Exam ({{ $remainingAttempts }} Attempts Left)
             </a>
@@ -154,17 +154,19 @@
                             $module = $topics['didWell']->first()->topic->unit->module ?? null;
                             $unit = $topics['didWell']->first()->topic->unit ?? null;
                         @endphp
-                        @if ($module)
-                            <div class="text-lg font-bold">{{ $module->name }}</div>
-                        @endif
-                        @if ($unit)
-                            <div class="text-md font-semibold">{{ $unit->name }}</div>
-                        @endif
-                        <ul class="list-disc list-inside dark:text-gray-300">
-                            @foreach ($topics['didWell'] as $performance)
-                                <li>{{ $performance->topic->name }}</li>
-                            @endforeach
-                        </ul>
+                        <div class="mb-4">
+                            @if ($module)
+                                <div class="text-lg font-bold mb-2">{{ $module->name }}</div>
+                            @endif
+                            @if ($unit)
+                                <div class="text-md font-semibold mb-1">{{ $unit->name }}</div>
+                            @endif
+                            <ul class="list-disc list-inside dark:text-gray-300">
+                                @foreach ($topics['didWell'] as $performance)
+                                    <li>{{ $performance->topic->name }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
                     @endforeach
                 @endforeach
             </div>
@@ -181,17 +183,19 @@
                             $module = $topics['didNotDoWell']->first()->topic->unit->module ?? null;
                             $unit = $topics['didNotDoWell']->first()->topic->unit ?? null;
                         @endphp
-                        @if ($module)
-                            <div class="text-lg font-bold">{{ $module->name }}</div>
-                        @endif
-                        @if ($unit)
-                            <div class="text-md font-semibold">{{ $unit->name }}</div>
-                        @endif
-                        <ul class="list-disc list-inside dark:text-gray-300">
-                            @foreach ($topics['didNotDoWell'] as $performance)
-                                <li>{{ $performance->topic->name }}</li>
-                            @endforeach
-                        </ul>
+                        <div class="mb-4">
+                            @if ($module)
+                                <div class="text-lg font-bold mb-2">{{ $module->name }}</div>
+                            @endif
+                            @if ($unit)
+                                <div class="text-md font-semibold mb-1">{{ $unit->name }}</div>
+                            @endif
+                            <ul class="list-disc list-inside dark:text-gray-300">
+                                @foreach ($topics['didNotDoWell'] as $performance)
+                                    <li>{{ $performance->topic->name }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
                     @endforeach
                 @endforeach
             </div>
