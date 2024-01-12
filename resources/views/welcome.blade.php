@@ -114,7 +114,7 @@
 
         <div class="relative isolate px-6 pt-14 lg:px-8">
             <!-- Background gradient shapes -->
-           <x-bg-gradient></x-bg-gradient>
+            <x-bg-gradient></x-bg-gradient>
             <div class="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
                 <div class="hidden sm:mb-8 sm:flex sm:justify-center">
                     <!-- Consider adding a relevant announcement or remove this if not needed -->
@@ -144,7 +144,7 @@
                 </div>
             </div>
             <!-- Background gradient shapes for bottom -->
-           <x-bg-gradient-2></x-bg-gradient-2>
+            <x-bg-gradient-2></x-bg-gradient-2>
         </div>
 
 
@@ -184,82 +184,9 @@
 
         <!-- Responsive Grid Container -->
         <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Card for JAMB -->
 
-                <div
-                    class="bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg rounded-lg shadow hover:shadow-lg transition-shadow duration-300 p-6 text-center">
-                    <a href="#">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">JAMB</h3>
-                        <img src="path-to-jamb-logo.svg" alt="JAMB Logo" class="h-12 mx-auto mb-4">
-                        <p class="text-gray-600 mb-6">Join thousands of students excelling in JAMB with our specialized
-                            tools
-                            and resources.</p>
-                        <div
-                            class="relative rounded-full px-3 py-1 text-sm leading-6 text-gray-600 ring-1 ring-gray-900/10 hover:ring-gray-900/20">
-                            <a href="{{route('study-fields')}}" class="font-semibold text-indigo-600">Start Preparation <span
-                                    aria-hidden="true">&rarr;</span></a>
-                        </div>
-                    </a>
-                </div>
+            @livewire('exams')
 
-                <!-- Card for WAEC -->
-
-                <div
-                    class="bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg rounded-lg shadow hover:shadow-lg transition-shadow duration-300 p-6 text-center">
-
-
-                    <h3 class="text-xl font-semibold text-gray-800 mb-2">WAEC</h3>
-                    <img src="path-to-waec-logo.svg" alt="WAEC Logo" class="h-12 mx-auto mb-4">
-                    <p class="text-gray-600 mb-6">Ace your WAEC exams with our comprehensive study materials and
-                        practice
-                        tests.</p>
-                    <div
-                        class="relative rounded-full px-3 py-1 text-sm leading-6 text-gray-600 ring-1 ring-gray-900/10 hover:ring-gray-900/20">
-                        <a href="#neco" class="font-semibold text-indigo-600">Start Preparation <span
-                                aria-hidden="true">&rarr;</span></a>
-                    </div>
-
-                </div>
-
-                <!-- Card for NECO -->
-
-                <div
-                    class="bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg rounded-lg shadow hover:shadow-lg transition-shadow duration-300 p-6 text-center">
-
-                    <h3 class="text-xl font-semibold text-gray-800 mb-2">NECO</h3>
-                    <img src="path-to-neco-logo.svg" alt="NECO Logo" class="h-12 mx-auto mb-4">
-                    <p class="text-gray-600 mb-6">Get ahead in NECO exams with custom quizzes and real-time
-                        progress
-                        tracking.</p>
-                    <div
-                        class="relative rounded-full px-3 py-1 text-sm leading-6 text-gray-600 ring-1 ring-gray-900/10 hover:ring-gray-900/20">
-                        <a href="#neco" class="font-semibold text-indigo-600">Start Preparation <span
-                                aria-hidden="true">&rarr;</span></a>
-                    </div>
-
-                </div>
-
-                {{-- <div
-                    class="bg-white bg-opacity-80 backdrop-filter backdrop-blur-lg rounded-lg shadow hover:shadow-lg transition-shadow duration-300 p-6 text-center">
-
-                    <h3 class="text-xl font-semibold text-gray-800 mb-2">NOUN</h3>
-                    <img src="path-to-neco-logo.svg" alt="NECO Logo" class="h-12 mx-auto mb-4">
-                    <p class="text-gray-600 mb-6">Get ahead in NOUN exams with custom quizzes and real-time
-                        progress
-                        tracking.</p>
-                    <div
-                        class="relative rounded-full px-3 py-1 text-sm leading-6 text-gray-600 ring-1 ring-gray-900/10 hover:ring-gray-900/20">
-                        <a href="#neco" class="font-semibold text-indigo-600">Start Preparation <span
-                                aria-hidden="true">&rarr;</span></a>
-                    </div>
-
-                </div> --}}
-
-
-
-                <!-- ... additional cards if needed ... -->
-            </div>
         </div>
 
 

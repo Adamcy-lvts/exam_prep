@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ExamController;
 use App\Livewire\ExamPage;
 use App\Livewire\TestPage;
 use Illuminate\Http\Request;
@@ -25,6 +26,8 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Route::get('/', [ExamController::class, 'index'])->name('welcome');
+
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
@@ -36,11 +39,11 @@ Route::middleware([
 });
 
 
-Route::get('/field-of-study', StudyFieldPage::class)->name('study-fields');
+Route::get('/field-of-study/{id}', StudyFieldPage::class)->name('study-fields');
 
-Route::get('/subjects', SubjectsPage::class)->name('subjects.page');
+Route::get('/subjects/{examid}/{fieldid}', SubjectsPage::class)->name('subjects.page');
 
-Route::get('/subjects/lessons/{id}', SubjectsLessons::class)->name('subjects.lessons');
+Route::get('/subject-lessons/{id}', SubjectsLessons::class)->name('subjects.lessons');
 
 Route::get('/subject/instructions-page/{id}', InstructionPage::class)->name('instructions.page');
 

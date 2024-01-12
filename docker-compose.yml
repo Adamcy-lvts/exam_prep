@@ -1,0 +1,59 @@
+version: '3'
+services:
+  app:
+    build:
+      context: .
+    volumes:
+      - .:/var/www/html
+    working_dir: /var/www/html
+    networks:
+      - examprep
+    depends_on:
+      - db
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8083:80"
+    volumes:
+      - ./:/var/www/html
+      - ./xconfig/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - examprep
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: exam_prep
+      MYSQL_USER: prep
+      MYSQL_PASSWORD: eprep
+      MYSQL_ROOT_PASSWORD: eprep
+    ports:
+      - "3309:3306"
+    volumes:
+      - examdbdata:/var/lib/mysql
+    networks:
+      - examprep
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: eprep  # Use the same root password here as you set for the MySQL service
+    ports:
+      - "8080:80"  # This will expose phpMyAdmin on http://localhost:8080 on your host machine
+    depends_on:
+      - db  # This should be the name of your MySQL service
+    networks:
+      - examprep 
+  
+
+networks:
+  examprep:
+
+volumes:
+  examdbdata:
+

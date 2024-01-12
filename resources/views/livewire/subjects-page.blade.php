@@ -30,14 +30,15 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
                 <!-- Mathematics Card -->
-                <div
-                    class="relative bg-transparent rounded-xl overflow-hidden transform hover:-translate-y-1 transition duration-500 ease-out">
+                @foreach ($subjects as $subject)
                     <div
-                        class="absolute inset-0 bg-gray-100 dark:bg-zinc-800 bg-opacity-60 backdrop-filter backdrop-blur-md border border-transparent rounded-xl">
-                        <div class="border border-purple-200 border-opacity-50 rounded-xl"></div>
-                    </div>
+                        class="relative bg-transparent rounded-xl overflow-hidden transform hover:-translate-y-1 transition duration-500 ease-out">
+                        <div
+                            class="absolute inset-0 bg-gray-100 dark:bg-zinc-800 bg-opacity-60 backdrop-filter backdrop-blur-md border border-transparent rounded-xl">
+                            <div class="border border-purple-200 border-opacity-50 rounded-xl"></div>
+                        </div>
 
-                    @foreach ($subjects as $subject)
+
                         <a href="{{ route('subjects.lessons', $subject->id) }}">
                             <div class="relative p-5">
                                 <div class="flex justify-center">
@@ -49,7 +50,7 @@
                                 </div>
                                 <div class="text-center">
                                     <h3 class="mt-3 text-md sm:text-lg font-semibold text-gray-800 dark:text-gray-300">
-                                        {{ $subject->title }}</h3>
+                                        {{ $subject->name }}</h3>
                                     <p class="mt-1 text-sm sm:text-md text-gray-600 dark:text-gray-300">Algebra,
                                         Calculus, Statistics, and
                                         more
@@ -57,12 +58,10 @@
                                 </div>
                             </div>
                         </a>
-                    @endforeach
 
-
-                </div>
-
-                <!-- Physics Card -->
+                    </div>
+                @endforeach
+                {{-- <!-- Physics Card -->
                 <div
                     class="relative bg-transparent rounded-xl overflow-hidden transform hover:-translate-y-1 transition duration-500 ease-out">
                     <div
@@ -164,7 +163,7 @@
                                 Technology</p>
                         </div>
                     </div>
-                </div>
+                </div> --}}
 
             </div>
         </div>
