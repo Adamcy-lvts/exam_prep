@@ -39,8 +39,8 @@ class QuizSessionResource extends Resource
         return $table
             ->columns([
                 ViewColumn::make('User')->view('filament.tables.columns.full-name'),
-                TextColumn::make('course.title'),
-                TextColumn::make('course.course_code'),
+                TextColumn::make('title'),
+                TextColumn::make('quizzable_type'),
                 TextColumn::make('start_time')->dateTime('g:i A'),
                 TextColumn::make('duration'),
                 TextColumn::make('allowed_attempts')->numeric(),

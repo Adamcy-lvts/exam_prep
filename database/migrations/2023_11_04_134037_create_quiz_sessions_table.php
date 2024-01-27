@@ -14,11 +14,12 @@ return new class extends Migration
         Schema::create('quiz_sessions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id');
-            $table->foreignId('course_id');
+            $table->nullableMorphs('quizzable');
             $table->timestamp('start_time');
             $table->unsignedInteger('duration')->default(0);
             $table->integer('allowed_attempts')->default(0);
             $table->boolean('completed')->default(false);
+            $table->unique(['user_id', 'quizzable_type', 'quizzable_id'], 'user_quizzable_unique');
             $table->timestamps();
         });
     }

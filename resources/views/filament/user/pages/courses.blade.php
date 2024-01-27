@@ -15,7 +15,7 @@
                 </div>
                 <div class="bg-gray-50 dark:bg-gray-700 px-4 py-4 sm:px-6">
                     <div class="text-sm">
-                        <a href="{{ route('filament.user.resources.courses.instruction-page', $course->id) }}"
+                        <a href="{{ route('filament.user.resources.courses.instruction-page', ['record' => $course->id, 'quizzableType' => $course->getMorphClass()]) }}"
                             class="font-medium text-green-600 hover:text-green-500 dark:hover:text-green-400">
                             Take {{ $course->course_code }} → Exam
                         </a>

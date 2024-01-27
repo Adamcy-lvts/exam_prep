@@ -2,10 +2,12 @@
 
 namespace App\Imports;
 
+use App\Models\Quiz;
 use App\Models\Unit;
 use App\Models\Topic;
 use App\Models\Course;
 use App\Models\Module;
+use App\Models\Subject;
 use App\Models\Question;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -18,19 +20,33 @@ class QuestionImport implements ToCollection
     public $correctAnswerColumnIndex;
     public $lastColumnIndex;
     public $isCorrectColumn;
+    public $quizzableId;
+    public $quizzableType;
     protected $typeColumnIndex = 7;
     protected $shortAnswerColumnIndex = 8;
+    public $quizId;
+    public $quizzable;
 
 
 
-    public function __construct($courseId, $totalMarks)
+    public function __construct($quizzableType, $quizzableId, $totalMarks)
     {
-        $this->courseId = $courseId;
+        if ($quizzableType == 'course') {
+            $this->quizzable = Course::with('questions')->findOrFail($quizzableId);
+        } elseif ($quizzableType == 'subject') {
+            $this->quizzable = Subject::with('questions')->findOrFail($quizzableId);
+        } else {
+            throw new \Exception("Invalid quizzable type provided");
+        }
+
+        $this->quizzableType = $quizzableType;
+        $this->quizzableId = $quizzableId;
         $this->totalMarks = $totalMarks;
     }
 
     public function collection(Collection $rows)
     {
+        // dd('Working...');
         // Skip the first row as it contains the headers
         $headers = $rows->shift();
 
@@ -47,10 +63,28 @@ class QuestionImport implements ToCollection
             $this->correctAnswerColumnIndex = $this->lastColumnIndex + 1;
         }
 
-        $course = Course::find($this->courseId);
-        $course->update([
-            'total_marks' => $this->totalMarks
+
+        // Initialize total marks
+        $totalMarks = 0;
+
+        // Iterate over the rows to calculate total marks
+        foreach ($rows as $row) {
+            $totalMarks += $row[1]; // Assuming marks are in the second column (index 1)
+        }
+
+        // Create or find a quiz
+        $quiz = Quiz::firstOrCreate([
+            'title' => $this->quizzable->name ?? $this->quizzable->title.' '. $this->quizzable->course_code,
+            'quizzable_type' => $this->quizzable->getMorphClass(),
+            'quizzable_id' => $this->quizzableId,
+            'total_marks' => $totalMarks, // Use the calculated total marks
+            'duration' => 60, // Example default value
+            'total_questions' => count($rows), // Count the number of questions
+            'max_attempts' => 3, // Example default value
         ]);
+
+        // Store quiz_id for later use
+        $this->quizId = $quiz->id;
 
         foreach ($rows as $row) {
             if ($row[7] === 'mcq') {
@@ -72,7 +106,9 @@ class QuestionImport implements ToCollection
         $questionData = [
             'question' => $row[0],
             'marks' => $row[1],
-            'course_id' => $this->courseId,
+            'quizzable_id' => $this->quizzableId,
+            'quizzable_type' => $this->quizzable->getMorphClass(),
+            'quiz_id' => $this->quizId,
             'type' => $row[7],
             'topic_id' => $moduleUnitTopic['topic'] ? $moduleUnitTopic['topic']->id : null,
         ];
@@ -105,8 +141,9 @@ class QuestionImport implements ToCollection
         // Create the question with the associated topic ID
         $question = Question::create([
             'question' => $row[0],
-            'marks' => $row[1],
-            'course_id' => $this->courseId,
+            'quiz_id' => $this->quizId,
+            'quizzable_id' => $this->quizzableId,
+            'quizzable_type' => $this->quizzable->getMorphClass(),
             'type' => $row[7],
             'answer_text' => $row[8], // Store the correct answer as 'True' or 'False'
             'topic_id' => $moduleUnitTopic['topic'] ? $moduleUnitTopic['topic']->id : null,
@@ -121,29 +158,16 @@ class QuestionImport implements ToCollection
         // Create the question
         $question = Question::create([
             'question' => $row[0],
+            'quiz_id' => $this->quizId,
             'marks' => $row[1],
-            'course_id' => $this->courseId,
+            'quizzable_id' => $this->quizzableId,
+            'quizzable_type' => $this->quizzable->getMorphClass(),
             'type' => $row[7],
             'answer_text' => $row[8],
             'topic_id' => $moduleUnitTopic['topic'] ? $moduleUnitTopic['topic']->id : null,
         ]);
     }
 
-    // Refactor the topic creation logic into a separate method
-    // protected function findOrCreateTopic($row)
-    // {
-    //     $topicName = isset($row[9]) && trim($row[9]) !== '' ? $row[9] : null;
-    //     $topic = null;
-
-    //     if ($topicName) {
-    //         $topic = Topic::firstOrCreate([
-    //             'name' => $topicName,
-    //             'course_id' => $this->courseId
-    //         ]);
-    //     }
-
-    //     return $topic;
-    // }
 
     // Method to find or create the module, unit, and topic
     protected function findOrCreateModuleUnitTopic($row)
@@ -161,7 +185,7 @@ class QuestionImport implements ToCollection
         if ($moduleName) {
             $module = Module::firstOrCreate([
                 'name' => $moduleName,
-                'course_id' => $this->courseId
+                'course_id' => $this->quizzableId,
             ]);
         }
 
@@ -178,7 +202,7 @@ class QuestionImport implements ToCollection
             $topic = Topic::firstOrCreate([
                 'name' => $topicName,
                 'unit_id' => $unit->id,
-                'course_id' => $this->courseId
+                'course_id' => $this->quizzableId,
             ]);
         }
 

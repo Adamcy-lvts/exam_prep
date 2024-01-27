@@ -13,7 +13,7 @@
             </div>
             <div>01:59:32</div>
         </div>
-        <div class="container mx-auto max-w-6xl flex items-center justify-center h-screen" x-data="tabComponent()">
+        {{-- <div class="container mx-auto max-w-6xl flex items-center justify-center h-screen" x-data="tabComponent()">
             <!-- Tabs -->
             <div class="w-full max-w-7xl px-2 sm:px-0">
                 <div class="bg-white rounded-lg shadow-md">
@@ -91,73 +91,7 @@
                         </div>
                         <div x-show="activeTab === 1" x-cloak>
                             <!-- Content for Physics Tab -->
-                            <div class="w-full px-2 md:px-6 md:w-5/6 lg:w-4/5 overflow-y-auto pb-16 mt-5">
-                                <form id="test-form" wire:submit.prevent="submitTest">
-                                    @csrf
-                                    <div class="space-y-8 mb-10">
-                                        @if (!is_null($questions))
-                                            @foreach ($questions as $key => $question)
-                                                @php
-                                                    $questionNumber = ($questions->currentPage() - 1) * $questions->perPage() + $key + 1;
-                                                @endphp
-                                                <div id="q{{ $questionNumber }}"
-                                                    class="bg-white dark:bg-gray-700 p-6 space-y-4 text-sm sm:text-lg">
-                                                    <h2 class="g font-medium mb-4 border-b dark:border-gray-600 pb-2">
-                                                        {{ $questionNumber }}.
-                                                        {{ $question->question }}</h2>
-                                                    <div class="space-y-4 flex flex-col ">
-                                                        @if ($question->type == \App\Models\Question::TYPE_MCQ)
-                                                            @foreach ($question->options as $option)
-                                                                <label class="radio-wrapper">
-                                                                    <span class="mr-5">
-                                                                        {{ chr($loop->index + 65) }}
-                                                                    </span>
-                                                                    <input type="radio" value="{{ $option->id }}"
-                                                                        class="custom-radio"
-                                                                        wire:click="setAnswer('{{ $question->id }}', '{{ $option->id }}')"
-                                                                        wire:model.defer="answers.{{ $question->id }}">
-                                                                    <span class="radio-label">
-                                                                        {{ $option->option }}</span>
-                                                                </label>
-                                                            @endforeach
-                                                        @elseif($question->type == \App\Models\Question::TYPE_SAQ)
-                                                            <input type="text"
-                                                                class="p-2 text-gray-800 rounded border focus:outline-none focus:border-green-500 dark:focus:border-green-400 w-full"
-                                                                wire:model="answers.{{ $question->id }}.answer_text"
-                                                                wire:change="setAnswer('{{ $question->id }}', null, $event.target.value)">
-                                                        @elseif($question->type == \App\Models\Question::TYPE_TF)
-                                                            <label class="flex items-center">
-                                                                <input type="radio" value="True" class="mr-2"
-                                                                    name="tf_{{ $question->id }}"
-                                                                    wire:model="answers.{{ $question->id }}.answer_text"
-                                                                    wire:click="setAnswer('{{ $question->id }}', 'True')">
-                                                                <span
-                                                                    class="text-gray-700 dark:text-gray-300">{{ __('True') }}</span>
-                                                            </label>
-                                                            <label class="flex items-center">
-                                                                <input type="radio" value="False" class="mr-2"
-                                                                    name="tf_{{ $question->id }}"
-                                                                    wire:model="answers.{{ $question->id }}.answer_text"
-                                                                    wire:click="setAnswer('{{ $question->id }}', 'False')">
-                                                                <span
-                                                                    class="text-gray-700 dark:text-gray-300">{{ __('False') }}</span>
-                                                            </label>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        @else
-                                            <p class="text-center text-gray-500 dark:text-gray-400">No questions
-                                                available.</p>
-                                        @endif
-                                    </div>
-                                    <button type="submit"
-                                        class="mb-10 w-full sm:w-auto px-6 py-2 text-white rounded-md shadow-md transition-colors duration-150 bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 focus:outline-none focus:ring-4 focus:ring-blue-300 focus:ring-opacity-50 dark:bg-gradient-to-r dark:from-gray-700 dark:to-gray-900 dark:hover:from-gray-600 dark:hover:to-gray-800 dark:focus:ring-blue-300 dark:focus:ring-opacity-50">
-                                        Submit
-                                    </button>
-
-                                     {{ $questions->links('vendor.pagination.simple-tailwind') }}
-                            </div>
+                           
                         </div>
                         <div x-show="activeTab === 2" x-cloak>
                             <!-- Content for Chemistry Tab -->
@@ -170,26 +104,85 @@
                     </div>
                 </div>
             </div>
+        </div> --}}
+
+        <div class="container mx-auto max-w-6xl flex items-center justify-center h-screen">
+            <div class="w-full max-w-7xl px-2 sm:px-0" x-data="tabsComponent()">
+                <div class="bg-white rounded-lg shadow-md">
+                    <nav class="flex border-b divide-x divide-gray-300 relative">
+                        <!-- Border Slider -->
+                        <div class="absolute bottom-0 h-1 bg-green-500 transition duration-300 ease-in-out"
+                            :style="{
+                                transform: `translateX(${activeTabPosition}px)`,
+                                width: `${tabWidth}px`
+                            }">
+                        </div>
+                        <!-- Tab Buttons -->
+                        @foreach ($sortedSubjects as $subject)
+                            <button @click="setActiveTab($refs['tab-{{ $subject->id }}'], {{ $subject->id }})"
+                                x-ref="tab-{{ $subject->id }}"
+                                class="flex-1 py-4 text-center focus:outline-none transition duration-150 ease-in-out"
+                                :class="{
+                                    'text-green-600': activeTab ===
+                                        {{ $subject->id }},
+                                    'text-gray-600 hover:text-green-600': activeTab !==
+                                        {{ $subject->id }}
+                                }">
+                                {{ $subject->name }}
+                            </button>
+                        @endforeach
+                    </nav>
+
+                    <!-- Tab Contents -->
+                    <div class="p-4">
+                        <form id="test-form" wire:submit.prevent="submitQuiz">
+                            @foreach ($sortedSubjects as $subject)
+                                <div x-show="activeTab === {{ $subject->id }}">
+                                    @livewire('subjects-component', ['subjectId' => $subject->id, 'attemptId' => $attempts[$subject->id]], key($subject->id))
+                                </div>
+                            @endforeach
+
+                            <button type="submit"
+                                class="mb-10 w-full sm:w-auto px-6 py-2 text-white rounded-md shadow-md transition-colors duration-150 bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 focus:outline-none focus:ring-4 focus:ring-blue-300 focus:ring-opacity-50 dark:bg-gradient-to-r dark:from-gray-700 dark:to-gray-900 dark:hover:from-gray-600 dark:hover:to-gray-800 dark:focus:ring-blue-300 dark:focus:ring-opacity-50">
+                                Submit
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+
+
         </div>
-
-        <script>
-            function tabComponent() {
-                return {
-                    tabs: ['English', 'Physics', 'Chemistry', 'Biology'],
-                    activeTab: 0,
-                    init() {
-                        this.activeTab = parseInt(localStorage.getItem('activeTab')) || 0;
-                    },
-                    changeTab(index) {
-                        this.activeTab = index;
-                        localStorage.setItem('activeTab', index);
-                    }
-                };
-            }
-        </script>
-
     </div>
+
+
+
+
 </div>
+<script>
+    function tabsComponent() {
+        return {
+            activeTab: {{ $sortedSubjects->first()->id ?? 'null' }},
+            activeTabPosition: 0,
+            tabWidth: 0,
+            setActiveTab(tabElement, subjectId) {
+                this.activeTab = subjectId;
+                this.tabWidth = tabElement.offsetWidth;
+                this.activeTabPosition = tabElement.offsetLeft;
+            },
+            init() {
+                // Set the initial tab width and position when the component is initialized
+                this.$nextTick(() => {
+                    const initialTab = this.$refs[`tab-${this.activeTab}`];
+                    if (initialTab) {
+                        this.setActiveTab(initialTab, this.activeTab);
+                    }
+                });
+            }
+        };
+    }
+</script>
 
 
 

@@ -11,7 +11,7 @@ class Question extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['question', 'course_id', 'marks', 'type', 'answer_text', 'topic_id'];
+    protected $fillable = ['question','quiz_id','quizzable_id','quizzable_type', 'marks', 'type', 'answer_text', 'topic_id'];
 
     const TYPE_MCQ = 'mcq';
     const TYPE_SAQ = 'saq';
@@ -36,5 +36,10 @@ class Question extends Model
     public function topic()
     {
         return $this->belongsTo(Topic::class);
+    }
+
+    public function quizzable()
+    {
+        return $this->morphTo();
     }
 }

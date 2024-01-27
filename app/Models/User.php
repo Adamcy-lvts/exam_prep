@@ -5,21 +5,25 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Filament\Panel;
 use App\Models\Course;
+use App\Models\Subject;
 use Laravel\Sanctum\HasApiTokens;
 use Filament\Models\Contracts\HasName;
 use Laravel\Jetstream\HasProfilePhoto;
 use Illuminate\Notifications\Notifiable;
 use Filament\Models\Contracts\FilamentUser;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class User extends Authenticatable implements FilamentUser, HasName
+class User extends Authenticatable implements FilamentUser, HasName, MustVerifyEmail 
 {
     use HasApiTokens;
     use HasFactory;
     use Notifiable;
 
+    // Define constants for registration status
+    const STATUS_REGISTRATION_COMPLETED = 'registration_completed';
 
     public function canAccessPanel(Panel $panel): bool
     {
@@ -81,6 +85,11 @@ class User extends Authenticatable implements FilamentUser, HasName
     {
         return $this->belongsToMany(Course::class);
     }
-    
 
+
+    // User.php
+    public function subjects()
+    {
+        return $this->belongsToMany(Subject::class);
+    }
 }

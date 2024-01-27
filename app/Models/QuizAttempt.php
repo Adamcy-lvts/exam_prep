@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Course;
 use App\Models\Question;
 use App\Models\TopicPerformance;
+use App\Models\CompositeQuizSession;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -13,17 +14,23 @@ class QuizAttempt extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'course_id', 'quiz_session_id', 'start_time', 'end_time', 'score'];
+    protected $fillable = ['user_id','composite_quiz_session_id', 'quiz_id', 'quiz_session_id', 'start_time', 'end_time', 'score'];
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
+    public function quiz()
+    {
+        return $this->belongsTo(Quiz::class);
+    }
+
     public function course()
     {
         return $this->belongsTo(Course::class);
     }
+
 
     public function topicPerformances()
     {
@@ -34,5 +41,11 @@ class QuizAttempt extends Model
     {
         return $this->belongsToMany(Question::class, 'quiz_attempt_questions');
     }
+
+    public function compositeQuizSession()
+    {
+        return $this->belongsTo(CompositeQuizSession::class);
+    }
+
 
 }

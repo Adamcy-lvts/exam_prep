@@ -11,9 +11,10 @@ use Illuminate\Auth\Events\Registered;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Http\Responses\Auth\Contracts\RegistrationResponse;
+// use App\Http\Responses\RegistrationResponse;
 use Illuminate\Validation\Rules\Password;
 use Filament\Pages\Auth\Register as AuthRegister;
+use Filament\Http\Responses\Auth\RegistrationResponse;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 
 class Register extends AuthRegister
@@ -57,11 +58,11 @@ class Register extends AuthRegister
 
         $data = $this->form->getState();
 
-        $courseIds = $data['courses'] ?? [];
+        // $courseIds = $data['courses'] ?? [];
 
         $user = $this->getUserModel()::create($data);
 
-        $user->courses()->attach($courseIds);
+        // $user->courses()->attach($courseIds);
 
         $this->sendEmailVerificationNotification($user);
 
@@ -69,6 +70,7 @@ class Register extends AuthRegister
 
         session()->regenerate();
 
+        // return new RegistrationResponse('choose-exam');
         return app(RegistrationResponse::class);
     }
 
@@ -82,7 +84,7 @@ class Register extends AuthRegister
                         $this->getLastNameFormComponent(),
                         $this->getEmailFormComponent(),
                         $this->getPhoneFormComponent(),
-                        $this->getCourseFormComponent(),
+                        // $this->getCourseFormComponent(),
                         $this->getPasswordFormComponent(),
                         $this->getPasswordConfirmationFormComponent(),
                     ])
@@ -130,13 +132,13 @@ class Register extends AuthRegister
     }
 
 
-    protected function getCourseFormComponent(): Component
-    {
-        return Select::make('courses')->multiple()->options(Course::all()->pluck('title', 'id')->toArray())
-            ->label(__('Course'))
-            ->required()
-            ->autofocus();
-    }
+    // protected function getCourseFormComponent(): Component
+    // {
+    //     return Select::make('courses')->multiple()->options(Course::all()->pluck('title', 'id')->toArray())
+    //         ->label(__('Course'))
+    //         ->required()
+    //         ->autofocus();
+    // }
 
 
     protected function getPasswordFormComponent(): Component

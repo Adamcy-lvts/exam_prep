@@ -1,6 +1,6 @@
 <div>
     <!-- Subject Page for Natural Sciences -->
-    <div class="min-h-screen flex flex-col items-center justify-center">
+    {{-- <div class="min-h-screen flex flex-col items-center justify-center">
         <div class="container mx-auto ">
             <!-- Page Title -->
             <!-- Page Title -->
@@ -23,8 +23,6 @@
                 </div>
             </div>
 
-
-
             <!-- Subjects Grid -->
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -39,7 +37,7 @@
                         </div>
 
 
-                        <a href="{{ route('subjects.lessons', $subject->id) }}">
+                        <a href="{{ route('subjects.lessons', ['subject_id'=>$subject->id, 'exam_id' => $examId, 'field_id' => $fieldId]) }}">
                             <div class="relative p-5">
                                 <div class="flex justify-center">
                                     <!-- Science Icon placeholder -->
@@ -61,112 +59,118 @@
 
                     </div>
                 @endforeach
-                {{-- <!-- Physics Card -->
-                <div
-                    class="relative bg-transparent rounded-xl overflow-hidden transform hover:-translate-y-1 transition duration-500 ease-out">
-                    <div
-                        class="absolute inset-0 bg-gray-100 dark:bg-zinc-800 bg-opacity-60 backdrop-filter backdrop-blur-md border border-transparent rounded-xl">
-                        <div class="border border-pink-200 border-opacity-50 rounded-xl"></div>
-                    </div>
-                    <div class="relative p-5">
-                        <div class="flex justify-center">
-                            <!-- Art Icon placeholder -->
-                            <span class="inline-block p-3 rounded-full bg-pink-100 text-pink-500">
-                                <!-- Replace with actual art icon -->
-                                <svg class="w-8 h-8" ...></svg>
-                            </span>
-                        </div>
-                        <div class="text-center">
-                            <h3 class="mt-3 text-md sm:text-lg font-semibold text-gray-800 dark:text-gray-300">Physics
-                            </h3>
-                            <p class="mt-1 text-sm sm:text-md text-gray-600 dark:text-gray-300">Mechanics,
-                                Thermodynamics,
-                                Electromagnetism, and more
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Chemistry Card -->
-                <div
-                    class="relative bg-transparent rounded-xl overflow-hidden transform hover:-translate-y-1 transition duration-500 ease-out">
-                    <div
-                        class="absolute inset-0 bg-gray-100 dark:bg-zinc-800 bg-opacity-60 backdrop-filter backdrop-blur-md border border-transparent rounded-xl">
-                        <div class="border border-yellow-200 border-opacity-50 rounded-xl"></div>
-                    </div>
-                    <div class="relative p-5">
-                        <div class="flex justify-center">
-                            <!-- History Icon placeholder -->
-                            <span class="inline-block p-3 rounded-full bg-yellow-100 text-yellow-500">
-                                <!-- Replace with actual history icon -->
-                                <svg class="w-8 h-8" ...></svg>
-                            </span>
-                        </div>
-                        <div class="text-center">
-                            <h3 class="mt-3 text-md sm:text-lg font-semibold text-gray-800 dark:text-gray-300">Chemistry
-                            </h3>
-                            <p class="mt-1 text-sm sm:text-md text-gray-600 dark:text-gray-300">Organic, Inorganic,
-                                Physical, and
-                                Biochemistry
-                                Systems</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Commercial Card -->
-                <div
-                    class="relative bg-transparent rounded-xl overflow-hidden transform hover:-translate-y-1 transition duration-500 ease-out">
-                    <div
-                        class="absolute inset-0 bg-gray-100 dark:bg-zinc-800 bg-opacity-60 backdrop-filter backdrop-blur-md border border-transparent rounded-xl">
-                        <div class="border border-green-200 border-opacity-50 rounded-xl"></div>
-                    </div>
-                    <div class="relative p-5">
-                        <div class="flex justify-center">
-                            <!-- Commercial Icon placeholder -->
-                            <span class="inline-block p-3 rounded-full bg-green-100 text-green-500">
-                                <!-- Replace with actual commercial icon -->
-                                <svg class="w-8 h-8" ...></svg>
-                            </span>
-                        </div>
-                        <div class="text-center">
-                            <h3 class="mt-3 text-md sm:text-lg font-semibold text-gray-800 dark:text-gray-300">Biology
-                            </h3>
-                            <p class="mt-1 text-sm sm:text-md text-gray-600 dark:text-gray-300">Economic Theory,
-                                Business Studies, and
-                                Entrepreneurship</p>
-                        </div>
-                    </div>
-                </div>
-                <x-bg-gradient-2></x-bg-gradient-2>
-                <!-- Technical Science Card -->
-                <div
-                    class="relative bg-transparent rounded-xl overflow-hidden transform hover:-translate-y-1 transition duration-500 ease-out">
-                    <div
-                        class="absolute inset-0 bg-gray-100 dark:bg-zinc-800 bg-opacity-60 backdrop-filter backdrop-blur-md border border-transparent rounded-xl">
-                        <div class="border border-blue-200 border-opacity-50 rounded-xl"></div>
-                    </div>
-                    <div class="relative p-5">
-                        <div class="flex justify-center">
-                            <!-- Technical Science Icon placeholder -->
-                            <span class="inline-block p-3 rounded-full bg-blue-100 text-blue-500">
-                                <!-- Replace with actual technical science icon -->
-                                <svg class="w-8 h-8" ...></svg>
-                            </span>
-                        </div>
-                        <div class="text-center">
-                            <h3 class="mt-3 text-md sm:text-lg font-semibold text-gray-800 dark:text-gray-300">Further
-                                Mathematics
-                            </h3>
-                            <p class="mt-1 text-sm sm:text-md text-gray-600 dark:text-gray-300">Engineering, Computer
-                                Science, and
-                                Information
-                                Technology</p>
-                        </div>
-                    </div>
-                </div> --}}
 
             </div>
         </div>
+    </div> --}}
+
+    {{-- <div>
+        <!-- Livewire Component for Subjects Selection -->
+        <div x-data="{ selectedSubjects: @entangle('selectedSubjects') }" class="min-h-screen flex flex-col items-center justify-center">
+            <div class="container mx-auto ">
+                <!-- ... Page Title and Description ... -->
+
+                <!-- Subjects Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Loop through subjects -->
+                    @foreach ($subjects as $subject)
+                        <div :class="{ 'ring-2 ring-indigo-300': selectedSubjects.includes({{ $subject->id }}) }"
+                            class="relative bg-white rounded-xl overflow-hidden transform hover:-translate-y-1 transition duration-500 ease-out cursor-pointer shadow-md"
+                            @click="selectedSubjects.includes({{ $subject->id }}) ? selectedSubjects = selectedSubjects.filter(id => id !== {{ $subject->id }}) : selectedSubjects.push({{ $subject->id }}); $wire.set('selectedSubjects', selectedSubjects)">
+                            <div class="p-5">
+                                <div class="flex justify-center">
+                                    <!-- Subject Icon -->
+                                    <span class="inline-block p-3 rounded-full bg-indigo-100 text-indigo-500">
+                                        <!-- Replace with actual icon -->
+                                        <svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                            <!-- SVG Path here -->
+                                        </svg>
+                                    </span>
+                                </div>
+                                <div class="text-center">
+                                    <h3 class="mt-3 text-md sm:text-lg font-semibold text-gray-800">{{ $subject->name }}
+                                    </h3>
+                                    <p class="mt-1 text-sm text-gray-600">Algebra, Calculus, Statistics, and more</p>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <!-- Actions -->
+                <div class="mt-6">
+                    <button type="button" class="px-4 py-2 bg-gray-500 text-black rounded-md"
+                        wire:click="submitSelection">
+                        Submit Selection
+                    </button>
+                </div>
+            </div>
+        </div>
+       
+    </div> --}}
+
+    <div x-data="{ selectedSubjects: @entangle('selectedSubjects'), showCards: true }" x-init="showCards = false;
+    setTimeout(() => showCards = true, 50)" class="min-h-screen flex flex-col items-center justify-center">
+
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Page Title and Description -->
+            <div class="text-center py-10">
+                <h1 class="text-4xl font-lightbold text-gray-900 sm:text-5xl md:text-6xl">Choose Your Subjects</h1>
+                <p class="mt-2 text-base text-gray-500 sm:text-lg md:text-normal">Select four subjects required for the
+                    course you applied for or that you registered in your JAMB registration.</p>
+            </div>
+
+            <!-- Subjects Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Loop through subjects -->
+                @foreach ($subjects as $subject)
+                    <div x-show="showCards" x-transition:enter="transition ease-out duration-700"
+                        x-transition:enter-start="transform opacity-0 scale-95"
+                        x-transition:enter-end="transform opacity-100 scale-100"
+                        class="transform transition duration-300 ease-in-out hover:scale-105 bg-white rounded-xl shadow-lg overflow-hidden"
+                        :class="{ 'ring-4 ring-indigo-300 ring-opacity-50': selectedSubjects.includes({{ $subject->id }}) }"
+                        {{-- class="relative bg-white rounded-xl overflow-hidden transform hover:scale-105 transition duration-300 ease-out cursor-pointer shadow-md" --}}
+                        @click="selectedSubjects.includes({{ $subject->id }}) ? selectedSubjects = selectedSubjects.filter(id => id !== {{ $subject->id }}) : selectedSubjects.push({{ $subject->id }}); $wire.set('selectedSubjects', selectedSubjects)">
+                        <div class="p-5">
+                            <div class="flex justify-center">
+                                <!-- Subject Icon -->
+                                <span class="inline-block p-3 rounded-full bg-indigo-100 text-indigo-500">
+                                    <!-- Replace with actual icon -->
+                                    <svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <!-- SVG Path here -->
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="text-center">
+                                <h3 class="mt-3 text-md sm:text-lg font-semibold text-gray-800">{{ $subject->name }}
+                                </h3>
+                                <p class="mt-1 text-sm text-gray-600">{{ $subject->description }}</p>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-10 text-center">
+                <button type="button"
+                    class="px-8 py-3 bg-indigo-600 text-white rounded-md shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition duration-300"
+                    wire:click="submitSelection">
+                    Submit Selection
+                </button>
+            </div>
+        </div>
     </div>
+
+
+    {{-- @push('scripts')
+        <script>
+            document.addEventListener('alpine:init', () => {
+                // Define any Alpine data or methods you want to initialize here.
+            });
+        </script>
+    @endpush --}}
 
 </div>

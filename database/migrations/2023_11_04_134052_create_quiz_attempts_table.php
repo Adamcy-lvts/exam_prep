@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('quiz_attempts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id');
-            $table->foreignId('course_id');
-            $table->foreignId('quiz_session_id');
+            $table->foreignId('quiz_id')->constrained('quizzes');
+            $table->foreignId('composite_quiz_session_id')->nullable()->constrained();
+            $table->foreignId('quiz_session_id')->nullable()->constrained();
             $table->timestamp('start_time');
             $table->timestamp('end_time')->nullable();
             $table->unsignedInteger('score')->default(0);

@@ -3,8 +3,8 @@
     <div
         class="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-xl shadow-lg mx-auto my-10 max-w-full sm:max-w-md lg:max-w-lg xl:max-w-xl 2xl:max-w-2xl">
         <h1 class="text-xl sm:text-4xl font-extrabold text-gray-900 dark:text-white text-center mb-3">
-            {{ $course->course_code }}</h1>
-        <h3 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white text-center">{{ $course->title }}
+            {{ $quizzable->course_code }}</h1>
+        <h3 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white text-center">{{ $quizzable->title }}
         </h3>
         <div class="text-center my-8">
             <h3 class="text-md sm:text-xl font-medium mb-2">Exam Instructions</h3>
@@ -84,8 +84,8 @@
             <div
                 class="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded shadow-lg max-w-full w-full md:w-1/2 lg:w-1/3 relative z-10">
                 <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Start the Exam?</h2>
-                <p class="text-gray-600 dark:text-gray-400 mb-4">You're about to start the {{ $course->title }}
-                    {{ $course->code }} Exam. Ensure
+                <p class="text-gray-600 dark:text-gray-400 mb-4">You're about to start the {{ $quizzable->title }}
+                    {{ $quizzable->code }} Exam. Ensure
                     you're prepared and have reviewed the course material.</p>
 
                 <div class="mt-4 flex justify-end space-x-4">

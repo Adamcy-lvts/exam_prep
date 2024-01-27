@@ -12,10 +12,13 @@ class ExamController extends Controller
      */
     public function index()
     {
-        $exams = Exam::all();
+        // $exams = Exam::all();
+        // Only get exams where the name is 'JAMB' or 'NOUN'
+        $exams = Exam::whereIn('exam_name', ['JAMB', 'NOUN'])->get();
 
-        return view('welcome', compact('exams', $exams));
+        return view('select-exam-type', ['exams' => $exams]);
     }
+
 
   
 }

@@ -25,5 +25,6 @@ class DatabaseSeeder extends Seeder
         $this->call(StudyFieldTableSeeder::class);
         $this->call(SubjectTableSeeder::class);
         $this->call(PhysicsSubjectSeeder::class);
+        $this->call(NounFacultySeeder::class);
     }
 }

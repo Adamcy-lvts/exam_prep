@@ -20,7 +20,34 @@ class CourseResource extends Resource
 {
     protected static ?string $model = Course::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-book-open';
+
+    public static function getNavigationLabel(): string
+    {
+        return 'Registered Courses';
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return auth()->user()->subjects->count();
+    }
+
+    // public static function canView(): bool
+    // {
+    //     // Only allow users who have registered courses to view this resource in the navigation.
+    //     return auth()->check() && auth()->user()->courses->count() > 0;
+    // }
+    // protected static function authorize(): bool
+    // {
+    //     // Only allow users who have registered courses to view this resource in the navigation.
+    //     return auth()->check() && auth()->user()->courses->count() > 0;
+    // }
+
+    public static function canViewAny(): bool
+    {
+        // Only show the navigation item if the user has registered courses.
+        return auth()->check() && auth()->user()->courses()->exists();
+    }
 
     public static function form(Form $form): Form
     {
@@ -78,9 +105,9 @@ class CourseResource extends Resource
             'index' => Pages\ListCourses::route('/'),
             // 'create' => Pages\CreateCourse::route('/create'),
             'edit' => Pages\EditCourse::route('/{record}/edit'),
-            'instruction-page' => Pages\InstructionPage::route('/{record}/instructions'),
-            'questions' => Pages\Questions::route('/{record}/questions'),
-            'result' => Pages\ResultPage::route('/{attemptId}/{courseId}/result'),
+            'instruction-page' => Pages\InstructionPage::route('/{record}/{quizzableType}/instructions'),
+            'questions' => Pages\Questions::route('/{record}/{quizzableType}/questions'),
+            'result' => Pages\ResultPage::route('/{attemptId}/{quizzableId}/{quizzableType}/result'),
         ];
     }
 }

@@ -97,7 +97,7 @@
                             $pageNumber = ceil(($key + 1) / 5);
                             $isAnswered = array_key_exists($question->id, $this->answers);
                         @endphp
-                        <a href="{{ url("user/courses/{$course->id}/questions/?page=$pageNumber#q" . ($key + 1)) }}"
+                        <a href="{{ route('filament.user.resources.courses.questions', ['record' => $quizzable->id, 'quizzableType' => $quizzableType, 'page' => $pageNumber]) . '#q' . ($key + 1) }}"
                             class="text-gray-600 dark:text-gray-300 hover:text-green-500 dark:hover:text-green-400 transition-transform transform hover:scale-105 {{ $isAnswered ? 'bg-green-200 dark:bg-green-700' : '' }} p-2 rounded-md">
                             Q{{ $key + 1 }}
                         </a>
@@ -123,7 +123,8 @@
                                 $isAnswered = array_key_exists($question->id, $this->answers);
                             @endphp
                             <li class="mb-2 flex items-center">
-                                <a href="{{ url("user/courses/{$course->id}/questions/?page=$pageNumber#q" . ($key + 1)) }}"
+                                <a href="{{ route('filament.user.resources.courses.questions', ['record' => $quizzable->id, 'quizzableType' => $quizzableType, 'page' => $pageNumber]) . '#q' . ($key + 1) }}"
+"
                                     class="text-gray-600 dark:text-gray-300 hover:text-green-500 dark:hover:text-green-400 transition-transform transform hover:scale-105 {{ $isAnswered ? 'bg-green-200 dark:bg-green-700' : '' }} p-2 rounded flex-grow hover:shadow-md">
                                     Question {{ $key + 1 }}
                                 </a>
@@ -156,14 +157,7 @@
                                         <div class="space-y-4">
                                             @if ($question->type == \App\Models\Question::TYPE_MCQ)
                                                 @foreach ($question->options as $option)
-                                                    {{-- <label class="flex items-center">
-                                                        <input type="radio" value="{{ $option->id }}" class="mr-2"
-                                                            wire:click="setAnswer('{{ $question->id }}', '{{ $option->id }}')"
-                                                            wire:model.defer="answers.{{ $question->id }}">
-                                                        <span
-                                                            class="text-gray-700 dark:text-gray-300">{{ chr($loop->index + 65) }}.
-                                                            {{ $option->option }}</span>
-                                                    </label> --}}
+                                                  
                                                     <label class="radio-wrapper">
                                                         <input type="radio" value="{{ $option->id }}"
                                                             class="custom-radio"
@@ -172,15 +166,7 @@
                                                         <span class="radio-label">{{ chr($loop->index + 65) }}.
                                                             {{ $option->option }}</span>
                                                     </label>
-                                                    {{-- <label class="flex items-center">
-                                                        <input type="radio" value="{{ $option->id }}"
-                                                            class="form-radio h-5 w-5 text-green-600 border-gray-300 focus:ring-green-500 dark:focus:ring-green-600"
-                                                            wire:click="setAnswer('{{ $question->id }}', '{{ $option->id }}')"
-                                                            wire:model.defer="answers.{{ $question->id }}">
-                                                        <span
-                                                            class="ml-2 text-gray-700 dark:text-gray-300">{{ chr($loop->index + 65) }}.
-                                                            {{ $option->option }}</span>
-                                                    </label> --}}
+                                             
                                                 @endforeach
                                             @elseif($question->type == \App\Models\Question::TYPE_SAQ)
                                                 <input type="text"

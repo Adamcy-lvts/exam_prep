@@ -2,20 +2,27 @@
 
 namespace App\Livewire;
 
+use App\Models\Exam;
 use App\Models\Subject;
 use Livewire\Component;
 
 class SubjectsLessons extends Component
 {
     public $subject;
+    public $examId;
+    public $exam;
+    public $fieldID;
 
-    function mount($id) {
-        // dd($id);
-        // $this->subject = Subject::find($id);
+    function mount($subject_id) {
+   
+       
+        
+        $this->subject = Subject::with('topics.subtopics')->find($subject_id);
 
-        $this->subject = Subject::with('topics.subtopics')->find($id);
+        $this->exam = $this->subject->exam;
+        // $this->examId = 
 
-// dd($this->subject);
+        // $this->fieldID = $field_id;
     }
 
     public function render()

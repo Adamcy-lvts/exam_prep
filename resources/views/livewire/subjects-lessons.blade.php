@@ -7,10 +7,10 @@
             <!-- Lesson Header -->
             <div class="text-center p-8 bg-white dark:bg-zinc-800 rounded-xl shadow-xl mb-10">
                 <h2 class="text-4xl font-bold text-gray-800 dark:text-white mb-3">{{ $subject->name }} Interactive
-                    Lessons</h2>
+                    Lessons for {{$exam->exam_name}}</h2>
                 <p class="text-lg text-gray-600 dark:text-gray-300">
                     Click on a topic to expand and explore its lessons. Each module is carefully designed for effective
-                    learning and retention to prepare you for the JAMB exams.
+                    learning and retention to prepare you for the {{$exam->exam_name}} exams.
                 </p>
             </div>
 
@@ -94,7 +94,7 @@
                                                 @endforeach
                                             </nav>
                                             <!-- Exam Readiness Button -->
-                                            <a href="{{ route('instructions.page', $subject->id) }}"
+                                            <a href="{{ route('instructions.page') }}"
                                                 class="w-full text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring focus:border-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-indigo-500 dark:hover:bg-indigo-600 dark:focus:ring-indigo-800 transition-colors duration-200">
                                                 Test Your Readiness
                                             </a>

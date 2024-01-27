@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('questions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('course_id')->references('id')->on('courses');
+            $table->foreignId('quiz_id')->nullable()->constrained()->onDelete('cascade');
+            $table->morphs('quizzable');
             $table->foreignId('topic_id')->nullable()->constrained()->onDelete('cascade');
             $table->text('question');
             $table->enum('type', ['mcq', 'saq', 'tf'])->default('mcq'); // mcq = Multiple Choice Questions, saq = Short Answer Questions

@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Filament\Support\Facades\FilamentColor;
 use Filament\Http\Responses\Auth\LoginResponse;
+use App\Http\Controllers\Filament\Auth\EmailVerificationController;
+use Filament\Http\Controllers\Auth\EmailVerificationController as FilamentEmailVerificationController;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +27,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->app->bind(FilamentEmailVerificationController::class, EmailVerificationController::class);
+
         Schema::defaultStringLength(191);
 
         FilamentColor::register([

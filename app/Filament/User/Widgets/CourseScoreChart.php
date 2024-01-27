@@ -21,7 +21,7 @@ class CourseScoreChart extends ChartWidget
 
         // Get the scores for each attempt ordered by attempt number
         $attempts = QuizAttempt::where('user_id', $userId)
-            ->where('course_id', $courseId)
+            ->where('quiz_id', $courseId)
             ->orderBy('id', 'asc') // Assuming 'id' increments with each attempt
             ->get(['id', 'score']);
 

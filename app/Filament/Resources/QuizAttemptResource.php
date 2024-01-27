@@ -9,6 +9,7 @@ use Filament\Tables\Table;
 use App\Models\QuizAttempt;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ViewColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\QuizAttemptResource\Pages;
@@ -32,8 +33,8 @@ class QuizAttemptResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('user.name'),
-                TextColumn::make('course.course_code'),
+                ViewColumn::make('User')->view('filament.tables.columns.full-name'),
+                TextColumn::make('quiz.title'),
                 TextColumn::make('start_time')->dateTime('g:i A'),
                 TextColumn::make('end_time')->dateTime('g:i A'),
                 TextColumn::make('QuizSession.duration'),

@@ -28,10 +28,10 @@ class Authenticate extends Middleware
 
         // Check if the request path starts with '/user'
         if ($request->is('user/*')) {
-            return route('user.login'); // Return the named route for user login
+            return route('filament.user.auth.login'); // Return the named route for user login
         }
 
         // Default redirect
-        return route('login');
+        return route('filament.user.auth.login');
     }
 }

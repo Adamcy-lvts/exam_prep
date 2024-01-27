@@ -16,7 +16,7 @@
             display: none !important;
         }
     </style>
-
+    @filamentStyles
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @livewireStyles
@@ -26,7 +26,7 @@
 
 <body
     class="antialiased {{ session('dark_mode', 'dark') ? 'dark:bg-custom-dark' : 'bg-gray-100' }} bg-gray-100 transition duration-500 ease-in-out">
-    <x-bg-gradient ></x-bg-gradient>
+    <x-bg-gradient></x-bg-gradient>
     {{ $slot }}
     <x-bg-gradient-2 x-show="!isDark"></x-bg-gradient-2>
 
@@ -50,7 +50,7 @@
     </div>
 
 
-
+    @filamentScripts
     <script>
         function theme() {
             return {
@@ -92,6 +92,8 @@
             }
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.9.1/dist/gsap.min.js"></script>
+
 </body>
 
 </html>
