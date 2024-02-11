@@ -2,6 +2,7 @@
 
 namespace App\Filament\User\Resources\SubjectResource\Pages;
 
+use App\Models\QuizAnswer;
 use App\Models\UserQuizAttempt;
 use Filament\Resources\Pages\Page;
 use App\Models\CompositeQuizSession;
@@ -19,13 +20,28 @@ class JambInstructionPage extends Page
     public $userSubjects;
     public $compositeQuizSessionId;
     public $showConfirmationModal;
-    public $ongoingAttempt;
+    public $ongoingSession;
+    public $compositeSession;
+    public $user;
 
     public function mount(): void
     {
+        $this->user = Auth::user();
         static::authorizeResourceAccess();
 
         $this->userSubjects = Auth::user()->subjects;
+
+        $this->ongoingSession = CompositeQuizSession::where('user_id', auth()->user()->id)
+            ->where('completed', 0) // assuming 'completed' is set when the quiz is submitted.
+            ->first();
+
+        // dd($this->ongoingSession);
+    }
+
+    private function getLatestSession()
+    {
+        // Returns the latest quiz session for the user and quizzable item.
+        return CompositeQuizSession::where('user_id', auth()->user()->id)->latest()->first();
     }
 
     public function getTitle(): string | Htmlable
@@ -35,32 +51,96 @@ class JambInstructionPage extends Page
 
     public function startQuiz()
     {
-        $user = Auth::user();
-        $compositeSession = $this->createOrRetrieveCompositeSession();
 
-        // Count the number of attempts for this specific composite session
-        $attemptCount = UserQuizAttempt::where('user_id', $user->id)
-            ->count();
-        // dd($attemptCount);
-        if ($attemptCount >= $compositeSession->allowed_attempts) {
-            // Notify the user that they have exhausted their attempts for this session
-            Notification::make()
-                ->title('No attempts left')
-                ->body('You have exhausted your maximum attempts for this quiz session.')
-                ->warning()
-                ->send();
-
-            return; // Prevent the quiz from starting
+        // Check if the user has an active unlimited plan
+        if ($this->user->hasFeature('Unlimited Quiz Attempts for 30 days')) {
+            // Proceed with the quiz for users with an unlimited plan
+            $this->compositeSession = $this->createOrRetrieveCompositeSession();
+            return redirect()->route('filament.user.resources.subjects.jamb-quiz', ['compositeSessionId' => $this->compositeSession->id]);
         }
 
-        // Record this attempt in UserQuizAttempt
-        UserQuizAttempt::create([
-            'user_id' => $user->id,
-            'composite_quiz_session_id' => $compositeSession->id,
-        ]);
+        // For users without an unlimited plan, check for available attempts
+        if ($this->user->hasJambAttempts()) {
+            // User has Jamb attempts left, continue with the quiz
+            $this->compositeSession = $this->createOrRetrieveCompositeSession();
+            return redirect()->route('filament.user.resources.subjects.jamb-quiz', ['compositeSessionId' => $this->compositeSession->id]);
+        } elseif ($this->user->hasSubjectAttemptsForAnySubject()) {
+            // User has attempts left in other subjects but not for this specific quiz
+            Notification::make()
+                ->title('No attempts left for this quiz')
+                ->body('You have attempts left for other quizzes. Please select another quiz to continue.')
+                ->warning()
+                ->send();
+            return redirect()->route('filament.user.pages.dashboard');
+        } else {
+            // User has no attempts left in any quiz
+            Notification::make()
+                ->title('No attempts left')
+                ->body('You have exhausted all your attempts, Please purchase more to continue.')
+                ->warning()
+                ->send();
+            return redirect()->route('filament.user.resources.subjects.pricing-page');
+        }
+        // if ($this->user->hasActiveUnlimitedPlan()) {
+        //     $this->compositeSession = $this->createOrRetrieveCompositeSession();
+        //     // User has an unlimited plan and can proceed with the quiz.
+        //     return redirect()->route('filament.user.resources.subjects.jamb-quiz', ['compositeSessionId' => $this->compositeSession->id]);
+        //     // You can perform any additional logic needed here, such as logging the quiz start
+        // } else {
+        //     // Check for other types of plans or attempts left
+        //     if (auth()->user()->hasJambAttempts()) {
+        //         $this->compositeSession = $this->createOrRetrieveCompositeSession();
+        //         // Continue with the quiz start logic
+        //         return redirect()->route('filament.user.resources.subjects.jamb-quiz', ['compositeSessionId' => $this->compositeSession->id]);
+        //     } else {
+        //         // Redirect to the pricing page.
+        //         Notification::make()
+        //             ->title('No attempts left')
+        //             ->body('You have exhausted your all your attempts, Please Purchase another attempts.')
+        //             ->warning()
+        //             ->send();
+        //         return redirect()->route('filament.user.resources.subjects.pricing-page');
+        //     }
+        // }
+    }
 
-        // Continue with the quiz start logic
-        return redirect()->route('filament.user.resources.subjects.jamb-quiz', ['compositeSessionId' => $compositeSession->id]);
+ 
+
+    public function continueLastAttempt()
+    {
+
+        if (auth()->check()) {
+            $ongoingSession = $this->ongoingSession;
+
+            if ($ongoingSession) {
+                // Find the most recent QuizAnswer for the current session.
+                $latestAnswer = QuizAnswer::whereHas('quizAttempt', function ($query) use ($ongoingSession) {
+                    $query->where('composite_quiz_session_id', $ongoingSession->id);
+                })->latest('updated_at')->first();
+
+                if ($latestAnswer) {
+                    // Get the associated attempt and question details from the latest answer.
+                    $lastAttemptId = $latestAnswer->quiz_attempt_id;
+                    $lastQuestionId = $latestAnswer->question_id;
+                    $lastSubjectId = $latestAnswer->question->quizzable_id;
+
+                    session()->forget(['lastAttemptId', 'lastQuestionId', 'lastSubjectId', 'ongoingSessionId']);
+                    // Store these details in the session.
+                    session([
+                        'lastAttemptId' => $lastAttemptId,
+                        'lastQuestionId' => $lastQuestionId,
+                        'lastSubjectId' => $lastSubjectId,
+                        'ongoingSessionId' => $ongoingSession->id
+                    ]);
+                }
+            }
+        }
+
+        // Redirect back to the quiz page, which will pick up the session variables.
+        return redirect()->route('filament.user.resources.subjects.jamb-quiz', [
+
+            'compositeSessionId' => $ongoingSession->id
+        ]);
     }
 
 
@@ -95,5 +175,4 @@ class JambInstructionPage extends Page
         // Show the modal
         $this->showConfirmationModal = true;
     }
-
 }

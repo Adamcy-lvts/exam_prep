@@ -35,16 +35,28 @@
             <label for="numberOfQuestions" class="text-md mb-4 font-medium text-gray-600 dark:text-gray-400">Select
                 number of questions:</label>
             <div class="flex divide-x divide-gray-200 shadow-sm rounded-lg overflow-hidden">
-                @foreach ([20, 50, 70, 100, 150] as $number)
-                    <button wire:click="$set('selectedNumberOfQuestions', {{ $number }})"
-                        class="px-4 py-2 sm:px-6 sm:py-3 transition duration-150 ease-in-out focus:outline-none {{ $selectedNumberOfQuestions == $number ? 'bg-green-600 text-white' : 'bg-white text-gray-600 hover:bg-green-100' }}">
+                @php
+                    $allOptions = [20, 50, 70, 100, 150];
+                    $accessibleOptions = $this->user->hasFeature('Flexible quizzes (20-150 questions)') ? [20, 50, 70, 100, 150] : ($this->user->hasFeature('Flexible quizzes (20-70 questions)') ? [20, 50, 70] : ($this->user->hasFeature('20 questions per quiz') ? [20] : []));
+                @endphp
+                @foreach ($allOptions as $number)
+                    <button
+                        wire:click="{{ in_array($number, $accessibleOptions) ? '$set(\'selectedNumberOfQuestions\', ' . $number . ')' : 'null' }}"
+                        class="px-4 py-2 sm:px-6 sm:py-3 transition duration-150 ease-in-out focus:outline-none {{ $selectedNumberOfQuestions == $number ? 'bg-green-600 text-white' : 'bg-white text-gray-600' }} {{ !in_array($number, $accessibleOptions) ? 'cursor-not-allowed opacity-50' : 'hover:bg-green-100' }}"
+                        {{ !in_array($number, $accessibleOptions) ? 'disabled' : '' }}>
                         {{ $number }}
                     </button>
                 @endforeach
             </div>
+            {{-- {{dd($this->user->subscriptions->isEmpty())}} --}}
+            @if ($this->user->hasFeature('20 questions per quiz') || $this->user->subscriptions->isEmpty())
+                <div class="mt-4 text-sm text-red-500">
+                    Your current plan allows for a default of 20 questions per quiz. To access more questions, please
+                    consider upgrading your plan.
+                    <a href="{{ route('filament.user.resources.subjects.pricing-page') }}" class="text-blue-500 hover:underline">Upgrade now</a>.
+                </div>
+            @endif
         </div>
-
-
 
         <div class="text-center">
             @if (!$ongoingAttempt)
@@ -85,7 +97,7 @@
                 class="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded shadow-lg max-w-full w-full md:w-1/2 lg:w-1/3 relative z-10">
                 <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Start the Exam?</h2>
                 <p class="text-gray-600 dark:text-gray-400 mb-4">You're about to start the {{ $quizzable->title }}
-                   Exam. Ensure
+                    Exam. Ensure
                     you're prepared and have reviewed the course material.</p>
 
                 <div class="mt-4 flex justify-end space-x-4">

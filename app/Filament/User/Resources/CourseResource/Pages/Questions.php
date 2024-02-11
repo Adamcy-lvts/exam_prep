@@ -119,6 +119,10 @@ class Questions extends Page
         // Clear session after submission
         session()->forget(['selectedNumberOfQuestions', 'selectedDuration']);
 
+        $user = auth()->user();
+        
+        $user->useCourseAttempt($this->quizzable->quizzable_id);
+
         return redirect()->route('filament.user.resources.courses.result', ['attemptId' => $this->currentAttempt->id, 'quizzableId' => $this->quizzable->quizzable_id, 'quizzableType' => $this->quizzable->quizzable_type]);
     }
 
@@ -137,7 +141,7 @@ class Questions extends Page
         return view('filament.user.resources.course-resource.pages.questions', [
             'questions' => $questions,
             'allquestions' => $allquestions,
-        ])->layout(static::$layout, [
+        ])->layout($this->getLayout(), [
             'livewire' => $this,
             'maxContentWidth' => $this->getMaxContentWidth(),
             ...$this->getLayoutData(),

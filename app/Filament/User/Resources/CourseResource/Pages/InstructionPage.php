@@ -34,24 +34,14 @@ class InstructionPage extends Page
             'selectedDuration' => $this->duration,
         ]);
 
-        // If the user has no attempts left, flash a message and send a notification, then redirect.
-        if (!$this->canAttemptQuiz()) {
-            session()->flash('success_message', "You have exhausted your maximum of " . $this->allowed_attempts . " attempts for this quiz.");
-            Notification::make()->title("You have exhausted your maximum of " . $this->allowed_attempts . " attempts for this quiz.")
+        if (!$this->user->hasCourseAttempts($this->quizzable->quizzable_id)) {
+
+            Notification::make()->title("You have exhausted your all your attempts, Please Purchase another attempts.")
             ->warning()
                 ->send();
-            return redirect()->route('filament.user.resources.courses.instruction-page', [
-                'record' => $this->quizzable->quizzable_id,
-                'quizzableType' => $this->quizzable->quizzable_type
-            ]);
+            return redirect()->route('filament.user.resources.courses.pricing-page');
         }
-        // Verify if the quiz can be started based on additional conditions.
-        $canStart = $this->canStartQuiz();
-        if (!$canStart['status']) {
-            // If conditions fail, set an error message and redirect to the dashboard.
-            session()->flash('error_message', $canStart['message']);
-            return redirect()->route('dashboard');
-        }
+        
 
         // If checks pass,close any confirmation modal and proceed to the quiz questions page.
         $this->showConfirmationModal = false;

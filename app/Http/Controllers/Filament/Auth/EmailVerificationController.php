@@ -3,15 +3,16 @@
 namespace App\Http\Controllers\Filament\Auth;
 
 use Filament\Facades\Filament;
-use Filament\Http\Controllers\Auth\EmailVerificationController as BaseEmailVerificationController;
-use Filament\Http\Responses\Auth\Contracts\EmailVerificationResponse;
 use Illuminate\Auth\Events\Verified;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Filament\Http\Responses\Auth\Contracts\EmailVerificationResponse;
+use Filament\Http\Controllers\Auth\EmailVerificationController as BaseEmailVerificationController;
 
 class EmailVerificationController extends BaseEmailVerificationController
 {
-    public function __invoke(): EmailVerificationResponse
+    public function __invoke(EmailVerificationRequest $request): EmailVerificationResponse
     {
         /** @var MustVerifyEmail $user */
         $user = Filament::auth()->user();

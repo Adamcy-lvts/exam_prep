@@ -23,7 +23,7 @@
         <div class="text-center">
 
             <!-- Handle ongoing attempts -->
-            @if (!$ongoingAttempt)
+            @if (!$ongoingSession)
                 <button wire:click="showStartQuizConfirmation"
                     class="w-full bg-green-700 text-white py-2 px-3  sm:py-3 sm:px-4 rounded-md sm:rounded-lg hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-700 focus:ring-opacity-50 dark:hover:bg-green-600 transition duration-300 ease-in-out shadow hover:shadow-lg">
                     Start Exam

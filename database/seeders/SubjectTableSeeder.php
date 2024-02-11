@@ -23,12 +23,12 @@ class SubjectTableSeeder extends Seeder
 
         // List of all subjects by field
         $subjectsByField = [
-            'Natural Science' => ['Biology', 'Chemistry', 'Physics', 'Mathematics'],
-            'Arts and Humanities' => ['Literature in English', 'Fine Art', 'Music'],
-            'History and Geography' => ['History', 'Geography'],
-            'Commerce & Economics' => ['Commerce', 'Economics', 'Accounting', 'Business Studies'],
-            'Applied Sciences & Technology' => ['Computer Science', 'Agricultural Science', 'Technical Drawing'],
-            'Social Sciences' => ['Government', 'Sociology', 'Psychology', 'Civic Education'],
+            'Natural Science' => ['Biology', 'Chemistry', 'Physics', 'Mathematics', 'Use of English'],
+            'Arts and Humanities' => ['Use of English', 'Fine Art', 'Music','Mathematics'],
+            'History and Geography' => ['History', 'Geography','Mathematics', 'Use of English'],
+            'Commerce & Economics' => ['Commerce', 'Economics', 'Accounting', 'Business Studies','Mathematics', 'Use of English'],
+            'Applied Sciences & Technology' => ['Computer Science', 'Agricultural Science', 'Technical Drawing','Mathematics', 'Use of English'],
+            'Social Sciences' => ['Government', 'Sociology', 'Psychology', 'Civic Education','Mathematics', 'Use of English'],
         ];
 
         foreach ($exams as $examName => $examId) {

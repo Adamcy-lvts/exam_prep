@@ -9,8 +9,10 @@ use App\Models\QuizAttempt;
 use Livewire\WithPagination;
 use Filament\Resources\Pages\Page;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Log;
 use App\Models\CompositeQuizSession;
 use Illuminate\Support\Facades\Auth;
+use Filament\Notifications\Notification;
 use App\Filament\User\Resources\SubjectResource;
 
 class JambQuizPage extends Page
@@ -31,20 +33,40 @@ class JambQuizPage extends Page
     public $translateXPercent;
     public $sortedSubjects;
     public $ongoingAttempt;
+    public $compositeQuizSession;
+    public $remainingTime;
+    public $user;
+
+    protected $listeners = ['timesUp' => 'submitQuiz'];
 
     public function mount($compositeSessionId): void
     {
+        $this->user = auth()->user();
         $this->compositeSessionId = $compositeSessionId;
+        $this->compositeQuizSession = CompositeQuizSession::findOrFail($this->compositeSessionId);
         $this->subjects = Auth::user()->subjects;
+
         // Sort the subjects by id
         $this->sortedSubjects = $this->subjects->sortBy('id')->values();
-        $this->activeTab = $this->sortedSubjects->first()->id ?? null;
+        $this->activeTab = session('lastSubjectId', $this->sortedSubjects->first()->id ?? null);
+
+        // Sort the subjects by id
+        // $this->sortedSubjects = $this->subjects->sortBy('id')->values();
+        // $this->activeTab = $this->sortedSubjects->first()->id ?? null;
 
         foreach ($this->subjects as $subject) {
             $this->initializeSubjectSession($subject);
         }
 
+        // Restore additional state as needed, such as the current question.
+        // $lastQuestionId = session('lastQuestionId');
+        // $lastAttemptId = session('lastAttemptId');
+
         static::authorizeResourceAccess();
+
+        $this->remainingTime = $this->getRemainingTime();
+
+        // dd($this->remainingTime);
     }
 
     private function initializeSubjectSession($subject)
@@ -70,23 +92,57 @@ class JambQuizPage extends Page
             'duration' => 120, // example duration
             'total_marks' => 100, // example total marks
             'total_questions' => $subject->questions->count(),
-            'max_attempts' => 3,
+            'max_attempts' => $this->compositeQuizSession->allowed_attempts,
         ]);
     }
 
+    // private function initializeQuizAttempt($quizId)
+    // {
+
+    //     $this->ongoingAttempt = QuizAttempt::where('user_id', auth()->user()->id)
+    //         ->where('composite_quiz_session_id', $this->compositeSessionId)->where('quiz_id', $quizId)
+    //         ->whereNull('end_time') // assuming 'end_time' is set when the quiz is submitted.
+    //         ->first();
+
+    //     if ($this->ongoingAttempt) {
+    //         return $this->ongoingAttempt;
+    //     }
+
+    //     // If no ongoing attempt, create a new one
+    //     return QuizAttempt::create([
+    //         'quiz_id' => $quizId,
+    //         'composite_quiz_session_id' => $this->compositeSessionId,
+    //         'user_id' => Auth::id(),
+    //         'start_time' => now(),
+    //         'score' => 0,
+    //     ]);
+    // }
+
     private function initializeQuizAttempt($quizId)
     {
-
-        $this->ongoingAttempt = QuizAttempt::where('user_id', auth()->user()->id)
-            ->where('composite_quiz_session_id', $this->compositeSessionId)->where('quiz_id', $quizId)
-            ->whereNull('end_time') // assuming 'end_time' is set when the quiz is submitted.
+        $ongoingAttempt = QuizAttempt::where('user_id', auth()->user()->id)
+            ->where('composite_quiz_session_id', $this->compositeSessionId)
+            ->where('quiz_id', $quizId)
+            ->whereNull('end_time')
             ->first();
 
-        if ($this->ongoingAttempt) {
-            return $this->ongoingAttempt;
+        if ($ongoingAttempt) {
+            // Return the ongoing attempt and handle notification elsewhere.
+            return $ongoingAttempt;
         }
 
-        // If no ongoing attempt, create a new one
+        $completedAttempt = QuizAttempt::where('user_id', auth()->user()->id)
+            ->where('composite_quiz_session_id', $this->compositeSessionId)
+            ->where('quiz_id', $quizId)
+            ->whereNotNull('end_time')
+            ->first();
+
+        if ($completedAttempt) {
+            // Return the completed attempt and handle notification elsewhere.
+            return $completedAttempt;
+        }
+
+        // Create a new attempt.
         return QuizAttempt::create([
             'quiz_id' => $quizId,
             'composite_quiz_session_id' => $this->compositeSessionId,
@@ -96,44 +152,80 @@ class JambQuizPage extends Page
         ]);
     }
 
-    public function submitQuiz()
+    public function getRemainingTime()
     {
-        // This will hold the total score across all subjects.
-        $compositeScore = 0;
 
-        foreach ($this->subjectSessions as $subjectId => $sessionDetails) {
-            $attempt = $sessionDetails['attempt'];
+        // $quizSession = $this->getLatestSession($this->quizzable->quizzable_id, $this->quizzable->quizzable_type);
 
+        if ($this->compositeQuizSession) {
+            $startTime = $this->compositeQuizSession->start_time;
+            $duration = $this->compositeQuizSession->duration * 60 * 1000;  // Convert duration to milliseconds
+            $elapsedTime = now()->diffInSeconds($startTime) * 1000;  // Convert to milliseconds
 
+            $remainingTime = max(0, $duration - $elapsedTime);
 
-            // Retrieve the questions and user answers for this attempt.
-            // Retrieve the subject model.
-            $subject = $this->subjects->firstWhere('id', $subjectId);
-
-            // Retrieve the questions and user answers for this attempt.
-            $questions = Question::where('quizzable_id', $subject->id)->where('quizzable_type', get_class($subject))->get();
-
-            // Calculate the score for this subject's attempt.
-            $score = $this->calculateScoreForAttempt($questions, $attempt);
-
-            // Update the individual QuizAttempt with the score.
-            $attempt->score = $score;
-            $attempt->end_time = now();
-            $attempt->save();
-
-            // Add to the composite score.
-            $compositeScore += $score;
-
-            // Update the CompositeQuizSession with the compositeScore and mark as completed.
-            $compositeSession = CompositeQuizSession::find($this->compositeSessionId);
-            $compositeSession->completed = true;
-            $compositeSession->total_score = $compositeScore;
-            $compositeSession->save();
+            // $this->dispatch('timerUpdated', $remainingTime)->to(Timer::class);
+            return $remainingTime;
         }
 
+        return 0;  // Quiz session not found
+    }
 
-        // Redirect to the results page with the CompositeQuizSession ID.
-        return redirect()->route('filament.user.resources.subjects.jamb-quiz-result', ['compositeSessionId' => $this->compositeSessionId]);
+    public function timesUp()
+    {
+        $this->submitQuiz();
+    }
+
+    public function submitQuiz()
+    {
+        $user = auth()->user();
+
+        try {
+            $compositeScore = 0;
+
+            foreach ($this->subjectSessions as $subjectId => $sessionDetails) {
+                $attempt = $sessionDetails['attempt'];
+
+
+
+                // Retrieve the questions and user answers for this attempt.
+                // Retrieve the subject model.
+                $subject = $this->subjects->firstWhere('id', $subjectId);
+
+                // Retrieve the questions and user answers for this attempt.
+                $questions = Question::where('quizzable_id', $subject->id)->where('quizzable_type', get_class($subject))->get();
+
+                // Calculate the score for this subject's attempt.
+                $score = $this->calculateScoreForAttempt($questions, $attempt);
+
+                // Update the individual QuizAttempt with the score.
+                $attempt->score = $score;
+                $attempt->end_time = now();
+                $attempt->save();
+
+                // Add to the composite score.
+                $compositeScore += $score;
+
+                // Update the CompositeQuizSession with the compositeScore and mark as completed.
+                $compositeSession = CompositeQuizSession::find($this->compositeSessionId);
+                $compositeSession->completed = true;
+                $compositeSession->total_score = $compositeScore;
+                $compositeSession->save(); 
+            }
+
+            // After successful submission
+            $this->user->useJambAttempts($this->user);
+
+            // Redirect to the results page with the CompositeQuizSession ID.
+            return redirect()->route('filament.user.resources.subjects.jamb-quiz-result', ['compositeSessionId' => $this->compositeSessionId]);
+        } catch (\Exception $e) {
+            // Log the error and notify the user.
+            Log::error('Quiz submission failed: ' . $e->getMessage());
+            session()->flash('error', 'Quiz submission failed.');
+            return; // Optionally redirect back or to another page.
+        }
+        // This will hold the total score across all subjects.
+      
     }
 
     private function calculateScoreForAttempt($questions, $attempt)
@@ -154,22 +246,34 @@ class JambQuizPage extends Page
         return $score;
     }
 
-
-
     public function render(): View
     {
         $attempts = [];
         foreach ($this->subjectSessions as $subjectId => $sessionData) {
             $attempts[$subjectId] = $sessionData['attempt']->id;
         }
-
+        
         return view('filament.user.resources.subject-resource.pages.jamb-quiz-page', [
             'sortedSubjects' => $this->sortedSubjects,
             'attempts' => $attempts,
-        ])->layout(static::$layout, [
-            'livewire' => $this,
-            'maxContentWidth' => $this->getMaxContentWidth(),
-            ...$this->getLayoutData(),
-        ]);
+        ])->layout($this->getLayout(), [
+                'livewire' => $this,
+                'maxContentWidth' => $this->getMaxContentWidth(),
+                ...$this->getLayoutData(),
+            ]);
     }
+
+    // public function render(): View
+    // {
+       
+
+    //     return view('filament.user.resources.subject-resource.pages.jamb-quiz-page', [
+    //         'sortedSubjects' => $this->sortedSubjects,
+    //         'attempts' => $attempts,
+    //     ])->layout(static::$layout, [
+    //         'livewire' => $this,
+    //         'maxContentWidth' => $this->getMaxContentWidth(),
+    //         ...$this->getLayoutData(),
+    //     ]);
+    // }
 }

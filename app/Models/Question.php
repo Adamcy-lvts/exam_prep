@@ -11,7 +11,7 @@ class Question extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['question','quiz_id','quizzable_id','quizzable_type', 'marks', 'type', 'answer_text', 'topic_id'];
+    protected $fillable = ['question','quiz_id','quizzable_id','quizzable_type', 'marks', 'type', 'question_image','answer_text', 'topic_id'];
 
     const TYPE_MCQ = 'mcq';
     const TYPE_SAQ = 'saq';

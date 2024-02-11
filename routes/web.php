@@ -8,6 +8,7 @@ use App\Livewire\TestPage;
 use App\Livewire\Faculties;
 use App\Livewire\QuizResult;
 use Illuminate\Http\Request;
+use App\Livewire\PricingPlans;
 use App\Livewire\SubjectsPage;
 use App\Livewire\StudyFieldPage;
 use App\Livewire\InstructionPage;
@@ -15,6 +16,7 @@ use App\Livewire\SubjectsLessons;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\FacultyController;
+use App\Http\Controllers\PaymentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,6 +56,7 @@ Route::middleware(['auth', 'verified', 'steps.completed'])->group(function () {
     Route::get('/subject/instructions-page', InstructionPage::class)->name('instructions.page');
     Route::get('/jamb/quiz/{compositeSessionId}', TestPage::class)->name('start.quiz');
     Route::get('/jamb/result/{compositeSessionId}', QuizResult::class)->name('quiz.result');
+    Route::get('/pricing', PricingPlans::class)->name('pricing-page');
     
 });
 
@@ -62,9 +65,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/field-of-study/{id}', StudyFieldPage::class)->name('study-fields');
     Route::get('/subjects/{examid}/{fieldid}', SubjectsPage::class)->name('subjects.page');
     Route::get('/select-exam-type', Exams::class)->name('choose-exam');
+ 
+    Route::get('/payment/callback', [PaymentController::class, 'handleGatewayCallback']);
 });
 
 
+Route::webhooks('webhook/paystack', 'paystack');
+
+Route::get('/test', function () {
+    dd(env('WEBHOOK_CLIENT_SECRET'));
+});
 
 
 Route::post('/update-theme', function (Request $request) {

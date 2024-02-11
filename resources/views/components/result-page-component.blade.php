@@ -89,19 +89,36 @@
         </p>
     </div>
 
+
     <!-- Retake Exam Button -->
+    @if ($quizzable->quizzable_type === 'App\Models\Subject')
+        <div class="mt-6 text-center">
+            @if ($remainingAttempts > 0)
+                <a href="{{ route('filament.user.resources.subjects.questions', ['record' => $quizzable->quizzable_id, 'quizzableType' => $quizzable->quizzable_type]) }}"
+                    class="inline-block bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-700 focus:ring-opacity-75 hover:bg-green-700 transition duration-300 ease-in-out">
+                    Retake Exam ({{ $remainingAttempts }} Attempts Left)
+                </a>
+            @else
+                <p class="text-lg dark:text-gray-300">
+                    You have no remaining attempts for this exam.
+                </p>
+            @endif
+        </div>
+    @else
     <div class="mt-6 text-center">
-        @if ($remainingAttempts > 0)
-            <a href="{{ route('filament.user.resources.courses.questions', ['record' => $quizzable->quizzable_id, 'quizzableType' => $quizzable->quizzable_type]) }}"
-                class="inline-block bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-700 focus:ring-opacity-75 hover:bg-green-700 transition duration-300 ease-in-out">
-                Retake Exam ({{ $remainingAttempts }} Attempts Left)
-            </a>
-        @else
-            <p class="text-lg dark:text-gray-300">
-                You have no remaining attempts for this exam.
-            </p>
-        @endif
-    </div>
+            @if ($remainingAttempts > 0)
+                <a href="{{ route('filament.user.resources.courses.questions', ['record' => $quizzable->quizzable_id, 'quizzableType' => $quizzable->quizzable_type]) }}"
+                    class="inline-block bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-700 focus:ring-opacity-75 hover:bg-green-700 transition duration-300 ease-in-out">
+                    Retake Exam ({{ $remainingAttempts }} Attempts Left)
+                </a>
+            @else
+                <p class="text-lg dark:text-gray-300">
+                    You have no remaining attempts for this exam.
+                </p>
+            @endif
+        </div>
+    @endif
+
 
     <!-- Topics Section -->
     <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">

@@ -43,11 +43,11 @@ class CourseResource extends Resource
     //     return auth()->check() && auth()->user()->courses->count() > 0;
     // }
 
-    public static function canViewAny(): bool
-    {
-        // Only show the navigation item if the user has registered courses.
-        return auth()->check() && auth()->user()->courses()->exists();
-    }
+    // public static function canViewAny(): bool
+    // {
+    //     // Only show the navigation item if the user has registered courses.
+    //     return auth()->check() && auth()->user()->courses()->exists();
+    // }
 
     public static function form(Form $form): Form
     {
@@ -104,6 +104,7 @@ class CourseResource extends Resource
         return [
             'index' => Pages\ListCourses::route('/'),
             // 'create' => Pages\CreateCourse::route('/create'),
+            'pricing-page' => Pages\PricingPage::route('/pricing'),
             'edit' => Pages\EditCourse::route('/{record}/edit'),
             'instruction-page' => Pages\InstructionPage::route('/{record}/{quizzableType}/instructions'),
             'questions' => Pages\Questions::route('/{record}/{quizzableType}/questions'),

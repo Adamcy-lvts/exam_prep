@@ -22,13 +22,27 @@ class SubjectsComponent extends Component
 
     public function mount($subjectId, $attemptId)
     {
+        // $this->reset();
         $this->currentAttempt = QuizAttempt::findOrFail($attemptId);
         
         $this->subject = Subject::findOrFail($subjectId);
 
         $this->allQuestions = $this->subject->questions;
-// dd($this->allQuestions);
+
         $this->loadAnswers();
+
+        // Retrieve the questionId from the session
+        $questionId = session('lastQuestionId');
+
+        if ($questionId) {
+            // Find the page number for the given questionId
+            $questionNumber = $this->allQuestions->pluck('id')->search($questionId) + 1;
+
+            // If the question number is valid, navigate to the corresponding page
+            if ($questionNumber !== false) {
+                $this->goToQuestion($questionNumber);
+            }
+        }
 
     }
 
@@ -50,6 +64,7 @@ class SubjectsComponent extends Component
 
     public function getQuestionsProperty()
     {
+        
         $this->loadAnswers();
         return Question::where('quizzable_id', $this->subject->id)
             ->where('quizzable_type', $this->subject->getMorphClass())
@@ -119,6 +134,7 @@ class SubjectsComponent extends Component
 
     public function render()
     {
+        
         return view('livewire.subjects-component', [
             'questions' => $this->questions
         ]);

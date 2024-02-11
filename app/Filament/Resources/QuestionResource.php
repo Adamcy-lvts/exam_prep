@@ -52,7 +52,7 @@ class QuestionResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('question'),
-                TextColumn::make('course.title'),
+                TextColumn::make('quizzable.name'),
                 TextColumn::make('marks')
             ])
             ->filters([

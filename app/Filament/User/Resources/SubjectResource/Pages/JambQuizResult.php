@@ -19,30 +19,34 @@ class JambQuizResult extends Page
     public $aggregateScore;
     public $remainingAttempts;
     public $attempts;
+    public $user;
 
     public function mount($compositeSessionId): void
     {
         static::authorizeResourceAccess();
 
-        $this->compositeSession = CompositeQuizSession::with('quizAttempts.quiz.quizzable')
-        ->findOrFail($compositeSessionId);
+        $this->compositeSession = CompositeQuizSession::with('quizAttempts.quiz.quizzable')->findOrFail($compositeSessionId);
 
-        $user = Auth::user();
+        if ($this->compositeSession) {
+            $this->user = Auth::user();
 
-        $attemptCount = UserQuizAttempt::where('user_id', $user->id)
-            ->count();
+            // $attemptCount = UserQuizAttempt::where('user_id', $user->id)
+            //     ->count();
 
-        $this->attempts = $this->compositeSession->allowed_attempts;
-        // Check if the user has exceeded the allowed attempts
-        $this->remainingAttempts =  $this->attempts - $attemptCount;
+            $this->attempts = $this->compositeSession->allowed_attempts;
+            // Check if the user has exceeded the allowed attempts
 
-        $this->calculateAggregateScore();
+            $attempt = $this->user->jambAttempts->attempts_left ?? 0;
+            $this->remainingAttempts = $attempt;
+
+            $this->calculateAggregateScore();
+        } else {
+            $this->redirectRoute('filament.user.pages.dashboard');
+        }
     }
 
     private function calculateAggregateScore()
     {
         $this->aggregateScore = $this->compositeSession->quizAttempts->sum('score');
-   
     }
-
 }

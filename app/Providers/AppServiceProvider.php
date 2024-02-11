@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\User;
+use App\Observers\UserObserver;
 use Filament\Support\Colors\Color;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Schema;
@@ -40,5 +42,7 @@ class AppServiceProvider extends ServiceProvider
             'warning' => Color::Amber,
             'indigo' => Color::Indigo,
         ]);
+
+        User::observe(UserObserver::class);
     }
 }

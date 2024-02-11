@@ -81,10 +81,6 @@ class Questions extends Page
             }
         }
 
-
-
-
-
         // Save the topic performance data
         foreach ($topicPerformanceData as $topicId => $performanceData) {
             TopicPerformance::create([
@@ -118,6 +114,10 @@ class Questions extends Page
         // Clear session after submission
         session()->forget(['selectedNumberOfQuestions', 'selectedDuration']);
 
+        $user = auth()->user();
+
+        $user->useSubjectAttempt($this->quizzable->quizzable_id);
+
         return redirect()->route('filament.user.resources.subjects.result', ['attemptId' => $this->currentAttempt->id, 'quizzableId' => $this->quizzable->quizzable_id, 'quizzableType' => $this->quizzable->quizzable_type]);
     }
 
@@ -137,7 +137,7 @@ class Questions extends Page
         return view('filament.user.resources.subject-resource.pages.questions', [
             'questions' => $questions,
             'allquestions' => $allquestions,
-        ])->layout(static::$layout, [
+        ])->layout($this->getLayout(), [
             'livewire' => $this,
             'maxContentWidth' => $this->getMaxContentWidth(),
             ...$this->getLayoutData(),

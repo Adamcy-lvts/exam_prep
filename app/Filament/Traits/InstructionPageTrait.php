@@ -28,6 +28,8 @@ trait InstructionPageTrait
     public $quizzableType;
     public $quizzable;
 
+    public $user;
+
    
     public $duration; // To hold the dynamic duration based on the selected number of questions
 
@@ -40,7 +42,9 @@ trait InstructionPageTrait
      */
     public function mount($record, $quizzableType): void
     {
-// dd($quizzableType);
+
+        $this->user = auth()->user();
+
         $this->quizzable = Quiz::with('questions')->where(['quizzable_type' => $quizzableType, 'quizzable_id' => $record])->firstOrFail();
 
         // $this->quizzable = Quiz::with('questions')->where(['quizzable_type' => $quizzableType, 'quizzable_id' => $record])->firstOrFail();
@@ -82,7 +86,8 @@ trait InstructionPageTrait
         $this->updateDuration();
         // dd($this->allowed_attempts);
         // Calculate the remaining attempts by subtracting the number of attempts made from the allowed attempts.
-        $this->remainingAttempts = $this->allowed_attempts - $this->attempts;
+        $attempt = $this->user->courseAttempts()->where('course_id', $this->quizzable->quizzable_id)->first();
+        $this->remainingAttempts = $attempt ? $attempt->attempts_left : 0;
 
         // Error handling: Check if the user has exceeded the allowed number of attempts.
         if ($this->remainingAttempts < 0) {
@@ -183,6 +188,7 @@ trait InstructionPageTrait
             150 => 90, // For 150 questions, the duration is 90 minutes.
         ];
 
+      
         // Check if the selected number of questions is in the mapping.
         if (isset($durationMapping[$this->selectedNumberOfQuestions])) {
             // If a match is found, update the duration accordingly.

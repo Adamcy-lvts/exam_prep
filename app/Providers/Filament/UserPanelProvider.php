@@ -6,13 +6,13 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\Widgets;
 use Filament\PanelProvider;
+use Filament\Navigation\MenuItem;
 use Filament\Support\Colors\Color;
 use App\Filament\User\Pages\Auth\Register;
-use App\Filament\User\Pages\EmailVerification\EmailVerificationPrompt;
-use App\Http\Middleware\EnsureRegistrationCompletion;
 use Filament\Http\Middleware\Authenticate;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
+use App\Http\Middleware\EnsureRegistrationCompletion;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
@@ -20,6 +20,8 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use App\Filament\User\Pages\EmailVerification\EmailVerificationPrompt;
+use App\Filament\User\Resources\SubjectResource\Pages\PricingPage;
 
 class UserPanelProvider extends PanelProvider
 {
@@ -31,6 +33,14 @@ class UserPanelProvider extends PanelProvider
             ->login()
             ->colors([
                 'primary' => Color::Green,
+            ])
+            ->userMenuItems([
+                MenuItem::make()
+                    ->label('Pricing')
+                    ->url(fn (): string => PricingPage::getUrl())
+                    ->icon('heroicon-o-currency-dollar'),
+                    
+                // ...
             ])
             ->sidebarCollapsibleOnDesktop()
             ->viteTheme('resources/css/filament/user/theme.css')

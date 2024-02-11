@@ -31,11 +31,11 @@ class SubjectResource extends Resource
         return auth()->user()->subjects->count();
     }
 
-    public static function canViewAny(): bool
-    {
-        // Only show the navigation item if the user has registered courses.
-        return auth()->check() && auth()->user()->subjects()->exists();
-    }
+    // public static function canViewAny(): bool
+    // {
+    //     // Only show the navigation item if the user has registered courses.
+    //     return auth()->check() && auth()->user()->subjects()->exists();
+    // }
 
     public static function form(Form $form): Form
     {
@@ -88,12 +88,15 @@ class SubjectResource extends Resource
             'index' => Pages\ListSubjects::route('/'),
             // 'create' => Pages\CreateSubject::route('/create'),
             'jamb-instrcution' => Pages\JambInstructionPage::route('jamb/instruction-page'),
+            'pricing-page' => Pages\PricingPage::route('/pricing'),
             'edit' => Pages\EditSubject::route('/{record}/edit'),
             'instruction-page' => Pages\InstructionPage::route('/{record}/{quizzableType}/instructions'),
             'questions' => Pages\Questions::route('/{record}/{quizzableType}/questions'),
             'result' => Pages\ResultPage::route('/{attemptId}/{quizzableId}/{quizzableType}/result'),
             'jamb-quiz' => Pages\JambQuizPage::route('/{compositeSessionId}/jamb/quiz'),
-            'jamb-quiz-result' => Pages\JambQuizResult::route('/{compositeSessionId}/jamb-quiz/result')
+            'jamb-quiz-result' => Pages\JambQuizResult::route('/{compositeSessionId}/jamb-quiz/result'),
+            'payment-form' => Pages\PaymentForm::route('/{planId}/payment'),
+            
         ];
     }
 }

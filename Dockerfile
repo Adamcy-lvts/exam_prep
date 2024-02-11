@@ -8,7 +8,11 @@ RUN apt-get update && apt-get install -y \
     unzip \
     curl \
     git \
-    libzip-dev 
+    libzip-dev \
+    libmagickwand-dev # <-- Add this line for Imagick
+
+# Install Imagick extension
+RUN pecl install imagick && docker-php-ext-enable imagick # <-- Add this line for Imagick
 
 # Install Redis extension
 RUN pecl install redis && docker-php-ext-enable redis

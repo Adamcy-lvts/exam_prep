@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\Plan;
 use App\Models\User;
 use App\Models\Course;
 use App\Models\Subject;
@@ -35,26 +36,35 @@ class SubjectsPage extends Component
 
     public function submitSelection()
     {
-        // Assuming you have the user available, for example through auth:
+     
+        $basicPlan = Plan::where('title', 'Explorer Access Plan')->first();
         
+        if (!$basicPlan) {
+            // Handle the case where the basic plan is not found
+            // Possibly log an error or set a flash message
+            return redirect()->back()->withErrors('Explorer Access Plan not found.');
+        }
 
-        // Detach any existing subjects to avoid duplication
         $this->user->subjects()->detach();
-
-        // Attach the new set of selected subjects
         $this->user->subjects()->attach($this->selectedSubjects);
 
-        // Once the user has completed all necessary steps:
         $this->user->registration_status = User::STATUS_REGISTRATION_COMPLETED;
         $this->user->save();
 
-        // Provide some feedback to the user
-        $this->redirectRoute('filament.user.pages.dashboard'); 
-       
+        if (!$this->user->hasInitializedSubjectAttempts()) {
+            foreach ($this->user->subjects as $subject) {
+                $this->user->subjectAttempts()->create([
+                    'subject_id' => $subject->id,
+                    'attempts_left' => $basicPlan->number_of_attempts ?? 1,
+                ]);
+            }
+            $this->user->markSubjectAttemptsAsInitialized();
+        }
+     
         // session()->flash('message', 'Your subjects have been registered successfully.');
-
-        // Redirect or perform another action as needed
+        return redirect()->route('filament.user.pages.dashboard');
     }
+
 
 
     public function render()

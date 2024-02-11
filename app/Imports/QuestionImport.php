@@ -29,7 +29,7 @@ class QuestionImport implements ToCollection
 
 
 
-    public function __construct($quizzableType, $quizzableId, $totalMarks)
+    public function __construct($quizzableType, $quizzableId)
     {
         if ($quizzableType == 'course') {
             $this->quizzable = Course::with('questions')->findOrFail($quizzableId);
@@ -41,7 +41,7 @@ class QuestionImport implements ToCollection
 
         $this->quizzableType = $quizzableType;
         $this->quizzableId = $quizzableId;
-        $this->totalMarks = $totalMarks;
+        // $this->totalMarks = $totalMarks;
     }
 
     public function collection(Collection $rows)

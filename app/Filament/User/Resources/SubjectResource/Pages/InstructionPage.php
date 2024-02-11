@@ -15,6 +15,7 @@ class InstructionPage extends Page
 {
     use InstructionPageTrait;
 
+    public $user;
     public $course;
     public $courseId;
     public $ongoingAttempt;
@@ -27,15 +28,17 @@ class InstructionPage extends Page
     public $quizzableId;
     public $quizzableType;
     public $quizzable;
-    
+
     protected static string $resource = SubjectResource::class;
 
     protected static string $view = 'filament.user.resources.subject-resource.pages.instruction-page';
 
-    public $selectedNumberOfQuestions = 50;
+    public $selectedNumberOfQuestions = 20;
 
     public function mount($record, $quizzableType): void
     {
+        $this->user = auth()->user();
+
         $this->quizzable = Quiz::with('questions')->where(['quizzable_type' => $quizzableType, 'quizzable_id' => $record])->firstOrFail();
 
         // $this->quizzable = Quiz::with('questions')->where(['quizzable_type' => $quizzableType, 'quizzable_id' => $record])->firstOrFail();
@@ -45,6 +48,15 @@ class InstructionPage extends Page
         // Get the number of allowed attempts, falling back to the default specified in the quizzable model if not already set in the session.
         $this->allowed_attempts = $this->existingSession->allowed_attempts ?? $this->quizzable->max_attempts;
 
+
+
+        // if ($this->user->hasFeature('Flexible quizzes (10-150 questions)')) {
+        //     $this->selectedNumberOfQuestions = [ 20, 50, 70, 100, 150];
+        // } elseif ($this->user->hasFeature('Flexible quizzes (10-70 questions)')) {
+        //     $this->selectedNumberOfQuestions = [ 20, 50, 70];
+        // } elseif ($this->user->hasFeature('20 questions per quiz')) {
+        //     $this->selectedNumberOfQuestions = [20];
+        // }
         // Count the number of questions associated with the quizzable.
         $this->numberOfQuestions = $this->quizzable->questions->count();
 
@@ -61,7 +73,7 @@ class InstructionPage extends Page
 
         // If there is an ongoing attempt, retrieve the selected number of questions and duration from the session.
         if ($this->ongoingAttempt) {
-            $this->selectedNumberOfQuestions = session('selectedNumberOfQuestions', 100); // Default to 100 if not set in session
+            $this->selectedNumberOfQuestions = session('selectedNumberOfQuestions', $this->selectedNumberOfQuestions); // Default to 100 if not set in session
             $this->duration = session('selectedDuration', $this->quizzable->duration); // Use the quizzable duration as default
         }
 
@@ -77,9 +89,42 @@ class InstructionPage extends Page
         $this->updateDuration();
         // dd($this->allowed_attempts);
         // Calculate the remaining attempts by subtracting the number of attempts made from the allowed attempts.
-        $this->remainingAttempts = $this->allowed_attempts - $this->attempts;
+        // $this->remainingAttempts = $this->allowed_attempts - $this->attempts;
+        $attempt = $this->user->subjectAttempts()->where('subject_id', $this->quizzable->quizzable_id)->first();
+        // $this->remainingAttempts = $attempt ? $attempt->attempts_left : 0;
+        $this->remainingAttempts = $attempt ? ($attempt->attempts_left === null ? 'Unlimited' : $attempt->attempts_left) : 0;
 
     }
+
+    // public function startQuiz()
+    // {
+    //     // Save the current settings for number of questions and duration to the session.
+    //     session([
+    //         'selectedNumberOfQuestions' => $this->selectedNumberOfQuestions,
+    //         'selectedDuration' => $this->duration,
+    //     ]);
+
+
+    //     // $planAttempts = $this->user->currentPlan()->number_of_attempts;
+
+    //     // If the user has no attempts left, flash a message and send a notification, then redirect.
+    //     if (!$this->user->hasSubjectAttempt($this->quizzable->quizzable_id)) {
+
+    //         Notification::make()->title("You have exhausted your all your attempts, Please Purchase another attempts.")
+    //         ->warning()
+    //             ->send();
+    //         return redirect()->route('filament.user.resources.subjects.pricing-page');
+    //     }
+
+    //     // If checks pass,close any confirmation modal and proceed to the quiz questions page.
+    //     $this->showConfirmationModal = false;
+
+    //     // Redirect to the quiz questions page with the necessary parameters.
+    //     return redirect()->route('filament.user.resources.subjects.questions', [
+    //         'record' => $this->quizzable->quizzable_id,
+    //         'quizzableType' => $this->quizzable->quizzable_type
+    //     ]);
+    // }
 
     public function startQuiz()
     {
@@ -89,32 +134,50 @@ class InstructionPage extends Page
             'selectedDuration' => $this->duration,
         ]);
 
-        // If the user has no attempts left, flash a message and send a notification, then redirect.
-        if (!$this->canAttemptQuiz()) {
-            session()->flash('success_message', "You have exhausted your maximum of " . $this->allowed_attempts . " attempts for this quiz.");
-            Notification::make()->title("You have exhausted your maximum of " . $this->allowed_attempts . " attempts for this quiz.")
-            ->warning()
+        // If the user has an active unlimited plan, proceed to the quiz.
+        if ($this->user->hasFeature('Unlimited Quiz Attempts for 30 days')) {
+            $this->proceedToQuiz();
+            return;
+        }
+
+        // Check for subject attempts for the specific quiz.
+        if ($this->user->hasSubjectAttempt($this->quizzable->quizzable_id)) {
+            $this->proceedToQuiz();
+            return;
+        }
+
+        // Check if the user has any Jamb attempts left.
+        if ($this->user->hasJambAttempts()) {
+            // Inform the user they have Jamb attempts left and redirect them to the Jamb instruction page.
+            Notification::make()
+                ->title("You have Jamb attempts left.")
+                ->body("You have exhausted your attempts for this specific subject, but you still have Jamb attempts available.")
+                ->warning()
                 ->send();
-            return redirect()->route('filament.user.resources.subjects.instruction-page', [
-                'record' => $this->quizzable->quizzable_id,
-                'quizzableType' => $this->quizzable->quizzable_type
-            ]);
+            return redirect()->route('filament.user.resources.subjects.jamb-instrcution');
+        } elseif ($this->user->hasSubjectAttemptsForAnySubject()) {
+            // Inform the user they have attempts left for other subjects but not for this specific quiz.
+            Notification::make()
+                ->title("You have no attempts left for this subject.")
+                ->body("You have attempts left for other subjects. Please select another subject to continue.")
+                ->warning()
+                ->send();
+            return redirect()->route('filament.user.pages.dashboard');
+        } else {
+            // The user has no attempts left for any subject or Jamb, redirect to the pricing page.
+            Notification::make()
+                ->title("You have exhausted all your attempts.")
+                ->body("Please purchase more attempts to continue.")
+                ->warning()
+                ->send();
+            return redirect()->route('filament.user.resources.subjects.pricing-page');
         }
-        // Verify if the quiz can be started based on additional conditions.
-        $canStart = $this->canStartQuiz();
-        if (!$canStart['status']) {
-            // If conditions fail, set an error message and redirect to the dashboard.
-            session()->flash('error_message', $canStart['message']);
-            return redirect()->route('filament.user.resources.subjects.instruction-page', [
-                'record' => $this->quizzable->quizzable_id,
-                'quizzableType' => $this->quizzable->quizzable_type
-            ]);
-        }
+    }
 
-        // If checks pass,close any confirmation modal and proceed to the quiz questions page.
+    // Helper method to proceed to quiz questions page.
+    protected function proceedToQuiz()
+    {
         $this->showConfirmationModal = false;
-
-        // Redirect to the quiz questions page with the necessary parameters.
         return redirect()->route('filament.user.resources.subjects.questions', [
             'record' => $this->quizzable->quizzable_id,
             'quizzableType' => $this->quizzable->quizzable_type

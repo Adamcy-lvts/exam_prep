@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\User;
 use App\Models\Course;
 use App\Models\Question;
+use App\Models\QuizAnswer;
 use App\Models\TopicPerformance;
 use App\Models\CompositeQuizSession;
 use Illuminate\Database\Eloquent\Model;
@@ -29,6 +30,10 @@ class QuizAttempt extends Model
     public function course()
     {
         return $this->belongsTo(Course::class);
+    }
+
+    function quizAnswers() {
+        return $this->hasMany(QuizAnswer::class);
     }
 
 

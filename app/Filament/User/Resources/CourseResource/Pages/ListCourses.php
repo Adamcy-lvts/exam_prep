@@ -2,6 +2,7 @@
 
 namespace App\Filament\User\Resources\CourseResource\Pages;
 
+use App\Models\Plan;
 use App\Models\User;
 use Filament\Actions;
 use App\Models\Course;
@@ -64,6 +65,15 @@ class ListCourses extends ListRecords
                     if ($user) {
                         $courseIds = $data['course_ids'];
                         $user->courses()->syncWithoutDetaching($courseIds);
+                    }
+
+                    $basicPlan = Plan::where('title', 'Basic Access Plan')->first();
+
+                    foreach ($this->user->courses as $course) {
+                        $this->user->courseAttempts()->create([
+                            'course_id' => $course->id,
+                            'attempts_left' => $basicPlan->number_of_attempts ?? 1,
+                        ]);
                     }
                 })
         ];

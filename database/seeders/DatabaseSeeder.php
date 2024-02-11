@@ -26,5 +26,12 @@ class DatabaseSeeder extends Seeder
         $this->call(SubjectTableSeeder::class);
         $this->call(PhysicsSubjectSeeder::class);
         $this->call(NounFacultySeeder::class);
+        $this->call(PlansSeeder::class);
+        $this->call(PhysicsQuestionSeeder::class);
+        $this->call(ChemistryQuestionSeeder::class);
+        $this->call(BiologyQuestionSeeder::class);
+        $this->call(EnglishQuestionSeeder::class);
+        $this->call(MathematicsQuestionSeeder::class);
+        // $this->call(QuizDataSeeder::class);
     }
 }

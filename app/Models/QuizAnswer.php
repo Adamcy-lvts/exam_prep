@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Models\Topic;
+use App\Models\Question;
+use App\Models\QuizAttempt;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -20,5 +22,9 @@ class QuizAnswer extends Model
     public function topic()
     {
         return $this->belongsTo(Topic::class);
+    }
+
+    function quizAttempt() {
+        return $this->belongsTo(QuizAttempt::class);
     }
 }

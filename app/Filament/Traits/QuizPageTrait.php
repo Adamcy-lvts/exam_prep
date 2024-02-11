@@ -36,6 +36,7 @@ trait QuizPageTrait
     public $remainingAttempts;
     public $quizzable;
     public $quizzableType;
+    public $user;
 
     public $selectedNumberOfQuestions;
     public $duration;
@@ -45,7 +46,7 @@ trait QuizPageTrait
     public function mount($record, $quizzableType): void
     {
 
-
+        $this->user = auth()->user();
 
         $this->quizzable = Quiz::with('questions')->where(['quizzable_type' => $quizzableType, 'quizzable_id' => $record])->firstOrFail();
 
@@ -56,29 +57,6 @@ trait QuizPageTrait
         $this->existingSession = $this->getLatestSession($this->quizzable->quizzable_id, $this->quizzableType);
         // dd($this->existingSession);
         $this->allowed_attempts = $this->existingSession->allowed_attempts ?? '';
-
-        // Run the check to see if the user can start the quiz
-        $canStart = $this->canStartQuiz();
-
-        if (!$canStart['status']) {
-            // The user cannot start the quiz. Redirect them with a notification.
-            Notification::make()
-                ->title('You have exhausted your maximum of ' . $this->allowed_attempts . ' attempts for this quiz.')
-                ->warning()
-                ->send();
-            // Check the current route and perform a redirect accordingly.
-            // if (request()->routeIs('filament.user.resources.courses.questions')) {
-            //     // Redirect to the course instruction page if the current route is course questions.
-            //      $this->redirectRoute('filament.user.resources.courses.instruction-page', ['record' => $this->quizzable->quizzable_id, 'quizzableType' => $this->quizzableType]);
-            // } else {
-            //     // Otherwise, redirect to the subject instruction page.
-            //      $this->redirectRoute('filament.user.resources.subjects.instruction-page', ['record' => $this->quizzable->quizzable_id, 'quizzableType' => $this->quizzableType]);
-            // }
-
-            $this->redirectRoute('filament.user.resources.subjects.instruction-page', ['record' => $this->quizzable->quizzable_id, 'quizzableType' => $this->quizzableType]);
-        }
-
-
 
         // Fetching the course details
 
@@ -128,12 +106,21 @@ trait QuizPageTrait
             ->first();
 
         $latestSession = $this->getLatestSession($this->quizzable->quizzable_id, $this->quizzable->quizzable_type);
-        // dd($latestSession);
-        $numberofAttempts = QuizAttempt::where('user_id', auth()->user()->id)->where('quiz_id', $this->quizzable->id)
-            ->where('quiz_session_id', $latestSession->id)
-            ->count();
 
-        $this->remainingAttempts =  $latestSession->allowed_attempts - $numberofAttempts;
+        // Conditional checking for attempts based on quizzable type
+        if ($this->quizzableType === 'App\Models\Subject') {
+            $attempt = $this->user->subjectAttempts()->where('subject_id', $this->quizzable->quizzable_id)->first();
+            // dd($attempt);
+            // Check if attempts_left is null for unlimited attempts
+            $this->remainingAttempts = $attempt->attempts_left == null ? 'Unlimited' : $attempt->attempts_left;
+        } elseif ($this->quizzableType === 'App\Models\Course') {
+            $attempt = $this->user->courseAttempts()->where('course_id', $this->quizzable->quizzable_id)->first();
+            // Check if attempts_left is null for unlimited attempts
+            $this->remainingAttempts = $attempt->attempts_left == null ? 'Unlimited' : $attempt->attempts_left;
+        } else {
+            // Handle other quizzable types or default case
+            $this->remainingAttempts = 0; // Consider how to handle unlimited cases here too
+        }
 
 
         // Check for session values and use them if available
@@ -149,7 +136,7 @@ trait QuizPageTrait
         // For example, it can be a user preference or a setting in the course
         // $this->selectedNumberOfQuestions = $numberOfQuestions; // Default value or retrieve from user preference or course setting
         // dd($this->quizzable->questions->count());
-        if (!$this->ongoingAttempt && $this->remainingAttempts > 0) {
+        if (!$this->ongoingAttempt && ($this->remainingAttempts > 0 || $this->remainingAttempts === 'Unlimited')) {
             // Create a new attempt only if there's no ongoing attempt
             $this->currentAttempt = QuizAttempt::create([
                 'user_id' => auth()->user()->id,
@@ -202,54 +189,49 @@ trait QuizPageTrait
     }
 
 
-    public function canStartQuiz()
-    {
-        if (!$this->canAttemptQuiz()) {
-            return [
-                'status' => false,
-                // 'message' => Notification::make()->title('You have exhausted your maximum of ' . $this->subject->max_attempts . ' attempts for this quiz.')->warning()->send()
-            ];
-        }
+    // public function canStartQuiz()
+    // {
+    //     if (!$this->canAttemptQuiz()) {
+    //         return [
+    //             'status' => false,
+    //             // 'message' => Notification::make()->title('You have exhausted your maximum of ' . $this->subject->max_attempts . ' attempts for this quiz.')->warning()->send()
+    //         ];
+    //     }
 
-        return [
-            'status' => true,  // User can start or continue the quiz.
-            'message' => ''
-        ];
-    }
+    //     return [
+    //         'status' => true,  // User can start or continue the quiz.
+    //         'message' => ''
+    //     ];
+    // }
 
     // Check if user can attempt the quiz
-    public function canAttemptQuiz()
-    {
-        $latestSession = $this->getLatestSession($this->quizzable->quizzable_id, $this->quizzable->quizzable_type);
+    // public function canAttemptQuiz()
+    // {
+    //     $latestSession = $this->getLatestSession($this->quizzable->quizzable_id, $this->quizzable->quizzable_type);
 
-        if (!$latestSession) {
-            return true;  // If no session exists, user can attempt
-        }
+    //     if (!$latestSession) {
+    //         return true;  // If no session exists, user can attempt
+    //     }
 
-        // Check if the user has an ongoing attempt for the latest session
-        $this->ongoingAttempt = QuizAttempt::where('user_id', auth()->user()->id)
-            ->where('quiz_session_id', $latestSession->id)->where('quiz_id', $this->quizzable->id)
-            ->whereNull('end_time')  // assuming 'end_time' is set when the quiz is submitted.
-            ->first();
+    //     // Check if the user has an ongoing attempt for the latest session
+    //     $this->ongoingAttempt = QuizAttempt::where('user_id', auth()->user()->id)
+    //         ->where('quiz_session_id', $latestSession->id)->where('quiz_id', $this->quizzable->id)
+    //         ->whereNull('end_time')  // assuming 'end_time' is set when the quiz is submitted.
+    //         ->first();
 
-        if ($this->ongoingAttempt) {
-            return true;  // If there's an ongoing attempt, user can continue
-        }
+    //     if ($this->ongoingAttempt) {
+    //         return true;  // If there's an ongoing attempt, user can continue
+    //     }
 
-        // If no ongoing attempt, check the total number of attempts by the user
-        $attempts = QuizAttempt::where('user_id', auth()->user()->id)->where('quiz_id', $this->quizzable->id)
-            ->where('quiz_session_id', $latestSession->id)
-            ->count();
+    //     // If no ongoing attempt, check the total number of attempts by the user
+    //     $attempts = QuizAttempt::where('user_id', auth()->user()->id)->where('quiz_id', $this->quizzable->id)
+    //         ->where('quiz_session_id', $latestSession->id)
+    //         ->count();
 
-        // Check if the user has exceeded the allowed attempts
-        return $attempts < $latestSession->allowed_attempts;
-    }
+    //     // Check if the user has exceeded the allowed attempts
+    //     return $attempts < $latestSession->allowed_attempts;
+    // }
 
-    function redirectTo()
-    {
-
-        return redirect()->route();
-    }
 
     private function getPage()
     {

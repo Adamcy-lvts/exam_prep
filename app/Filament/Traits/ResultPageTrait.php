@@ -14,6 +14,7 @@ use App\Models\TopicPerformance;
 use Filament\Resources\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
 use App\Filament\User\Resources\CourseResource;
+use Illuminate\Support\Facades\Auth;
 
 trait ResultPageTrait
 {
@@ -33,15 +34,17 @@ trait ResultPageTrait
     public $attempts;
     public $remainingAttempts;
     public $quizzableType;
+    public $user;
 
     public $numberOfQuestions;
 
     public function mount($attemptId, $quizzableId, $quizzableType): Void
     {
+        $this->user = Auth::user();
 
         $this->quizzable = Quiz::with('questions')->where(['quizzable_type' => $quizzableType, 'quizzable_id' => $quizzableId])->firstOrFail();
 
-        // dd($attemptId);
+    
         $this->testAnswers = QuizAnswer::where('quiz_attempt_id', $attemptId)->where('completed', true)->get(); // Assuming you have a "TestAnswer" model for test answers
 
         $this->answeredCorrectQuestions = $this->testAnswers->where('correct', 1)->count();
@@ -102,8 +105,18 @@ trait ResultPageTrait
             ->where('quiz_session_id', $session->id)
             ->count();
 
-        // Check if the user has exceeded the allowed attempts
-        $this->remainingAttempts =  $this->attempts - $attempts;
+    
+        // Conditional checking for attempts based on quizzable type
+        if ($this->quizzableType === 'App\Models\Subject') {
+            $attempt = $this->user->subjectAttempts()->where('subject_id', $this->quizzable->quizzable_id)->first();
+            $this->remainingAttempts = $attempt ? $attempt->attempts_left : 0;
+        } elseif ($this->quizzableType === 'App\Models\Course') {
+            $attempt = $this->user->courseAttempts()->where('course_id', $this->quizzable->quizzable_id)->first();
+            $this->remainingAttempts = $attempt ? $attempt->attempts_left : 0;
+        } else {
+            // Handle other quizzable types or default case
+            $this->remainingAttempts = 0;
+        }
 
         // Fetch the topic performance data for this attempt
         $topicPerformances = TopicPerformance::with('topic') // Assuming you have a 'topic' relationship on your TopicPerformance model

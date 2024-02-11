@@ -19,6 +19,7 @@ return new class extends Migration
             $table->text('question');
             $table->enum('type', ['mcq', 'saq', 'tf'])->default('mcq'); // mcq = Multiple Choice Questions, saq = Short Answer Questions
             $table->text('answer_text')->nullable(); // Correct answer For storing short answers
+            $table->string('question_image')->nullable();
             $table->integer('marks')->default(1);
             $table->timestamps();
         });

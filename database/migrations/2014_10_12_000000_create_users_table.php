@@ -19,7 +19,10 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->string('registration_status')->nullable();
             $table->timestamp('email_verified_at')->nullable();
+            $table->boolean('is_on_trial')->default(true); // Indicates if the user is currently on a trial
+            $table->date('trial_ends_at')->nullable(); //
             $table->string('password');
+            $table->timestamp('subject_attempts_initialized_at')->nullable();
             $table->rememberToken();
             $table->foreignId('current_team_id')->nullable();
             $table->string('profile_photo_path', 2048)->nullable();
