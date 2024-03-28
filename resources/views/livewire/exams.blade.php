@@ -18,10 +18,10 @@
                         x-transition:leave-start="transform opacity-100 scale-100"
                         x-transition:leave-end="transform opacity-0 scale-95"
                         class="transform transition duration-300 ease-in-out hover:scale-105 bg-white rounded-xl shadow-lg overflow-hidden">
-                        <a href="{{ $exam->exam_name === 'JAMB' ? route('study-fields', $exam->id) : route('faculties') }}"
+                        <a href="{{ $exam->exam_name === 'JAMB' ? route('subjects.page', $exam->id) : route('courses.page', $exam->id) }}"
                             wire:navigate class="block p-12 h-full text-center hover:bg-gray-50">
                             <h3 class="text-2xl font-semibold text-gray-800 mb-2">{{ $exam->exam_name }}</h3>
-                            <img src="path-to-jamb-logo.svg" alt="{{ $exam->exam_name }} Logo"
+                            <img src="{{ asset($exam->exam_logo) }}" alt="{{ $exam->exam_name }} Logo"
                                 class="h-20 mx-auto mb-4">
                             <p class="text-gray-600 mb-6">{{ $exam->description }}</p>
                             <span class="font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">Start

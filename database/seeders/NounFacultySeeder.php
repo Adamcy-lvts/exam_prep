@@ -63,6 +63,13 @@ class NounFacultySeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+
+            [
+                'faculty_name' => 'DE and General Studies',
+                'code' => 'DEGS',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ];
 
         // Insert faculties into database

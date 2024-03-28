@@ -21,7 +21,7 @@
             viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
         </svg>
-        <p class="text-lg font-semibold text-green-500 mt-4 dark:text-green-400">Exam Completed Successfully</p>
+        <p class="text-lg font-semibold text-green-500 mt-4 dark:text-green-400">Quiz Completed Successfully</p>
     </div>
 
     <!-- Information Columns -->
@@ -94,7 +94,7 @@
     @if ($quizzable->quizzable_type === 'App\Models\Subject')
         <div class="mt-6 text-center">
             @if ($remainingAttempts > 0)
-                <a href="{{ route('filament.user.resources.subjects.questions', ['record' => $quizzable->quizzable_id, 'quizzableType' => $quizzable->quizzable_type]) }}"
+                <a href="{{ route('filament.user.resources.subjects.instruction-page', ['record' => $quizzable->quizzable_id, 'quizzableType' => $quizzable->quizzable_type]) }}"
                     class="inline-block bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-700 focus:ring-opacity-75 hover:bg-green-700 transition duration-300 ease-in-out">
                     Retake Exam ({{ $remainingAttempts }} Attempts Left)
                 </a>
@@ -105,9 +105,9 @@
             @endif
         </div>
     @else
-    <div class="mt-6 text-center">
+        <div class="mt-6 text-center">
             @if ($remainingAttempts > 0)
-                <a href="{{ route('filament.user.resources.courses.questions', ['record' => $quizzable->quizzable_id, 'quizzableType' => $quizzable->quizzable_type]) }}"
+                <a href="{{ route('filament.user.resources.courses.instruction-page', ['record' => $quizzable->quizzable_id, 'quizzableType' => $quizzable->quizzable_type]) }}"
                     class="inline-block bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-700 focus:ring-opacity-75 hover:bg-green-700 transition duration-300 ease-in-out">
                     Retake Exam ({{ $remainingAttempts }} Attempts Left)
                 </a>
@@ -179,6 +179,26 @@
             </div>
         @endif
 
+        <!-- Directly Associated Topics -->
+        {{-- @if ($organizedPerformances->has('directly_associated'))
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-xl transition duration-300">
+                <p class="text-xl font-semibold mb-4 dark:text-gray-100">Direct Topics</p>
+                @foreach ($organizedPerformances['directly_associated']['directly_associated'] as $performanceType => $performances)
+                    <div class="mb-4">
+                        <p class="text-lg font-bold mb-2">
+                            {{ $performanceType === 'didWell' ? 'Topics You Did Well' : 'Topics You Didn\'t Do Well' }}
+                        </p>
+                        <ul class="list-disc list-inside dark:text-gray-300">
+                            @foreach ($performances as $performance)
+                                <li>{{ $performance->topic->name }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endforeach
+            </div>
+        @endif --}}
+
+
     </div>
 
     <div x-data="{ open: false }" class="w-full mx-auto mt-16">
@@ -214,7 +234,7 @@
                                     @php $mcqAnswer = $testAnswers->where('question_id', $question->id)->first() @endphp
                                     @foreach ($question->options as $option)
                                         <li
-                                            class="@if ($option->is_correct && $testAnswers->where('question_id', $question->id)->first()->option_id == $option->id) bg-green-100 dark:bg-green-700 border-green-500 dark:border-green-600 @elseif (!$option->is_correct && $testAnswers->where('question_id', $question->id)->first()->option_id == $option->id) bg-red-100 dark:bg-red-700 border-red-500 dark:border-red-600 @elseif ($option->is_correct) bg-green-100 dark:bg-green-700 border-green-500 dark:border-green-600 @elseif ($testAnswers->where('question_id', $question->id)->first()->option_id == $option->id) bg-red-100 dark:bg-red-700 border-red-500 dark:border-red-600 @endif border-l-4 pl-4 py-2 mb-1">
+                                            class="@if ($option->is_correct && $testAnswers->where('question_id', $question->id)->first()->option_id == $option->id) bg-green-100 border border-l-green-600 rounded-md text-green-600 dark:border-green-600 dark:bg-green-700 dark:bg-opacity-25 dark:text-green-400 @elseif (!$option->is_correct && $testAnswers->where('question_id', $question->id)->first()->option_id == $option->id) bg-red-100 border border-l-red-600 rounded-md text-red-600 dark:border-red-600 dark:bg-red-700 dark:bg-opacity-25 dark:text-red-400 @elseif ($option->is_correct) bg-green-100 border border-l-green-600 rounded-md text-green-600 dark:border-green-600 dark:bg-green-700 dark:bg-opacity-25 dark:text-green-400 @elseif ($testAnswers->where('question_id', $question->id)->first()->option_id == $option->id) bg-red-100 dark:bg-red-700 border-red-500 dark:border-red-600 @endif border-l-4 pl-4 py-2 mb-1">
                                             {{ chr(64 + $loop->index + 1) }}. {{ $option->option }}
                                             <!-- Show checkmark if option is correct -->
                                             @if ($option->is_correct)
@@ -227,6 +247,15 @@
                                             @endif
                                         </li>
                                     @endforeach
+                                    <!-- Explanation section -->
+                                    {{-- @if (auth()->user()->hasFeature('Answer Review and Explanations')) --}}
+                                    <div class="mt-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                                        <h4 class="text-md sm:text-lg font-semibold text-gray-900 dark:text-white">
+                                            Answer Explanation:</h4>
+                                        <p class="text-sm sm:text-md text-gray-600 dark:text-gray-400">
+                                            {!! $question['explanation'] !!}</p>
+                                    </div>
+                                    {{-- @endif --}}
                                     @if (!$mcqAnswer || !$mcqAnswer->option_id)
                                         <li
                                             class="bg-blue-100 dark:bg-blue-700 border-blue-500 dark:border-blue-600 border-l-4 pl-4 py-2 mb-1 text-gray-900 dark:text-gray-200">
@@ -237,7 +266,7 @@
                                     @php $saqAnswer = $testAnswers->where('question_id', $question->id)->first() @endphp
                                     @if ($saqAnswer && sanitizeAnswer($saqAnswer->answer_text) === sanitizeAnswer($question->answer_text))
                                         <li
-                                            class="bg-green-100 dark:bg-green-700 border-green-500 dark:border-green-600 border-l-4 pl-4 py-2 mb-1 text-gray-900 dark:text-gray-200">
+                                            class="bg-green-100 border border-l-green-600 rounded-md text-green-600 dark:border-green-600 dark:bg-green-700 dark:bg-opacity-25 dark:text-green-400 border-l-4 pl-4 py-2 mb-1 text-gray-900 dark:text-gray-200">
                                             Answer: {{ $question->answer_text }}
                                         </li>
                                     @elseif (
@@ -271,8 +300,9 @@
                                     {{-- Display radio buttons reflecting the correct answer --}}
                                     <li>
                                         <label class="flex items-center">
-                                            <input class="text-green-600" type="radio" value="True" class="mr-2"
-                                                disabled @if (strtolower($question->answer_text) === 'true') checked @endif>
+                                            <input class="text-green-600" type="radio" value="True"
+                                                class="mr-2" disabled
+                                                @if (strtolower($question->answer_text) === 'true') checked @endif>
                                             <span class="text-gray-700 dark:text-gray-300">True</span>
                                             <svg class="w-6 h-6 inline-block text-green-500 ml-2"
                                                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"

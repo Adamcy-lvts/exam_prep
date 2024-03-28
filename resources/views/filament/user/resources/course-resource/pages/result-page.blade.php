@@ -112,7 +112,7 @@
         <!-- Retake Exam Button -->
         <div class="mt-6 text-center">
             @if ($remainingAttempts > 0)
-                <a href="{{ route('filament.user.resources.courses.questions', ['record' => $quizzable->quizzable_id, 'quizzableType' => $quizzable->quizzable_type]) }}"
+                <a href="{{ route('filament.user.resources.courses.instruction-page', ['record' => $quizzable->quizzable_id, 'quizzableType' => $quizzable->quizzable_type]) }}"
                     class="inline-block bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-700 focus:ring-opacity-75 hover:bg-green-700 transition duration-300 ease-in-out">
                     Retake Exam ({{ $remainingAttempts }} Attempts Left)
                 </a>

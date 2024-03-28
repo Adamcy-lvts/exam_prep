@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('last_4_digits')->nullable();
             $table->integer('attempts_purchased')->nullable();
             $table->string('status'); // 'pending', 'completed', 'failed'
-            $table->string('transaction_id')->nullable();
+            $table->string('transaction_ref')->nullable();
             $table->timestamps();
         });
     }

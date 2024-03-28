@@ -56,6 +56,8 @@ class ListCourses extends ListRecords
                         ->multiple()
                         ->options(Course::query()->pluck('title', 'id'))
                         ->required(),
+
+                        
                 ])
                 ->action(function (array $data): void {
                     // Use the authenticated user instance directly

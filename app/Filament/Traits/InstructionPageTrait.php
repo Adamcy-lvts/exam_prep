@@ -12,6 +12,7 @@ use App\Models\QuizSession;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Facades\Log;
 use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 trait InstructionPageTrait
 {
@@ -30,8 +31,9 @@ trait InstructionPageTrait
 
     public $user;
 
-   
+
     public $duration; // To hold the dynamic duration based on the selected number of questions
+    
 
     /**
      * Mount the component with the provided record and quizzable type.
@@ -45,76 +47,97 @@ trait InstructionPageTrait
 
         $this->user = auth()->user();
 
-        $this->quizzable = Quiz::with('questions')->where(['quizzable_type' => $quizzableType, 'quizzable_id' => $record])->firstOrFail();
+        try {
+            $this->quizzable = Quiz::with('questions')->where(['quizzable_type' => $quizzableType, 'quizzable_id' => $record])->firstOrFail();
 
-        // $this->quizzable = Quiz::with('questions')->where(['quizzable_type' => $quizzableType, 'quizzable_id' => $record])->firstOrFail();
-        // Retrieve the latest quiz session for the quizzable item.
-        $this->existingSession = $this->getLatestSession($this->quizzable->quizzable_id, $this->quizzable->quizzable_type);
+            // Retrieve the latest quiz session for the quizzable item.
+            $this->existingSession = $this->getLatestSession($this->quizzable->quizzable_id, $this->quizzable->quizzable_type);
 
-        // Get the number of allowed attempts, falling back to the default specified in the quizzable model if not already set in the session.
-        $this->allowed_attempts = $this->existingSession->allowed_attempts ?? $this->quizzable->max_attempts;
+            // Get the number of allowed attempts, falling back to the default specified in the quizzable model if not already set in the session.
+            $this->allowed_attempts = $this->existingSession->allowed_attempts ?? $this->quizzable->max_attempts;
 
-        // Count the number of questions associated with the quizzable.
-        $this->numberOfQuestions = $this->quizzable->questions->count();
+            // Count the number of questions associated with the quizzable.
+            $this->numberOfQuestions = $this->quizzable->questions->count();
 
-        // Initialize attempts to 0.
-        $this->attempts = 0;
+            if ($this->numberOfQuestions === 0) {
+                // Handle the case where no questions are available
+                // This could be setting an error message, redirecting the user, etc.
+                $this->errorMessage = 'No questions available';
+            }
 
-        // If there is an existing session, try to find an ongoing attempt that has not yet ended.
-        if ($this->existingSession !== null) {
-            $this->ongoingAttempt = QuizAttempt::where('user_id', auth()->user()->id)
-                ->where('quiz_session_id', $this->existingSession->id)->where('quiz_id', $this->quizzable->quizzable_id)
-                ->whereNull('end_time') // assuming 'end_time' is set when the quiz is submitted.
-                ->first();
+            // Initialize attempts to 0.
+            $this->attempts = 0;
+
+            // If there is an existing session, try to find an ongoing attempt that has not yet ended.
+            if ($this->existingSession !== null) {
+                $this->ongoingAttempt = QuizAttempt::where('user_id', auth()->user()->id)
+                    ->where('quiz_session_id', $this->existingSession->id)->where('quiz_id', $this->quizzable->id)
+                    ->whereNull('end_time') // assuming 'end_time' is set when the quiz is submitted.
+                    ->first();
+                // dd($this->quizzable->quizzable_id);
+            }
+           
+            // If there is an ongoing attempt, retrieve the selected number of questions and duration from the session.
+            if ($this->ongoingAttempt) {
+                $this->selectedNumberOfQuestions = session('selectedNumberOfQuestions', 100); // Default to 100 if not set in session
+                $this->duration = session('selectedDuration', $this->quizzable->duration); // Use the quizzable duration as default
+            }
+
+            // Count the number of attempts the user has made for this quizzable and session.
+            if ($this->existingSession) {
+                $this->attempts = QuizAttempt::where('user_id', auth()->user()->id)
+                    ->where('quiz_id', $this->quizzable->id)
+                    ->where('quiz_session_id', $this->existingSession->id)
+                    ->count();
+            }
+
+            // Update the quiz duration based on the session data.
+            $this->updateDuration();
+            // dd($this->allowed_attempts);
+            // Calculate the remaining attempts by subtracting the number of attempts made from the allowed attempts.
+            $attempt = $this->user->courseAttempts()->where('course_id', $this->quizzable->quizzable_id)->first();
+            $this->remainingAttempts = $attempt ? ($attempt->attempts_left === null ? 'Unlimited' : $attempt->attempts_left) : 0;
+
+            // Error handling: Check if the user has exceeded the allowed number of attempts.
+            if ($this->remainingAttempts < 0) {
+                // Log this issue as it shouldn't normally happen, indicating a potential problem in attempts tracking.
+                Log::warning('User has exceeded the number of allowed attempts', [
+                    'user_id' => auth()->user()->id,
+                    'quizzable_id' => $this->quizzable->quizzable_id,
+                    'attempts' => $this->attempts,
+                    'allowed_attempts' => $this->allowed_attempts
+                ]);
+                // Optionally, you could throw an exception or handle this case as per your application's requirement.
+            }
+
+            // More error handling could be added here to deal with other edge cases, such as:
+            // - Invalid or corrupted session data.
+            // - Inconsistencies between the session state and the database records.
+            // - Handling situations where the quizzable has no questions.
+            if ($this->numberOfQuestions === 0) {
+                // This is a critical issue as quizzes should have questions.
+                Log::error('Quizzable has no questions.', [
+                    'quizzable_id' => $this->quizzable->quizzable_id,
+                    'quizzable_type' => $quizzableType
+                ]);
+                // Handle the error according to the needs of your application.
+            }
+        } catch (ModelNotFoundException $e) {
+            // Handle the case where the Quiz was not found
+            // lets find the quizzable item in course or subject and use the title of course or subject
+            $quizzable = Course::find($record) ?? Subject::find($record);
+            // dd($this->quizzable->name ?? $this->quizzable->title);
+            Notification::make()
+                ->title("No quiz found for " . ($quizzable->name ?? $quizzable->title))
+                ->warning()
+                ->send();
+            $this->redirectRoute('filament.user.resources.courses.index');
         }
 
-        // If there is an ongoing attempt, retrieve the selected number of questions and duration from the session.
-        if ($this->ongoingAttempt) {
-            $this->selectedNumberOfQuestions = session('selectedNumberOfQuestions', 100); // Default to 100 if not set in session
-            $this->duration = session('selectedDuration', $this->quizzable->duration); // Use the quizzable duration as default
-        }
-
-        // Count the number of attempts the user has made for this quizzable and session.
-        if ($this->existingSession) {
-            $this->attempts = QuizAttempt::where('user_id', auth()->user()->id)
-                ->where('quiz_id', $this->quizzable->id)
-                ->where('quiz_session_id', $this->existingSession->id)
-                ->count();
-        }
-
-        // Update the quiz duration based on the session data.
-        $this->updateDuration();
-        // dd($this->allowed_attempts);
-        // Calculate the remaining attempts by subtracting the number of attempts made from the allowed attempts.
-        $attempt = $this->user->courseAttempts()->where('course_id', $this->quizzable->quizzable_id)->first();
-        $this->remainingAttempts = $attempt ? $attempt->attempts_left : 0;
-
-        // Error handling: Check if the user has exceeded the allowed number of attempts.
-        if ($this->remainingAttempts < 0) {
-            // Log this issue as it shouldn't normally happen, indicating a potential problem in attempts tracking.
-            Log::warning('User has exceeded the number of allowed attempts', [
-                'user_id' => auth()->user()->id,
-                'quizzable_id' => $this->quizzable->quizzable_id,
-                'attempts' => $this->attempts,
-                'allowed_attempts' => $this->allowed_attempts
-            ]);
-            // Optionally, you could throw an exception or handle this case as per your application's requirement.
-        }
-
-        // More error handling could be added here to deal with other edge cases, such as:
-        // - Invalid or corrupted session data.
-        // - Inconsistencies between the session state and the database records.
-        // - Handling situations where the quizzable has no questions.
-        if ($this->numberOfQuestions === 0) {
-            // This is a critical issue as quizzes should have questions.
-            Log::error('Quizzable has no questions.', [
-                'quizzable_id' => $this->quizzable->quizzable_id,
-                'quizzable_type' => $quizzableType
-            ]);
-            // Handle the error according to the needs of your application.
-        }
+        
+      
     }
-    
+
 
     // Check if user can attempt the quiz
     public function canAttemptQuiz()
@@ -188,7 +211,7 @@ trait InstructionPageTrait
             150 => 90, // For 150 questions, the duration is 90 minutes.
         ];
 
-      
+
         // Check if the selected number of questions is in the mapping.
         if (isset($durationMapping[$this->selectedNumberOfQuestions])) {
             // If a match is found, update the duration accordingly.
@@ -250,5 +273,4 @@ trait InstructionPageTrait
         // Fetching the current page from the request or defaulting to 1 if not specified
         return request()->get('page', 1);
     }
-
 }

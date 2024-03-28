@@ -23,27 +23,16 @@ class BiologyQuestionSeeder extends Seeder
         // Check if the 'JAMB' exam ID was retrieved successfully
         if ($jambExamId) {
             // Retrieve the 'Physics' subject for the 'JAMB' exam
-            $physicsSubjectForJAMB = DB::table('subjects')
+            $biology = DB::table('subjects')
             ->where('name', 'Biology')
             ->where('exam_id', $jambExamId)
                 ->first();
 
-            // Now, you can use the $physicsSubjectForJAMB to do further operations if needed
+            // Now, you can use the $biology to do further operations if needed
             // For example, using the subject to create quiz questions in another seeder
-            // Make sure to check if the $physicsSubjectForJAMB is not null before proceeding
+            // Make sure to check if the $biology is not null before proceeding
         }
         // $physicsSubject = Subject::where('name', 'Physics')->firstOrFail();
-
-        // Create or find a quiz associated with the physics subject
-        $quiz = Quiz::firstOrCreate([
-            'title' => $physicsSubjectForJAMB->name,
-            'quizzable_type' => Subject::class,
-            'quizzable_id' => $physicsSubjectForJAMB->id,
-            'total_marks' => 20, // Sum of marks for all questions
-            'duration' => 60, // Example default value
-            'total_questions' => 10, // Total number of questions
-            'max_attempts' => 3, // Example default value
-        ]);
 
         $questions = [
             [
@@ -56,6 +45,7 @@ class BiologyQuestionSeeder extends Seeder
                     ['option' => 'Organ', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'The <strong>Cell</strong> is the basic unit of life, acting as the building block for all living organisms.',
             ],
             [
                 'question' => 'Which organ system is responsible for transport of nutrients?',
@@ -67,6 +57,7 @@ class BiologyQuestionSeeder extends Seeder
                     ['option' => 'Respiratory System', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'The <strong>Circulatory System</strong>, including the heart and blood vessels, transports nutrients and oxygen throughout the body.',
             ],
             [
                 'question' => 'What is the process by which plants make their food?',
@@ -78,6 +69,7 @@ class BiologyQuestionSeeder extends Seeder
                     ['option' => 'Transpiration', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'Through <strong>Photosynthesis</strong>, plants convert sunlight into food in their leaves.',
             ],
             [
                 'question' => 'Which molecule carries genetic information?',
@@ -89,6 +81,7 @@ class BiologyQuestionSeeder extends Seeder
                     ['option' => 'Lipid', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => '<strong>DNA</strong> holds all the genetic instructions used in the growth, development, and functioning of living organisms.',
             ],
             [
                 'question' => 'What is the powerhouse of the cell?',
@@ -100,6 +93,7 @@ class BiologyQuestionSeeder extends Seeder
                     ['option' => 'Ribosome', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'The <strong>Mitochondria</strong> are known as the powerhouse of the cell because they convert energy from food into a form that the cell can use.',
             ],
             [
                 'question' => 'What are the building blocks of proteins?',
@@ -111,6 +105,7 @@ class BiologyQuestionSeeder extends Seeder
                     ['option' => 'Monosaccharides', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'Proteins are made up of smaller units called <strong>Amino acids</strong>. Think of amino acids as the alphabet of a language, combining in many ways to create the vast array of proteins in living things.',
             ],
             [
                 'question' => 'Which part of the brain controls balance and coordination?',
@@ -122,6 +117,7 @@ class BiologyQuestionSeeder extends Seeder
                     ['option' => 'Hypothalamus', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'The <strong>Cerebellum</strong> is the part of the brain that helps regulate balance, posture, and coordination, ensuring smooth and balanced muscular activity.',
             ],
             [
                 'question' => 'In which cell organelle does cellular respiration occur?',
@@ -133,6 +129,7 @@ class BiologyQuestionSeeder extends Seeder
                     ['option' => 'Mitochondria', 'is_correct' => true],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'The <strong>Mitochondria</strong> are known as the powerhouse of the cell because they generate most of the cell\'s supply of ATP, used as a source of chemical energy.',
             ],
             [
                 'question' => 'What is the term for a group of similar cells performing the same function?',
@@ -144,6 +141,7 @@ class BiologyQuestionSeeder extends Seeder
                     ['option' => 'Organism', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => '<strong>Tissue</strong> is the term used for a group of similar cells that work together to perform a specific function, like muscle tissue moving parts of the body.',
             ],
             [
                 'question' => 'What type of blood cells are responsible for immunity?',
@@ -155,20 +153,38 @@ class BiologyQuestionSeeder extends Seeder
                     ['option' => 'Plasma cells', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => '<strong>White blood cells</strong> are the soldiers of the body, protecting you from infection and disease by attacking invaders like bacteria and viruses.',
             ],
             // ... add the remaining questions in the same format
         ];
 
+
+        // Calculate total marks
+        $total_marks = array_sum(array_column($questions, 'marks'));
+
+        // Create or find a quiz associated with the physics subject
+        $quiz = Quiz::firstOrCreate([
+            'title' => $biology->name,
+            'quizzable_type' => Subject::class,
+            'quizzable_id' => $biology->id,
+            'total_marks' => $total_marks, // Sum of marks for all questions
+            'duration' => 60, // Example default value
+            'total_questions' => count($questions), // Total number of questions
+            'max_attempts' => 3, // Example default value
+        ]);
+
+        
         foreach ($questions as $questionData) {
             // Create a new question for the quiz
             $question = Question::create([
                 'quiz_id' => $quiz->id,
                 'quizzable_type' => Subject::class,
-                'quizzable_id' => $physicsSubjectForJAMB->id,
+                'quizzable_id' => $biology->id,
                 'question' => $questionData['question'],
                 'marks' => $questionData['marks'],
                 'type' => $questionData['type'],
                 'answer_text' => $questionData['answer_text'] ?? null, // Provide a default null if 'answer_text' is not set
+                'explanation' => $questionData['explanation'] ?? null,
 
             ]);
 

@@ -21,7 +21,7 @@ class Register extends AuthRegister
 {
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
-    protected static string $view = 'filament.user.pages.Auth.register';
+    protected static string $view = 'filament.user.pages.auth.register';
 
     public ?array $data = [];
 
@@ -62,9 +62,9 @@ class Register extends AuthRegister
 
         $user = $this->getUserModel()::create($data);
 
-        // $user->courses()->attach($courseIds);
+        $user->assignRole('panel_user');
 
-        $this->sendEmailVerificationNotification($user);
+        // $this->sendEmailVerificationNotification($user);
 
         Filament::auth()->login($user);
 

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('question_id')->nullable()->constrained()->onDelete('cascade');
             $table->foreignId('topic_id')->nullable()->constrained()->onDelete('cascade');
             $table->foreignId('option_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('topic_quiz_attempt_id')->nullable()->constrained('topic_quiz_attempts')->onDelete('cascade');
             $table->boolean('correct')->default(0)->nullable();
             $table->text('answer_text')->nullable(); // For storing short answers
             $table->boolean('completed')->default(false)->nullable();

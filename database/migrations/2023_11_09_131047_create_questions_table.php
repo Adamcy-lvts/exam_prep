@@ -16,9 +16,11 @@ return new class extends Migration
             $table->foreignId('quiz_id')->nullable()->constrained()->onDelete('cascade');
             $table->morphs('quizzable');
             $table->foreignId('topic_id')->nullable()->constrained()->onDelete('cascade');
+            $table->integer('duration')->nullable();
             $table->text('question');
             $table->enum('type', ['mcq', 'saq', 'tf'])->default('mcq'); // mcq = Multiple Choice Questions, saq = Short Answer Questions
             $table->text('answer_text')->nullable(); // Correct answer For storing short answers
+            $table->text('explanation')->nullable();
             $table->string('question_image')->nullable();
             $table->integer('marks')->default(1);
             $table->timestamps();

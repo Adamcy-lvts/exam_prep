@@ -23,27 +23,16 @@ class EnglishQuestionSeeder extends Seeder
         // Check if the 'JAMB' exam ID was retrieved successfully
         if ($jambExamId) {
             // Retrieve the 'Physics' subject for the 'JAMB' exam
-            $physicsSubjectForJAMB = DB::table('subjects')
-            ->where('name', 'Use of English')
-            ->where('exam_id', $jambExamId)
+            $useOfEnglish = DB::table('subjects')
+                ->where('name', 'Use of English')
+                ->where('exam_id', $jambExamId)
                 ->first();
 
-            // Now, you can use the $physicsSubjectForJAMB to do further operations if needed
+            // Now, you can use the $useOfEnglish to do further operations if needed
             // For example, using the subject to create quiz questions in another seeder
-            // Make sure to check if the $physicsSubjectForJAMB is not null before proceeding
+            // Make sure to check if the $useOfEnglish is not null before proceeding
         }
         // $physicsSubject = Subject::where('name', 'Physics')->firstOrFail();
-
-        // Create or find a quiz associated with the physics subject
-        $quiz = Quiz::firstOrCreate([
-            'title' => $physicsSubjectForJAMB->name,
-            'quizzable_type' => Subject::class,
-            'quizzable_id' => $physicsSubjectForJAMB->id,
-            'total_marks' => 20, // Sum of marks for all questions
-            'duration' => 60, // Example default value
-            'total_questions' => 10, // Total number of questions
-            'max_attempts' => 3, // Example default value
-        ]);
 
         $questions = [
             [
@@ -56,6 +45,7 @@ class EnglishQuestionSeeder extends Seeder
                     ['option' => 'going', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'The correct form is "went" because the sentence is in the past tense. "She went to the store."',
             ],
             [
                 'question' => 'Identify the synonym of "quick":',
@@ -67,6 +57,7 @@ class EnglishQuestionSeeder extends Seeder
                     ['option' => 'Lazy', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => '"Rapid" is a synonym for "quick," both meaning fast or speedy.',
             ],
             [
                 'question' => 'Which word is spelled incorrectly?',
@@ -78,6 +69,7 @@ class EnglishQuestionSeeder extends Seeder
                     ['option' => 'Accidentally', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'The word "Definately" is spelled incorrectly. The correct spelling is "Definitely".',
             ],
             [
                 'question' => 'What is the antonym of "ancient"?',
@@ -89,8 +81,8 @@ class EnglishQuestionSeeder extends Seeder
                     ['option' => 'Past', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'The antonym of "ancient" is "Modern," meaning something is from recent times or the present.',
             ],
-
             [
                 'question' => 'Identify the correct passive form: "The book was read by her."',
                 'marks' => 2,
@@ -98,9 +90,11 @@ class EnglishQuestionSeeder extends Seeder
                     ['option' => 'She was read the book.', 'is_correct' => false],
                     ['option' => 'She read the book.', 'is_correct' => false],
                     ['option' => 'The book was reading by her.', 'is_correct' => false],
-                    ['option' => 'The book read by her.', 'is_correct' => true],
+                    ['option' => 'The book read by her.', 'is_correct' => false], // This option is actually incorrect.
                 ],
                 'type' => 'mcq',
+                'explanation' => 'The given sentence "The book was read by her." is already in the correct passive form. None of the options accurately represent a change or correction to the given sentence.',
+                'correction' => 'The correct passive form of the sentence has been provided in the question. The options and explanation have been adjusted to reflect accurate understanding.'
             ],
             [
                 'question' => 'Which sentence is grammatically correct?',
@@ -112,6 +106,7 @@ class EnglishQuestionSeeder extends Seeder
                     ['option' => 'Him and me went home.', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => '"He and I went home." is grammatically correct because "he" and "I" are subject pronouns that correctly match the subject position in the sentence.',
             ],
             [
                 'question' => 'Choose the word that correctly fills the gap: "She is ___ to win the race."',
@@ -123,6 +118,7 @@ class EnglishQuestionSeeder extends Seeder
                     ['option' => 'liken', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => '"Likely" is the correct choice because it means "probable" or "expected," which fits the context of someone having a good chance to win the race.',
             ],
             [
                 'question' => 'Select the correctly punctuated sentence:',
@@ -134,6 +130,7 @@ class EnglishQuestionSeeder extends Seeder
                     ['option' => 'Its a beautiful day.', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => '"It\'s a beautiful day." uses the correct contraction "It\'s," which stands for "It is," and properly includes the apostrophe for contraction.',
             ],
             [
                 'question' => 'Choose the word that is spelled correctly:',
@@ -145,6 +142,7 @@ class EnglishQuestionSeeder extends Seeder
                     ['option' => 'Reccommend', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'The correct spelling is "Recommend," which means to suggest something as being particularly good or suitable.',
             ],
             [
                 'question' => 'What is the plural form of "mouse"?',
@@ -156,21 +154,36 @@ class EnglishQuestionSeeder extends Seeder
                     ['option' => 'Meese', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'The plural form of "mouse" is "Mice." Unlike most English nouns, "mouse" becomes "mice" when referring to more than one.',
             ],
             // ... add the remaining questions in the same format
         ];
+
+        // Calculate total marks
+        $total_marks = array_sum(array_column($questions, 'marks'));
+
+        // Create or find a quiz associated with the physics subject
+        $quiz = Quiz::firstOrCreate([
+            'title' => $useOfEnglish->name,
+            'quizzable_type' => Subject::class,
+            'quizzable_id' => $useOfEnglish->id,
+            'total_marks' => $total_marks, // Sum of marks for all questions
+            'duration' => 60, // Example default value
+            'total_questions' => count($questions), // Total number of questions
+            'max_attempts' => 3, // Example default value
+        ]);
 
         foreach ($questions as $questionData) {
             // Create a new question for the quiz
             $question = Question::create([
                 'quiz_id' => $quiz->id,
                 'quizzable_type' => Subject::class,
-                'quizzable_id' => $physicsSubjectForJAMB->id,
+                'quizzable_id' => $useOfEnglish->id,
                 'question' => $questionData['question'],
                 'marks' => $questionData['marks'],
                 'type' => $questionData['type'],
                 'answer_text' => $questionData['answer_text'] ?? null, // Provide a default null if 'answer_text' is not set
-
+                'explanation' => $questionData['explanation'] ?? null,
             ]);
 
             // Create options for the question
@@ -184,6 +197,5 @@ class EnglishQuestionSeeder extends Seeder
                 }
             }
         }
-
     }
 }

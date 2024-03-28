@@ -8,6 +8,7 @@ use Livewire\WithPagination;
 use App\Models\TopicPerformance;
 use Filament\Resources\Pages\Page;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Log;
 use App\Filament\Traits\QuizPageTrait;
 use App\Filament\User\Resources\CourseResource;
 
@@ -16,7 +17,7 @@ class Questions extends Page
 {
 
     use QuizPageTrait;
-    
+
     protected static string $resource = CourseResource::class;
 
     protected $listeners = ['timesUp' => 'submitTest'];
@@ -82,10 +83,6 @@ class Questions extends Page
             }
         }
 
-
-
-
-
         // Save the topic performance data
         foreach ($topicPerformanceData as $topicId => $performanceData) {
             TopicPerformance::create([
@@ -120,10 +117,13 @@ class Questions extends Page
         session()->forget(['selectedNumberOfQuestions', 'selectedDuration']);
 
         $user = auth()->user();
-        
+
         $user->useCourseAttempt($this->quizzable->quizzable_id);
 
+        $this->currentAttempt->update(['status' => 'completed']);
+   
         return redirect()->route('filament.user.resources.courses.result', ['attemptId' => $this->currentAttempt->id, 'quizzableId' => $this->quizzable->quizzable_id, 'quizzableType' => $this->quizzable->quizzable_type]);
+      
     }
 
     public function render(): View
@@ -147,5 +147,4 @@ class Questions extends Page
             ...$this->getLayoutData(),
         ]);
     }
-   
 }

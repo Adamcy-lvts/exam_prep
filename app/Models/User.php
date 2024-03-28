@@ -3,11 +3,16 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Carbon\Carbon;
 use Filament\Panel;
+use App\Models\Exam;
 use App\Models\Plan;
+use App\Models\Topic;
 use App\Models\Course;
+use App\Models\Payment;
 use App\Models\Subject;
 use App\Models\JambAttempt;
+use App\Models\QuizAttempt;
 use App\Models\Subscription;
 use App\Models\CourseAttempt;
 use App\Models\SubjectAttempt;
@@ -15,10 +20,12 @@ use App\Models\UserQuizAttempt;
 use Laravel\Sanctum\HasApiTokens;
 use Filament\Models\Contracts\HasName;
 use Laravel\Jetstream\HasProfilePhoto;
+use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
 use Filament\Models\Contracts\FilamentUser;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
@@ -27,6 +34,8 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
     use HasApiTokens;
     use HasFactory;
     use Notifiable;
+    use HasRoles;
+    use HasPanelShield;
 
     // Define constants for registration status
     const STATUS_REGISTRATION_COMPLETED = 'registration_completed';
@@ -46,13 +55,15 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
      * @var array<int, string>
      */
     protected $fillable = [
-    
+
         'first_name',
         'last_name',
         'phone',
         'email',
         'password',
         'subject_attempts_initialized_at',
+        'course_attempts_initialized_at',
+        'exam_id',
         'is_on_trial',
         'trial_ends_at'
     ];
@@ -84,17 +95,37 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
      * @var array<int, string>
      */
 
-    // public function hasActiveUnlimitedPlan()
-    // {
-    //     return $this->plans()
-    //         ->where('number_of_attempts', null) // Unlimited plans have null attempts
-    //         ->wherePivot('expires_at', '>', now()) // Plan is still within the validity period
-    //         ->exists();
-    // }
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function QuizAttempts()
+    {
+        return $this->hasMany(QuizAttempt::class);
+    }
+
+    public function topics()
+    {
+        return $this->belongsToMany(Topic::class, 'topic_users')->withPivot('unlocked')->withTimestamps();
+    }
+
+
+    public function exam()
+    {
+        return $this->belongsTo(Exam::class);
+    }
+
 
     public function subscriptions()
     {
         return $this->hasMany(Subscription::class);
+    }
+
+    public function latestSubscriptionStatus()
+    {
+
+        return $this->subscriptions()->latest()->first();
     }
 
     // Method to get the current active subscription
@@ -112,13 +143,18 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
         // Assuming you have a method 'currentSubscription()' that fetches the current active subscription
         $currentSubscription = $this->currentSubscription();
 
-        if ($currentSubscription && $currentSubscription->end_date->isPast()) {
+        if ($currentSubscription->ends_at ?? '') {
+            $end_date = Carbon::parse($currentSubscription->ends_at);
+        }
+
+        if ($currentSubscription && $end_date->isPast()) {
             // Subscription has ended
             $freePlan = Plan::where('title', 'Explorer Access Plan')->first(); // Retrieve your default free plan
 
             if ($freePlan) {
                 // Create a new subscription record for the free plan
-                $this->subscriptions()->create(['plan_id' => $freePlan->id,
+                $this->subscriptions()->create([
+                    'plan_id' => $freePlan->id,
                     'starts_at' => now(),
                     'ends_at' => now()->addYears(10),
                     'status' => 'active', // Consider your logic for setting status
@@ -170,9 +206,20 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
         return $this->subjectAttempts()->where('attempts_left', '>', 0)->exists();
     }
 
+    public function hasCourseAttemptsForAnyCourse()
+    {
+        // Assuming each subject attempt is tracked individually
+        return $this->courseAttempts()->where('attempts_left', '>', 0)->exists();
+    }
+
     public function getFilamentName(): string
     {
         return "{$this->first_name} {$this->last_name}";
+    }
+
+    public function getFullNameAttribute()
+    {
+        return $this->first_name . ' ' . $this->last_name;
     }
 
     public function courses()
@@ -187,21 +234,15 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
         return $this->belongsToMany(Subject::class);
     }
 
-    // User.php
+    public function isRegisteredForSubject()
+    {
+        return $this->subjects()->exists();
+    }
 
-    // public function plans()
-    // {
-    //     return $this->belongsToMany(Plan::class, 'user_plans');
-    // }
-
-    // public function currentPlan()
-    // {
-    //     return $this->plans()
-    //         ->latest('created_at') // assuming 'pivot_created_at' is a field in the pivot table
-    //         ->first();
-    // }
-
-
+    public function isRegisteredForCourse()
+    {
+        return $this->courses()->exists();
+    }
 
     public function hasJambAttempts()
     {
@@ -236,7 +277,7 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
         return false;
     }
 
-  
+
 
 
     public function useSubjectAttempt($subjectId)
@@ -274,6 +315,16 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
         }
     }
 
+    public function hasInitializedCourseAttempts()
+    {
+        return $this->course_attempts_initialized_at != null;
+    }
+    public function markCourseAttemptsAsInitialized()
+    {
+        $this->course_attempts_initialized_at = now();
+        $this->save();
+    }
+
     public function hasInitializedSubjectAttempts()
     {
         return $this->subject_attempts_initialized_at != null;
@@ -284,5 +335,4 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
         $this->subject_attempts_initialized_at = now();
         $this->save();
     }
-
 }

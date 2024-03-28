@@ -22,6 +22,8 @@ class PlanResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationGroup = 'Content Management';
+
     public static function form(Form $form): Form
     {
         return $form
@@ -30,7 +32,7 @@ class PlanResource extends Resource
                 TextInput::make('price'),
                 TextInput::make('description'),
                 Textarea::make('features'),
-                TextInput::make('number_of_attempts')->numeric()->required(),
+                TextInput::make('number_of_attempts')->numeric(),
             ]);
     }
 
@@ -41,7 +43,7 @@ class PlanResource extends Resource
                 TextColumn::make('title'),
                 TextColumn::make('type'),
                 TextColumn::make('price'),
-                TextColumn::make('number_of_attempts'),
+                TextColumn::make('number_of_attempts')->default('Unlimited'),
 
             ])
             ->filters([

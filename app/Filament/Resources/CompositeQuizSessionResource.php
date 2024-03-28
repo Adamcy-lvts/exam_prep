@@ -23,6 +23,8 @@ class CompositeQuizSessionResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationGroup = 'Quiz Management';
+
     public static function form(Form $form): Form
     {
         return $form
@@ -46,6 +48,11 @@ class CompositeQuizSessionResource extends Resource
                 TextColumn::make('completed'),
                 TextColumn::make('total_score'),
                 TextColumn::make('allowed_attempts'),
+                TextColumn::make('status')->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'in progress' => 'warning',
+                        'completed' => 'success',
+                    })
 
             ])
             ->filters([

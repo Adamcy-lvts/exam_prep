@@ -8,6 +8,7 @@ use App\Livewire\TestPage;
 use App\Livewire\Faculties;
 use App\Livewire\QuizResult;
 use Illuminate\Http\Request;
+use App\Livewire\CoursesPage;
 use App\Livewire\PricingPlans;
 use App\Livewire\SubjectsPage;
 use App\Livewire\StudyFieldPage;
@@ -34,24 +35,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Route::get('/', [ExamController::class, 'index'])->name('welcome');
-
-// Route::middleware([
-//     'auth:sanctum',
-//     config('jetstream.auth_session'),
-//     'verified',
-// ])->group(function () {
-//     Route::get('/dashboard', function () {
-//         return view('dashboard');
-//     })->name('dashboard');
-// });
-
-// In routes/web.php
-
 
 // Routes requiring authentication, email verification, and step completion
-Route::middleware(['auth', 'verified', 'steps.completed'])->group(function () {
-    Route::get('/faculties', Faculties::class)->name('faculties');
+Route::middleware(['auth', 'steps.completed'])->group(function () {
+    
     Route::get('/subject-lessons/{subject_id}', SubjectsLessons::class)->name('subjects.lessons');
     Route::get('/subject/instructions-page', InstructionPage::class)->name('instructions.page');
     Route::get('/jamb/quiz/{compositeSessionId}', TestPage::class)->name('start.quiz');
@@ -61,11 +48,11 @@ Route::middleware(['auth', 'verified', 'steps.completed'])->group(function () {
 });
 
 // Routes requiring authentication and email verification but not step completion
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/field-of-study/{id}', StudyFieldPage::class)->name('study-fields');
-    Route::get('/subjects/{examid}/{fieldid}', SubjectsPage::class)->name('subjects.page');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/courses/{examId}/', CoursesPage::class)->name('courses.page');
+    Route::get('/subjects/{examid}', SubjectsPage::class)->name('subjects.page');
     Route::get('/select-exam-type', Exams::class)->name('choose-exam');
- 
+    Route::get('/faculties', Faculties::class)->name('faculties');
     Route::get('/payment/callback', [PaymentController::class, 'handleGatewayCallback']);
 });
 

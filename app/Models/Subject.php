@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Exam;
 use App\Models\User;
+use App\Models\Programme;
 use App\Models\QuizSession;
 use App\Models\SubjectTopic;
 use Illuminate\Database\Eloquent\Model;
@@ -39,6 +40,10 @@ class Subject extends Model
     {
         return $this->morphMany(Question::class, 'quizzable');
     }
+    public function getLimitedQuestionsQuery()
+    {
+        return $this->questions()->take(50);
+    }
 
     public function quizAttempt()
     {
@@ -50,8 +55,12 @@ class Subject extends Model
         return $this->morphMany(Quiz::class, 'quizzable');
     }
     // Inside your Subject model
-
     public function topics()
+    {
+        return $this->morphMany(Topic::class, 'topicable');
+    }
+
+    public function subjectTopics()
     {
         return $this->hasMany(SubjectTopic::class)->orderBy('order');
     }
@@ -64,6 +73,11 @@ class Subject extends Model
     public function users()
     {
         return $this->belongsToMany(User::class);
+    }
+
+    public function programmes()
+    {
+        return $this->belongsToMany(Programme::class)->withPivot('is_default');
     }
 
 

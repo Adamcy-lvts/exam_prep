@@ -16,7 +16,8 @@
                         x-transition:leave-start="transform opacity-100 scale-100"
                         x-transition:leave-end="transform opacity-0 scale-95"
                         class="transform transition duration-300 ease-in-out hover:scale-105 bg-white rounded-xl shadow-lg overflow-hidden">
-                        <a href="#" wire:navigate class="block p-12 h-full text-center hover:bg-gray-50">
+                        <a href="{{ route('courses.page', $faculty->id) }}" wire:navigate
+                            class="block p-12 h-full text-center hover:bg-gray-50">
                             <h3 class="text-md md:text-2xl uppercase font-semibold text-gray-800 mb-2">
                                 {{ $faculty->faculty_name }}</h3>
 

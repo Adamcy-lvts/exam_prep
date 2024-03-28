@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('first_name');
             $table->string('last_name');
+            $table->string('full_name')->virtualAs('concat(first_name, \' \', last_name)');
             $table->string('email')->unique();
             $table->string('phone')->nullable();
             $table->string('registration_status')->nullable();
@@ -23,6 +24,8 @@ return new class extends Migration
             $table->date('trial_ends_at')->nullable(); //
             $table->string('password');
             $table->timestamp('subject_attempts_initialized_at')->nullable();
+            $table->timestamp('course_attempts_initialized_at')->nullable();
+            $table->foreignId('exam_id')->nullable();
             $table->rememberToken();
             $table->foreignId('current_team_id')->nullable();
             $table->string('profile_photo_path', 2048)->nullable();

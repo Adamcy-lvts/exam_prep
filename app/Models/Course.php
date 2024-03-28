@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\User;
 use App\Models\Topic;
 use App\Models\Module;
+use App\Models\Faculty;
 use App\Models\Question;
 use App\Models\QuizAttempt;
 use App\Models\QuizSession;
@@ -15,7 +16,7 @@ class Course extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title','course_code', 'duration', 'total_marks', 'max_attempts'];
+    protected $fillable = ['title','course_code', 'duration', 'faculty_id', 'total_marks', 'max_attempts'];
 
 
     public function quizAttempt()
@@ -41,7 +42,7 @@ class Course extends Model
 
     public function topics()
     {
-        return $this->hasMany(Topic::class);
+        return $this->morphMany(Topic::class, 'topicable');
     }
 
     public function modules()
@@ -55,4 +56,8 @@ class Course extends Model
     }
 
 
+    public function faculty()
+    {
+        return $this->belongsTo(Faculty::class);
+    }
 }

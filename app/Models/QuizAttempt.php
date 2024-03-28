@@ -15,7 +15,7 @@ class QuizAttempt extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id','composite_quiz_session_id', 'quiz_id', 'quiz_session_id', 'start_time', 'end_time', 'score'];
+    protected $fillable = ['user_id','composite_quiz_session_id', 'quiz_id', 'quiz_session_id', 'start_time', 'end_time', 'score', 'status'];
 
     public function user()
     {

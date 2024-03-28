@@ -8,6 +8,7 @@ use App\Models\Subject;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
+use Filament\Tables\Actions\Action;
 use Illuminate\Support\Facades\Auth;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
@@ -66,7 +67,13 @@ class SubjectResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Action::make('delete')
+                    ->requiresConfirmation()
+                    ->action(function ($record) {
+                        // Assuming the authenticated user is the one whose relationship you want to delete
+                        $user = Auth::user();
+                        $user->subjects()->detach($record->id);
+                    })
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -96,6 +103,7 @@ class SubjectResource extends Resource
             'jamb-quiz' => Pages\JambQuizPage::route('/{compositeSessionId}/jamb/quiz'),
             'jamb-quiz-result' => Pages\JambQuizResult::route('/{compositeSessionId}/jamb-quiz/result'),
             'payment-form' => Pages\PaymentForm::route('/{planId}/payment'),
+            'lessons' => Pages\SubjectLessonPage::route('/{subjectId}/lessons'),
             
         ];
     }

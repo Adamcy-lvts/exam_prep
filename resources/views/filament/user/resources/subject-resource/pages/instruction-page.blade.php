@@ -83,14 +83,9 @@
             x-transition:leave-start="opacity-100 transform scale-100"
             x-transition:leave-end="opacity-0 transform scale-90"
             class="fixed inset-0 flex items-center justify-center z-[9999]">
-
-            <!-- Background overlay -->
-            {{-- <div class="absolute inset-0 bg-black bg-opacity-50 transition-opacity ease-in-out duration-500"></div> --}}
-            <!-- Background overlay -->
             <div
                 class="absolute inset-0 bg-black bg-opacity-50 dark:bg-white dark:bg-opacity-30 transition-opacity ease-in-out duration-500">
             </div>
-
 
             <!-- Modal -->
             <div

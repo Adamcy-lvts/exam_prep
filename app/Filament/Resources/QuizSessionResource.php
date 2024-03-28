@@ -8,6 +8,7 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Models\QuizSession;
 use Filament\Resources\Resource;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
 use Filament\Forms\Components\TextInput;
@@ -24,6 +25,8 @@ class QuizSessionResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationGroup = 'Quiz Management';
+
     public static function form(Form $form): Form
     {
         return $form
@@ -38,13 +41,19 @@ class QuizSessionResource extends Resource
     {
         return $table
             ->columns([
-                ViewColumn::make('User')->view('filament.tables.columns.full-name'),
+                ViewColumn::make('full_name')->view('filament.tables.columns.full-name'),
                 TextColumn::make('title'),
                 TextColumn::make('quizzable_type'),
                 TextColumn::make('start_time')->dateTime('g:i A'),
                 TextColumn::make('duration'),
                 TextColumn::make('allowed_attempts')->numeric(),
-                ToggleColumn::make('completed'),
+                IconColumn::make('completed')
+                    ->boolean()->color(fn (string $state): string => match ($state) {
+                 
+                    '0' => 'warning',
+                    '1' => 'success',
+        
+                }),
             ])
             ->filters([
                 //

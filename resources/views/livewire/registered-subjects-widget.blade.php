@@ -1,6 +1,6 @@
 <x-filament-widgets::widget>
     <x-filament::section>
-        <a href="{{ route('subjects.lessons', ['subject_id' => $subject->id]) }}">
+        <a href="{{ route('filament.user.resources.subjects.lessons', ['subjectId' => $subject->id]) }}">
             <div class="text-center">
                 <h2 class="text-2xl font-bold mb-4">{{ $subject->name }}</h2>
 

@@ -65,7 +65,7 @@ trait ResultPageTrait
         // dd($this->totalScore);
         $session = QuizSession::find($this->currentAttempt->quiz_session_id);
 
-        $this->attempts = $session->allowed_attempts;
+        // $this->attempts = $session->allowed_attempts;
 
         // Get the questions and options related to the test answers
         $this->questions = Question::whereIn('id', $this->testAnswers->pluck('question_id'))->with('options')->get(); // Assuming you have a "Question" model for questions and a relationship between Question and Option models
@@ -100,10 +100,10 @@ trait ResultPageTrait
 
         $quizAttemptId = $this->currentAttempt->id; // You would get the current attempt ID from the user's session or the page URL.
 
-        // If no ongoing attempt, check the total number of attempts by the user
-        $attempts = QuizAttempt::where('user_id', auth()->user()->id)->where('quiz_id', $this->quizzable->id)
-            ->where('quiz_session_id', $session->id)
-            ->count();
+        // // If no ongoing attempt, check the total number of attempts by the user
+        // $attempts = QuizAttempt::where('user_id', auth()->user()->id)->where('quiz_id', $this->quizzable->id)
+        //     ->where('quiz_session_id', $session->id)
+        //     ->count();
 
     
         // Conditional checking for attempts based on quizzable type
@@ -124,34 +124,58 @@ trait ResultPageTrait
             ->get();
 
 
-
+// my original logic
         // Define the threshold for doing well
         $performanceThreshold = 70;
 
-        // Organize topics by module and unit
-        $organizedPerformances = $this->currentAttempt->topicPerformances
-            ->groupBy(function ($performance) {
-                return optional($performance->topic->unit)->module->id ?? 'no_module';
-            })
-            ->map(function ($groupedPerformances) use ($performanceThreshold) {
-                return $groupedPerformances
-                    ->groupBy(function ($performance) {
-                        return $performance->topic->unit->id ?? 'no_unit';
-                    })
-                    ->map(function ($performances) use ($performanceThreshold) {
-                        // Separate the performances into 'did well' and 'did not do well'
-                        $didWell = $performances->filter(function ($performance) use ($performanceThreshold) {
-                            return $performance->correct_answers_count / $performance->questions_count * 100 >= $performanceThreshold;
-                        });
-                        $didNotDoWell = $performances->reject(function ($performance) use ($performanceThreshold) {
-                            return $performance->correct_answers_count / $performance->questions_count * 100 >= $performanceThreshold;
-                        });
-                        return compact('didWell', 'didNotDoWell');
-                    });
-            });
+        // // // Organize topics by module and unit
+        // $organizedPerformances = $this->currentAttempt->topicPerformances
+        //     ->groupBy(function ($performance) {
+        //         return optional($performance->topic->unit)->module->id ?? 'no_module';
+        //     })
+        //     ->map(function ($groupedPerformances) use ($performanceThreshold) {
+        //         return $groupedPerformances
+        //             ->groupBy(function ($performance) {
+        //                 return $performance->topic->unit->id ?? 'no_unit';
+        //             })
+        //             ->map(function ($performances) use ($performanceThreshold) {
+        //                 // Separate the performances into 'did well' and 'did not do well'
+        //                 $didWell = $performances->filter(function ($performance) use ($performanceThreshold) {
+        //                     return $performance->correct_answers_count / $performance->questions_count * 100 >= $performanceThreshold;
+        //                 });
+        //                 $didNotDoWell = $performances->reject(function ($performance) use ($performanceThreshold) {
+        //                     return $performance->correct_answers_count / $performance->questions_count * 100 >= $performanceThreshold;
+        //                 });
+        //                 return compact('didWell', 'didNotDoWell');
+        //             });
+        //     });
 
-        // Now you have a nested collection organized by module and unit
-        $this->organizedPerformances = $organizedPerformances;
+        // // Now you have a nested collection organized by module and unit
+        // $this->organizedPerformances = $organizedPerformances;
+
+        // your logic
+        // Start by grouping performances at the highest level available - module, unit, or directly by topic
+        $organizedPerformances = $this->currentAttempt->topicPerformances->groupBy(function ($performance) {
+            if ($performance->topic->unit && $performance->topic->unit->module) {
+                return $performance->topic->unit->module->id;
+            }
+            return 'directly_associated'; // Topics directly associated with the course/subject
+        })->map(function ($groupedPerformances) use ($performanceThreshold) {
+            return $groupedPerformances->groupBy(function ($performance) {
+                return $performance->topic->unit_id ? $performance->topic->unit_id : 'directly_associated';
+            })->map(function ($performances) use ($performanceThreshold) {
+                // Separate the performances into 'did well' and 'did not do well'
+                $didWell = $performances->filter(function ($performance) use ($performanceThreshold) {
+                    return $performance->correct_answers_count / $performance->questions_count * 100 >= $performanceThreshold;
+                });
+                $didNotDoWell = $performances->filter(function ($performance) use ($performanceThreshold) {
+                    return $performance->correct_answers_count / $performance->questions_count * 100 < $performanceThreshold;
+                });
+                return compact('didWell', 'didNotDoWell');
+            });
+        });
+         $this->organizedPerformances = $organizedPerformances;
+
     }
 
     public function getTitle(): string | Htmlable

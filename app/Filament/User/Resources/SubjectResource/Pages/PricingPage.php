@@ -19,6 +19,6 @@ class PricingPage extends Page
     public function mount()
     {
         $this->user = Auth::user();
-        $this->pricingPlans = Plan::all();
+        $this->pricingPlans = Plan::where('type','subject')->get();
     }
 }

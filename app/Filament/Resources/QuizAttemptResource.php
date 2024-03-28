@@ -21,6 +21,8 @@ class QuizAttemptResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationGroup = 'Quiz Management';
+
     public static function form(Form $form): Form
     {
         return $form
@@ -37,8 +39,15 @@ class QuizAttemptResource extends Resource
                 TextColumn::make('quiz.title'),
                 TextColumn::make('start_time')->dateTime('g:i A'),
                 TextColumn::make('end_time')->dateTime('g:i A'),
-                TextColumn::make('QuizSession.duration'),
+                TextColumn::make('quiz.duration'),
                 TextColumn::make('score'),
+                TextColumn::make('status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'in progress' => 'warning',
+                        'completed' => 'success',
+                    })
+
             ])
             ->filters([
                 //

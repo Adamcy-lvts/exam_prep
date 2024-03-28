@@ -36,6 +36,7 @@ class JambQuizPage extends Page
     public $compositeQuizSession;
     public $remainingTime;
     public $user;
+    public $quiz;
 
     protected $listeners = ['timesUp' => 'submitQuiz'];
 
@@ -71,9 +72,9 @@ class JambQuizPage extends Page
 
     private function initializeSubjectSession($subject)
     {
-        $quiz = $this->initializeQuizForSubject($subject);
+        $this->quiz = $this->initializeQuizForSubject($subject);
 
-        $attempt = $this->initializeQuizAttempt($quiz->id);
+        $attempt = $this->initializeQuizAttempt($this->quiz->id);
 
         $this->subjectSessions[$subject->id] = [
 
@@ -210,11 +211,14 @@ class JambQuizPage extends Page
                 $compositeSession = CompositeQuizSession::find($this->compositeSessionId);
                 $compositeSession->completed = true;
                 $compositeSession->total_score = $compositeScore;
+                $compositeSession->status = "completed";
                 $compositeSession->save(); 
             }
 
             // After successful submission
             $this->user->useJambAttempts($this->user);
+
+            QuizAttempt::where('composite_quiz_session_id', $this->compositeSessionId)->update(['status' => 'completed']);
 
             // Redirect to the results page with the CompositeQuizSession ID.
             return redirect()->route('filament.user.resources.subjects.jamb-quiz-result', ['compositeSessionId' => $this->compositeSessionId]);

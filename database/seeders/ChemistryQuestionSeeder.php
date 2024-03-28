@@ -23,27 +23,18 @@ class ChemistryQuestionSeeder extends Seeder
         // Check if the 'JAMB' exam ID was retrieved successfully
         if ($jambExamId) {
             // Retrieve the 'Physics' subject for the 'JAMB' exam
-            $physicsSubjectForJAMB = DB::table('subjects')
+            $chemistry = DB::table('subjects')
             ->where('name', 'Chemistry')
             ->where('exam_id', $jambExamId)
                 ->first();
 
-            // Now, you can use the $physicsSubjectForJAMB to do further operations if needed
+            // Now, you can use the $chemistry to do further operations if needed
             // For example, using the subject to create quiz questions in another seeder
-            // Make sure to check if the $physicsSubjectForJAMB is not null before proceeding
+            // Make sure to check if the $chemistry is not null before proceeding
         }
         // $physicsSubject = Subject::where('name', 'Physics')->firstOrFail();
 
-        // Create or find a quiz associated with the physics subject
-        $quiz = Quiz::firstOrCreate([
-            'title' => $physicsSubjectForJAMB->name,
-            'quizzable_type' => Subject::class,
-            'quizzable_id' => $physicsSubjectForJAMB->id,
-            'total_marks' => 20, // Sum of marks for all questions
-            'duration' => 60, // Example default value
-            'total_questions' => 10, // Total number of questions
-            'max_attempts' => 3, // Example default value
-        ]);
+      
 
         $questions = [
             [
@@ -56,6 +47,7 @@ class ChemistryQuestionSeeder extends Seeder
                     ['option' => 'Cu', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'Gold is represented by the symbol <strong>Au</strong> from the Latin word \'aurum\' meaning shiny dawn.',
             ],
             [
                 'question' => 'What is the most abundant gas in the Earth\'s atmosphere?',
@@ -67,6 +59,7 @@ class ChemistryQuestionSeeder extends Seeder
                     ['option' => 'Carbon dioxide', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'Nitrogen makes up about 78% of the Earth\'s atmosphere, making it the most abundant gas.',
             ],
             [
                 'question' => 'Which element has the highest electronegativity?',
@@ -78,6 +71,7 @@ class ChemistryQuestionSeeder extends Seeder
                     ['option' => 'Bromine', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'Fluorine has the highest electronegativity, making it extremely reactive and capable of attracting electrons to itself more than any other element.',
             ],
             [
                 'question' => 'What type of bond is formed when electrons are transferred from one atom to another?',
@@ -89,6 +83,7 @@ class ChemistryQuestionSeeder extends Seeder
                     ['option' => 'Metallic bond', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'An <strong>Ionic bond</strong> is formed through the transfer of electrons from one atom to another, leading to the formation of positively and negatively charged ions.',
             ],
             [
                 'question' => 'What is the pH value of pure water at 25°C?',
@@ -100,6 +95,7 @@ class ChemistryQuestionSeeder extends Seeder
                     ['option' => '9', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'Pure water at 25°C has a pH value of <strong>7</strong>, indicating that it is neutral – neither acidic nor basic.',
             ],
             [
                 'question' => 'The process of converting a liquid to a gas is called what?',
@@ -111,6 +107,7 @@ class ChemistryQuestionSeeder extends Seeder
                     ['option' => 'Deposition', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'Evaporation is the process where a liquid turns into a gas. It happens when liquid water gets enough energy from heat to escape into the air as water vapor.',
             ],
             [
                 'question' => 'What is the formula for calculating molarity?',
@@ -122,6 +119,7 @@ class ChemistryQuestionSeeder extends Seeder
                     ['option' => 'grams of solute/liters of solution', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'Molarity measures the concentration of a solution. It\'s calculated as the moles of solute (the substance dissolved) divided by the liters of the whole solution.',
             ],
             [
                 'question' => 'Which gas is produced when hydrochloric acid reacts with sodium hydroxide?',
@@ -133,6 +131,8 @@ class ChemistryQuestionSeeder extends Seeder
                     ['option' => 'None', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'When hydrochloric acid reacts with sodium hydroxide, it produces sodium chloride (table salt) and water. Hydrogen gas is released in some acid-base reactions but not in this neutralization reaction.',
+                'correction' => 'No gas is produced in the reaction between hydrochloric acid and sodium hydroxide; it results in water and sodium chloride. The correct option in the question should be revised to reflect accurate chemical outcomes.'
             ],
             [
                 'question' => 'What is the main component of natural gas?',
@@ -144,6 +144,7 @@ class ChemistryQuestionSeeder extends Seeder
                     ['option' => 'Butane', 'is_correct' => false],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'Methane is the main component of natural gas, making up about 70-90% of it. It\'s used as a fuel for heating, cooking, and electricity generation.',
             ],
             [
                 'question' => 'Which vitamin is produced by the human skin in response to sunlight?',
@@ -155,21 +156,36 @@ class ChemistryQuestionSeeder extends Seeder
                     ['option' => 'Vitamin D', 'is_correct' => true],
                 ],
                 'type' => 'mcq',
+                'explanation' => 'Vitamin D is known as the "sunshine vitamin" because the skin produces it in response to sunlight. It\'s essential for healthy bones because it helps the body use calcium from the diet.',
             ],
             // ... add the remaining questions in the same format
         ];
+
+        // Calculate total marks
+        $total_marks = array_sum(array_column($questions, 'marks'));
+
+        // Create or find a quiz associated with the physics subject
+        $quiz = Quiz::firstOrCreate([
+            'title' => $chemistry->name,
+            'quizzable_type' => Subject::class,
+            'quizzable_id' => $chemistry->id,
+            'total_marks' => $total_marks, // Sum of marks for all questions
+            'duration' => 60, // Example default value
+            'total_questions' => count($questions), // Total number of questions
+            'max_attempts' => 3, // Example default value
+        ]);
 
         foreach ($questions as $questionData) {
             // Create a new question for the quiz
             $question = Question::create([
                 'quiz_id' => $quiz->id,
                 'quizzable_type' => Subject::class,
-                'quizzable_id' => $physicsSubjectForJAMB->id,
+                'quizzable_id' => $chemistry->id,
                 'question' => $questionData['question'],
                 'marks' => $questionData['marks'],
                 'type' => $questionData['type'],
                 'answer_text' => $questionData['answer_text'] ?? null, // Provide a default null if 'answer_text' is not set
-
+                'explanation' => $questionData['explanation'] ?? null,
             ]);
 
             // Create options for the question

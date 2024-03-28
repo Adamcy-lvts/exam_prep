@@ -118,6 +118,8 @@ class Questions extends Page
 
         $user->useSubjectAttempt($this->quizzable->quizzable_id);
 
+        $this->currentAttempt->update(['status' => 'completed']);
+
         return redirect()->route('filament.user.resources.subjects.result', ['attemptId' => $this->currentAttempt->id, 'quizzableId' => $this->quizzable->quizzable_id, 'quizzableType' => $this->quizzable->quizzable_type]);
     }
 

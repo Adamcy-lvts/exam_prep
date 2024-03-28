@@ -9,6 +9,7 @@ use App\Models\Question;
 use App\Models\QuizAnswer;
 use App\Models\QuizAttempt;
 use Livewire\WithPagination;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class SubjectsComponent extends Component
 {
@@ -17,17 +18,33 @@ class SubjectsComponent extends Component
     public $subject;
     public $answers = [];
     public $currentAttempt;
-    public $allQuestions;
-    public $page;
+    // public $questions;
+    public $currentPage = 1;
+    public $perPage = 1;
+    public $totalQuestions;
+    public $questionIds;
+
 
     public function mount($subjectId, $attemptId)
     {
         // $this->reset();
         $this->currentAttempt = QuizAttempt::findOrFail($attemptId);
-        
+
         $this->subject = Subject::findOrFail($subjectId);
 
-        $this->allQuestions = $this->subject->questions;
+        if ($this->subject->questions->count() > 50) {
+            $this->totalQuestions =  $this->subject->questions->take(50);
+        } else {
+            $this->totalQuestions =  $this->subject->questions;
+        }
+
+        // Fetch 50 random question IDs
+        $this->questionIds = Question::where('quizzable_id', $this->subject->id)
+            ->where('quizzable_type', $this->subject->getMorphClass())
+            ->inRandomOrder()
+            ->take(50)
+            ->pluck('id')
+            ->toArray();
 
         $this->loadAnswers();
 
@@ -43,7 +60,6 @@ class SubjectsComponent extends Component
                 $this->goToQuestion($questionNumber);
             }
         }
-
     }
 
     public function goToQuestion($pageNumber)
@@ -54,21 +70,72 @@ class SubjectsComponent extends Component
 
     private function loadAnswers()
     {
-        
+
         $answers = QuizAnswer::where('quiz_attempt_id', $this->currentAttempt->id)
             ->pluck('option_id', 'question_id');
 
         $this->answers = $answers->all();
     }
 
+    // public function getQuestionsProperty()
+    // {
+    //     $this->loadAnswers();
+
+    //     // Convert collection to query builder instance
+    //     $questions = Question::query()
+    //         ->where('quizzable_id', $this->subject->id)
+    //         ->where('quizzable_type', $this->subject->getMorphClass())
+    //         ->inRandomOrder();
+
+    //         dd($questions);
+
+    //     // Paginate the results
+    //     $paginatedQuestions = $questions->simplePaginate(1); // Change the number to your desired items per page
+
+    //     return $paginatedQuestions;
+    // }
 
     public function getQuestionsProperty()
     {
-        
         $this->loadAnswers();
-        return Question::where('quizzable_id', $this->subject->id)
-            ->where('quizzable_type', $this->subject->getMorphClass())
-            ->simplePaginate(1);
+
+        // // Fetch 50 random questions
+        // $questions = Question::where('quizzable_id',
+        //     $this->subject->id
+        // )->where('quizzable_type', $this->subject->getMorphClass())
+        // ->inRandomOrder()
+        // ->take(50)
+        // ->get();
+        // Fetch questions using the stored IDs
+        $questions = Question::whereIn('id', $this->questionIds)
+            ->orderByRaw('FIELD(id, ' . implode(',', $this->questionIds) . ')')
+            ->get();
+
+
+        // Get current page from request, default is 1
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+
+        // Create a new LengthAwarePaginator instance
+        $paginatedQuestions = new LengthAwarePaginator(
+            $questions->forPage($currentPage, 1), // Items for current page
+            $questions->count(), // Total items
+            1, // Items per page
+            $currentPage, // Current page
+            ['path' => LengthAwarePaginator::resolveCurrentPath()] // Page path
+        );
+
+        return $paginatedQuestions;
+    }
+
+
+    public function previousPage()
+    {
+        $this->setPage($this->questions->currentPage() - 1);
+    }
+
+    public function nextPage()
+    {
+        $this->setPage($this->questions->currentPage() + 1);
     }
 
     public function setAnswer($questionId, $optionId = null, $answerText = null)
@@ -134,20 +201,9 @@ class SubjectsComponent extends Component
 
     public function render()
     {
-        
+
         return view('livewire.subjects-component', [
             'questions' => $this->questions
         ]);
     }
 }
-
- // private function loadAnswers()
-    // {
-    //     $cacheKey = 'quiz_answers_' . $this->currentAttempt->id;
-
-    //     $this->answers = cache()->remember($cacheKey, now()->addMinutes(30), function () {
-    //         return QuizAnswer::where('quiz_attempt_id', $this->currentAttempt->id)
-    //             ->pluck('option_id', 'question_id')
-    //             ->all();
-    //     });
-    // }

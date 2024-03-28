@@ -1,5 +1,6 @@
 <?php
 
+use App\Settings\AppSettings;
 
 function sanitizeAnswer($input)
 {
@@ -13,4 +14,15 @@ function sanitizeAnswer($input)
     $unitPart = isset($matches[2]) ? trim($matches[2]) : '';
 
     return strtolower($numericPart . ' ' . $unitPart);
+}
+
+
+function getSiteName(): string
+{
+    return app(AppSettings::class)->site_name;
+}
+
+function getTimeZone(): string
+{
+    return app(AppSettings::class)->timezone;
 }

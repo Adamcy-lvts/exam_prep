@@ -8,6 +8,7 @@ use App\Models\Option;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,6 +22,8 @@ class OptionResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationGroup = 'Content Management';
+
     public static function form(Form $form): Form
     {
         return $form
@@ -33,9 +36,21 @@ class OptionResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('question.question'),
+                TextColumn::make('question.question')->limit(50)
+                    ->tooltip(function (TextColumn $column): ?string {
+                        $state = $column->getState();
+
+                        if (strlen($state) <= $column->getCharacterLimit()) {
+                            return null;
+                        }
+
+                        // Only render the tooltip if the column content exceeds the length limit.
+                        return $state;
+                    }),
                 TextColumn::make('option'),
-                ToggleColumn::make('is_correct')->label('Correct Answer')
+
+                IconColumn::make('is_correct')->label('Correct Answer')
+                    ->boolean(),
             ])
             ->filters([
                 //

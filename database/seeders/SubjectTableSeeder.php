@@ -12,38 +12,35 @@ class SubjectTableSeeder extends Seeder
      */
     public function run(): void
     {
-        // Retrieve field IDs
-        $fields = DB::table('field_of_studies')->pluck('id', 'field_name');
+        // Retrieve JAMB exam ID
+        $jambExamId = DB::table('exams')->where('exam_name', 'JAMB')->value('id');
 
-        // Retrieve exam IDs
-        $exams = DB::table('exams')->pluck('id', 'exam_name');
-
-        // Define the subjects for each exam
-        $subjectsForAllExams = [];
-
-        // List of all subjects by field
-        $subjectsByField = [
-            'Natural Science' => ['Biology', 'Chemistry', 'Physics', 'Mathematics', 'Use of English'],
-            'Arts and Humanities' => ['Use of English', 'Fine Art', 'Music','Mathematics'],
-            'History and Geography' => ['History', 'Geography','Mathematics', 'Use of English'],
-            'Commerce & Economics' => ['Commerce', 'Economics', 'Accounting', 'Business Studies','Mathematics', 'Use of English'],
-            'Applied Sciences & Technology' => ['Computer Science', 'Agricultural Science', 'Technical Drawing','Mathematics', 'Use of English'],
-            'Social Sciences' => ['Government', 'Sociology', 'Psychology', 'Civic Education','Mathematics', 'Use of English'],
+        // List of all subjects
+        $subjects = [
+            'Biology', 
+            'Chemistry', 
+            'Physics', 
+            'Mathematics', 
+            'Use of English', 
+            'Fine Art', 'Music', 
+            'History', 'Geography', 
+            'Commerce', 'Economics', 
+            'Accounting', 'Business Studies', 
+            'Computer Science', 'Agricultural Science', 
+            'Technical Drawing', 'Government', 'Sociology', 
+            'Psychology', 'Civic Education'
         ];
 
-        foreach ($exams as $examName => $examId) {
-            foreach ($subjectsByField as $fieldName => $subjects) {
-                foreach ($subjects as $subjectName) {
-                    $subjectsForAllExams[] = [
-                        'name' => $subjectName,
-                        'field_id' => $fields[$fieldName],
-                        'exam_id' => $examId,
-                    ];
-                }
-            }
+        // Prepare the subjects for insertion
+        $subjectsForInsertion = [];
+        foreach ($subjects as $subjectName) {
+            $subjectsForInsertion[] = [
+                'name' => $subjectName,
+                'exam_id' => $jambExamId,
+            ];
         }
 
-        // Insert subjects into the database
-        DB::table('subjects')->insert($subjectsForAllExams);
+        // Insert the subjects into the database
+        DB::table('subjects')->insert($subjectsForInsertion);
     }
 }

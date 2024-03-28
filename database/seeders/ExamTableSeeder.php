@@ -14,10 +14,8 @@ class ExamTableSeeder extends Seeder
     public function run()
     {
         DB::table('exams')->insert([
-            ['exam_name' => 'JAMB', 'description' => 'Joint Admissions and Matriculation Board'],
-            ['exam_name' => 'WAEC', 'description' => 'West African Examinations Council'],
-            ['exam_name' => 'NECO', 'description' => 'National Examinations Council'],
-            ['exam_name' => 'NOUN', 'description' => 'National Open University of Nigeria']
+            ['exam_name' => 'JAMB', 'exam_logo' => 'images/jamb_logo.png', 'description' => 'Joint Admissions and Matriculation Board'],
+            ['exam_name' => 'NOUN','exam_logo' => null, 'description' => 'National Open University of Nigeria']
         ]);
     }
 }

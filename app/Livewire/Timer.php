@@ -15,14 +15,7 @@ class Timer extends Component
         $this->remainingTime = $initialTime;
 
     }
-    
-    // public function timerUpdated($time)
-    // {
-        
-    //     $this->remainingTime = $time;
-    //     // Additional logic to reinitialize or update the timer if needed
-    //     // dd($this->remainingTime);
-    // }
+
 
     public function initializeTimer()
     {

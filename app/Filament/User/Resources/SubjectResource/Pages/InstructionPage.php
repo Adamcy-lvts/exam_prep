@@ -66,7 +66,7 @@ class InstructionPage extends Page
         // If there is an existing session, try to find an ongoing attempt that has not yet ended.
         if ($this->existingSession !== null) {
             $this->ongoingAttempt = QuizAttempt::where('user_id', auth()->user()->id)
-                ->where('quiz_session_id', $this->existingSession->id)->where('quiz_id', $this->quizzable->quizzable_id)
+                ->where('quiz_session_id', $this->existingSession->id)->where('quiz_id', $this->quizzable->id)
                 ->whereNull('end_time') // assuming 'end_time' is set when the quiz is submitted.
                 ->first();
         }
@@ -93,7 +93,6 @@ class InstructionPage extends Page
         $attempt = $this->user->subjectAttempts()->where('subject_id', $this->quizzable->quizzable_id)->first();
         // $this->remainingAttempts = $attempt ? $attempt->attempts_left : 0;
         $this->remainingAttempts = $attempt ? ($attempt->attempts_left === null ? 'Unlimited' : $attempt->attempts_left) : 0;
-
     }
 
     // public function startQuiz()
@@ -147,15 +146,7 @@ class InstructionPage extends Page
         }
 
         // Check if the user has any Jamb attempts left.
-        if ($this->user->hasJambAttempts()) {
-            // Inform the user they have Jamb attempts left and redirect them to the Jamb instruction page.
-            Notification::make()
-                ->title("You have Jamb attempts left.")
-                ->body("You have exhausted your attempts for this specific subject, but you still have Jamb attempts available.")
-                ->warning()
-                ->send();
-            return redirect()->route('filament.user.resources.subjects.jamb-instrcution');
-        } elseif ($this->user->hasSubjectAttemptsForAnySubject()) {
+        if ($this->user->hasSubjectAttemptsForAnySubject()) {
             // Inform the user they have attempts left for other subjects but not for this specific quiz.
             Notification::make()
                 ->title("You have no attempts left for this subject.")
@@ -163,6 +154,14 @@ class InstructionPage extends Page
                 ->warning()
                 ->send();
             return redirect()->route('filament.user.pages.dashboard');
+        } elseif ($this->user->hasJambAttempts()) {
+            // Inform the user they have Jamb attempts left and redirect them to the Jamb instruction page.
+            Notification::make()
+                ->title("You have Jamb attempts left.")
+                ->body("You have exhausted your attempts for this specific subject, but you still have Jamb attempts available.")
+                ->warning()
+                ->send();
+            return redirect()->route('filament.user.resources.subjects.jamb-instrcution');
         } else {
             // The user has no attempts left for any subject or Jamb, redirect to the pricing page.
             Notification::make()
@@ -179,7 +178,7 @@ class InstructionPage extends Page
     {
         $this->showConfirmationModal = false;
         return redirect()->route('filament.user.resources.subjects.questions', [
-            'record' => $this->quizzable->quizzable_id,
+            'record' => $this->quizzable->id,
             'quizzableType' => $this->quizzable->quizzable_type
         ]);
     }

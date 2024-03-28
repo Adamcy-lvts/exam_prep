@@ -45,7 +45,7 @@ class PaymentController extends Controller
                     'last_4_digits' => $paymentDetails['data']['authorization']['last4'],
                     'status' => 'completed',
                     'authorization_code' => $paymentDetails['data']['authorization']['authorization_code'],
-                    'transaction_id' => $paymentDetails['data']['reference'],
+                    'transaction_ref' => $paymentDetails['data']['reference'],
                 ]);
                 $payment->save();
 
@@ -61,7 +61,6 @@ class PaymentController extends Controller
                     case 'course':
                         $redirectTo = route('filament.user.resources.courses.index'); // Adjust the route as needed
                         break;
-                    
                 }
 
                 // Send confirmation to the user
@@ -149,7 +148,7 @@ class PaymentController extends Controller
         // Retrieve all subjects for the user
         $subjects = $user->subjects;
 
-        // Iterate over each subject to reset attempts
+        // // Iterate over each subject to reset attempts
         foreach ($subjects as $subject) {
             $subjectAttempt = $user->subjectAttempts()->where('subject_id', $subject->id)->first();
 
@@ -162,7 +161,7 @@ class PaymentController extends Controller
         // Retrieve the user's JAMB attempt record
         $jambAttempt = $user->jambAttempts()->first();
 
-        // If there is an existing JAMB attempt record, reset attempts to 0
+        // // If there is an existing JAMB attempt record, reset attempts to 0
         if ($jambAttempt) {
             $jambAttempt->update(['attempts_left' => 0]);
         }
@@ -177,8 +176,14 @@ class PaymentController extends Controller
                 );
             }
             $jambAttempt = $this->user->jambAttempts()->first();
-            $jambAttempt->attempts_left = null; // Indicate unlimited attempts
-            $jambAttempt->save();
+            if ($jambAttempt) {
+                $jambAttempt->attempts_left = null; // Indicate unlimited attempts
+                $jambAttempt->save();
+            } else {
+                $this->user->jambAttempts()->create([
+                    'attempts_left' => null // Set specific number of attempts
+                ]);
+            }
         } else {
             // For plans with a limited number of attempts
             $subjects = $user->subjects;
@@ -200,45 +205,6 @@ class PaymentController extends Controller
         }
     }
 
-    // public function resetCompositeAttempts(User $user, Plan $plan)
-    // {
-    //     if (is_null($plan->number_of_attempts)) {
-    //         // If the plan is unlimited, set attempts_left to null
-    //         $jambAttempt = $this->user->jambAttempts();
-    //         $jambAttempt->attempts_left = null; // Indicate unlimited attempts
-    //         $jambAttempt->save();
-
-    //         // Set attempts_left to null for unlimited attempts
-    //         $subjects = $user->subjects;
-    //         foreach ($subjects as $subject) {
-    //             $user->subjectAttempts()->updateOrCreate(
-    //                 ['subject_id' => $subject->id],
-    //                 ['attempts_left' => null] // Indicate unlimited attempts
-    //             );
-    //         }
-    //     } else {
-    //         // For a specific number of attempts
-    //         $jambAttempt = $this->user->jambAttempts()->first();
-    //         if ($jambAttempt) {
-    //             $jambAttempt->increment('attempts_left', $plan->number_of_attempts);
-    //         } else {
-    //             $this->user->jambAttempts()->create([
-    //                 'attempts_left' => $plan->number_of_attempts // Set specific number of attempts
-    //             ]);
-    //         }
-
-    //         // For plans with a limited number of attempts
-    //         $subjects = $user->subjects;
-    //         foreach ($subjects as $subject) {
-    //             $user->subjectAttempts()->updateOrCreate(
-    //                 ['subject_id' => $subject->id],
-    //                 ['attempts_left' => $plan->number_of_attempts]
-    //             );
-    //         }
-    //     }
-
-    // }
-
     public function resetCourseAttempts(User $user, Plan $plan)
     {
         if ($this->user->courses->count() > 0) {
@@ -246,8 +212,8 @@ class PaymentController extends Controller
                 // Set attempts_left to null for unlimited attempts
                 $courses = $user->courses;
                 foreach ($courses as $course) {
-                    $user->subjectAttempts()->updateOrCreate(
-                        ['subject_id' => $course->id],
+                    $user->courseAttempts()->updateOrCreate(
+                        ['course_id' => $course->id],
                         ['attempts_left' => null] // Indicate unlimited attempts
                     );
                 }
@@ -255,8 +221,8 @@ class PaymentController extends Controller
                 // For plans with a limited number of attempts
                 $courses = $user->courses;
                 foreach ($courses as $course) {
-                    $user->subjectAttempts()->updateOrCreate(
-                        ['subject_id' => $course->id],
+                    $user->courseAttempts()->updateOrCreate(
+                        ['course_id' => $course->id],
                         ['attempts_left' => $plan->number_of_attempts]
                     );
                 }

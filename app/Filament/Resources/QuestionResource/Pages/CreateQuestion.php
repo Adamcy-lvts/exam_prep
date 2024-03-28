@@ -15,21 +15,40 @@ class CreateQuestion extends CreateRecord
 
     protected function handleRecordCreation(array $data): Model
     {
-       
+
+        $existingQuestion = Question::where([
+            'quiz_id' => $data['quiz_id'],
+            'quizzable_type' => $data['quizzable_type'],
+            'quizzable_id' => $data['quizzable_id'],
+            'topic_id' => $data['topic_id'],
+            'question' => $data['question'],
+            'type' => $data['type'],
+        ])->first();
+
+        if ($existingQuestion) {
+            // If a question with the same attributes already exists, return it
+            return $existingQuestion;
+        }
 
         $question = Question::create([
+            'quiz_id' => $data['quiz_id'],
+            'quizzable_type' => $data['quizzable_type'],
+            'quizzable_id' => $data['quizzable_id'],
+            'topic_id' => $data['topic_id'],
+            'duration' => $data['duration'],
             'question' => $data['question'],
-            'subject_id' => $data['subject_id']
+            'type' => $data['type'],
+            'answer_text' => $data['answer_text'],
+            'explanation' => $data['explanation'],
+            'marks' => $data['marks'],
         ]);
-
 
         // Loop through each option and create it for the question
         foreach ($data['options'] as $optionData) {
-
             Option::create([
                 'question_id' => $question->id,
-                'option'      => $optionData['option'],
-                'is_correct'  => $optionData['is_correct'],
+                'option' => $optionData['option'],
+                'is_correct' => $optionData['is_correct'],
             ]);
         }
 

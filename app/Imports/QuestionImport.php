@@ -170,42 +170,75 @@ class QuestionImport implements ToCollection
 
 
     // Method to find or create the module, unit, and topic
+    // protected function findOrCreateModuleUnitTopic($row)
+    // {
+    //     // Assume module name is in column K and unit name is in column L
+    //     $moduleName = isset($row[10]) && trim($row[10]) !== '' ? $row[10] : null;
+    //     $unitName = isset($row[11]) && trim($row[11]) !== '' ? $row[11] : null;
+    //     $topicName = isset($row[9]) && trim($row[9]) !== '' ? $row[9] : null;
+
+    //     $module = null;
+    //     $unit = null;
+    //     $topic = null;
+
+    //     // Find or create the module
+    //     if ($moduleName) {
+    //         $module = Module::firstOrCreate([
+    //             'name' => $moduleName,
+    //             'course_id' => $this->quizzableId,
+    //         ]);
+    //     }
+
+    //     // Find or create the unit
+    //     if ($module && $unitName) {
+    //         $unit = Unit::firstOrCreate([
+    //             'name' => $unitName,
+    //             'module_id' => $module->id
+    //         ]);
+    //     }
+
+    //     // Find or create the topic
+    //     if ($unit && $topicName) {
+    //         $topic = Topic::firstOrCreate([
+    //             'name' => $topicName,
+    //             'unit_id' => $unit->id,
+    //             'course_id' => $this->quizzableId,
+    //         ]);
+    //     }
+
+    //     return ['module' => $module, 'unit' => $unit, 'topic' => $topic];
+    // }
+
     protected function findOrCreateModuleUnitTopic($row)
     {
-        // Assume module name is in column K and unit name is in column L
+        // Assume module name is in column K, unit name in column L, and topic name in column J
         $moduleName = isset($row[10]) && trim($row[10]) !== '' ? $row[10] : null;
         $unitName = isset($row[11]) && trim($row[11]) !== '' ? $row[11] : null;
         $topicName = isset($row[9]) && trim($row[9]) !== '' ? $row[9] : null;
 
-        $module = null;
-        $unit = null;
-        $topic = null;
+        $module = $unit = $topic = null;
 
-        // Find or create the module
+        // Adjusting for polymorphic relationships
         if ($moduleName) {
-            $module = Module::firstOrCreate([
-                'name' => $moduleName,
-                'course_id' => $this->quizzableId,
-            ]);
+            // Assuming Course and Subject models have a 'modules' relationship
+            $module =  Module::firstOrCreate(['name' => $moduleName]);
         }
-
-        // Find or create the unit
+       
         if ($module && $unitName) {
-            $unit = Unit::firstOrCreate([
-                'name' => $unitName,
-                'module_id' => $module->id
-            ]);
+            $unit = $module->units()->firstOrCreate(['name' => $unitName]);
         }
 
-        // Find or create the topic
-        if ($unit && $topicName) {
+        if ($topicName) {
+            // Directly associate topics with quizzable entities if no unit is specified
             $topic = Topic::firstOrCreate([
                 'name' => $topicName,
-                'unit_id' => $unit->id,
-                'course_id' => $this->quizzableId,
+                'topicable_id' => $this->quizzableId,
+                'topicable_type' => get_class($this->quizzable),
+                'unit_id' => $unit ? $unit->id : null, // Associate with a unit if specified
             ]);
         }
 
         return ['module' => $module, 'unit' => $unit, 'topic' => $topic];
     }
+
 }

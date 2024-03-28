@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('subjects', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->foreignId('field_id')->constrained('field_of_studies');
             $table->foreignId('exam_id')->constrained('exams');
             $table->json('syllabus')->nullable();
+            $table->boolean('is_visible')->default(1);
             $table->timestamps();
         });
     }

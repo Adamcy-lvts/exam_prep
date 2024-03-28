@@ -31,8 +31,8 @@ class Dashboard extends BaseDashboard
     public function mount()
     {
         $user = Auth::user();
-        $this->subjects = $user->subjects;
-        $this->courses = $user->courses;
+        $this->subjects = $user->subjects()->take(4)->inRandomOrder()->get();;
+        $this->courses = $user->courses()->take(4)->inRandomOrder()->get();
     }
 
     public static function getNavigationLabel(): string

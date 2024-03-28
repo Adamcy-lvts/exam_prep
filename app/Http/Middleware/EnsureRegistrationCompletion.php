@@ -44,11 +44,11 @@ class EnsureRegistrationCompletion
             return $next($request);
         }
 
-        // If the user's email has not been verified, redirect them to email verification notice
-        if (!$user->hasVerifiedEmail()) {
-            return redirect()->route('filament.user.auth.email-verification.prompt')
-                ->withErrors('You must verify your email address.');
-        }
+        // // If the user's email has not been verified, redirect them to email verification notice
+        // if (!$user->hasVerifiedEmail()) {
+        //     return redirect()->route('filament.user.auth.email-verification.prompt')
+        //         ->withErrors('You must verify your email address.');
+        // }
 
         // If the user has not completed the registration process, redirect them to choose-exam
         if ($user->registration_status !== User::STATUS_REGISTRATION_COMPLETED) {

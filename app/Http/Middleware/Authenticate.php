@@ -15,7 +15,7 @@ class Authenticate extends Middleware
     //     return $request->expectsJson() ? null : route('login');
     // }
 
-    protected function redirectTo($request): ?string
+    protected function redirectTo(Request $request): ?string
     {
         if ($request->expectsJson()) {
             return null;
@@ -23,7 +23,7 @@ class Authenticate extends Middleware
 
         // Check if the request path starts with '/admin'
         if ($request->is('admin/*')) {
-            return route('admin.login'); // Return the named route for admin login
+            return route('filament.admin.auth.login'); // Return the named route for admin login
         }
 
         // Check if the request path starts with '/user'

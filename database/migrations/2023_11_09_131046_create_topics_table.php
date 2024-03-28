@@ -14,9 +14,11 @@ return new class extends Migration
         Schema::create('topics', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->foreignId('course_id')->constrained()->onDelete('cascade');
+            $table->morphs('topicable');
             $table->foreignId('unit_id')->nullable()->constrained()->onDelete('cascade');
+            $table->integer('order')->nullable();
             $table->timestamps();
+            $table->unique('name', 'unique_topic_names');
         });
     }
 

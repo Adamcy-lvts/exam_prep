@@ -16,7 +16,7 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         if (User::count() == 0) {
-            User::create([
+            $user = User::create([
                 'first_name'          => 'Adam',
                 'last_name'          => 'Mohammed',
                 'email'             => 'lv4mj1@gmail.com',
@@ -24,6 +24,8 @@ class UserSeeder extends Seeder
                 'remember_token'    => Str::random(60),
 
             ]);
+
+            $user->assignRole('super_admin');
         }
     }
 }

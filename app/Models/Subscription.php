@@ -28,4 +28,6 @@ class Subscription extends Model
     {
         return $query->where('status', 'active'); // Modify this condition based on how you determine active subscriptions
     }
+
+    
 }

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->unsignedInteger('duration')->default(0);
             $table->integer('allowed_attempts')->default(0);
             $table->boolean('completed')->default(false);
+            $table->enum('status', ['in progress', 'completed'])->default('in progress');
             $table->unsignedInteger('total_score')->default(0);
             $table->timestamps();
         });

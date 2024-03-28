@@ -29,7 +29,7 @@ class CourseResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return auth()->user()->subjects->count();
+        return auth()->user()->courses->count();
     }
 
     // public static function canView(): bool

@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('subject_topics', function (Blueprint $table) {
+        Schema::create('topic_contents', function (Blueprint $table) {
             $table->id();
             $table->foreignId('subject_id')->constrained()->onDelete('cascade');
-            $table->string('name');
+            $table->foreignId('topic_id')->constrained('topics')->onDelete('cascade');
             $table->text('description')->nullable();
-            $table->integer('order')->default(0); // Optional: to define the order of topics
             $table->json('learning_objectives')->nullable();
             $table->json('key_concepts')->nullable();
             $table->json('real_world_application')->nullable();
+            $table->longText('content')->nullable();
             $table->timestamps();
         });
     }
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('subject_topics');
+        Schema::dropIfExists('topic_contents');
     }
 };

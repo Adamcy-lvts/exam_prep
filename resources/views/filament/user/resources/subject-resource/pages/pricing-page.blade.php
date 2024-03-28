@@ -24,17 +24,26 @@
                 </div>
 
                 @if ($user->hasActiveSubscription($plan->id))
-                    <div class="text-center p-2 rounded bg-green-100 dark:bg-green-50 opacity-50 text-green-800">
+                    <div
+                        class="text-center p-2 rounded border border-green-600 bg-green-100 text-green-700 dark:border-green-400 dark:bg-green-700 dark:bg-opacity-25 dark:text-green-200">
                         Active Plan
+                    </div>
+                @elseif ($plan->title === 'Explorer Access Plan')
+                    <div
+                        class="text-center p-2 rounded border  font-bold text-xl">
+                        {{ $plan->cto }}
                     </div>
                 @else
                     <div class="flex flex-col">
                         <a href="{{ route('filament.user.resources.subjects.payment-form', $plan->id) }}"
-                            class="flex items-center justify-center bg-blue-500 text-white p-2 rounded my-8 hover:bg-blue-600 transition duration-300 ease-in-out">
+                            class="flex items-center justify-center bg-green-500 text-white p-2 rounded my-8 hover:bg-green-600 transition duration-300 ease-in-out dark:hover:bg-green-800 dark:hover:bg-opacity-25">
                             {{ $plan->cto }}
                         </a>
                     </div>
                 @endif
+
+
+
 
                 <ul>
                     @foreach (json_decode($plan->features, true) as $feature)

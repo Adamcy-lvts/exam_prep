@@ -1,43 +1,42 @@
 <x-filament-panels::page>
- <div
-        class="bg-white dark:bg-zinc-800 p-6 sm:p-8 rounded-xl shadow-lg mx-auto my-10 max-w-full sm:max-w-md lg:max-w-lg xl:max-w-xl 2xl:max-w-2xl">
-        <h1 class="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white text-center mb-6">Instructions</h1>
+    <div class="bg-white dark:bg-zinc-800 p-6 sm:p-8 rounded-xl shadow-lg mx-auto my-10 max-w-full sm:max-w-2xl">
+        <h1 class="text-3xl font-bold text-zinc-900 dark:text-white text-center mb-8">JAMB Exam Instructions</h1>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <!-- Loop through each subject -->
-            @foreach ($userSubjects as $subject)
-                <div class="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 shadow">
-                    <h3 class="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-white mb-4">{{ $subject->name }}
-                    </h3>
-                    <p class="text-zinc-600 dark:text-zinc-300 text-sm mb-4">
-                        Review the subject material thoroughly before attempting the exam.
-                    </p>
-                    <div>
-                        <p class="text-sm sm:text-md text-zinc-500 dark:text-zinc-300">Total Questions</p>
-                        <p class="text-xl font-bold text-zinc-800 dark:text-white">{{ $subject->questions->count() }}</p>
-                    </div>
+        <div class="bg-green-50 dark:bg-gray-700 rounded-lg p-6 shadow">
+            <h2 class="text-xl sm:text-2xl font-semibold text-zinc-900 dark:text-white mb-4">General Instructions</h2>
+            <p class="text-zinc-600 dark:text-zinc-300 text-sm sm:text-md mb-4">
+                Ensure you have reviewed all course materials thoroughly before attempting the exam. The exam will cover
+                the following subjects: Chemistry, Physics, Mathematics, and Use of English.
+            </p>
+            <div class="flex justify-between items-center mb-6">
+
+                <div>
+                    <p class="text-sm sm:text-md text-zinc-500 dark:text-zinc-300">Total Time</p>
+                    <p class="text-xl font-bold text-zinc-800 dark:text-white">3 Hours</p>
+                    <!-- Example total time for all subjects -->
                 </div>
-            @endforeach
-        </div>
+                <div>
+                    <p class="text-sm sm:text-md text-zinc-500 dark:text-zinc-300">Attempts Remaining</p>
+                    <p class="text-xl font-bold text-zinc-800 dark:text-white">{{ $user->jambAttempts->attempts_left ?? '0' }}
+                    </p> <!-- Example attempt count -->
+                </div>
+            </div>
 
-        <div class="text-center">
-
-            <!-- Handle ongoing attempts -->
-            @if (!$ongoingSession)
-                <button wire:click="showStartQuizConfirmation"
-                    class="w-full bg-green-700 text-white py-2 px-3  sm:py-3 sm:px-4 rounded-md sm:rounded-lg hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-700 focus:ring-opacity-50 dark:hover:bg-green-600 transition duration-300 ease-in-out shadow hover:shadow-lg">
-                    Start Exam
-                </button>
-            @else
-                <button wire:click="continueLastAttempt"
-                    class="w-full bg-green-700 text-white py-2 px-3  sm:py-3 sm:px-4 rounded-md sm:rounded-lg hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-700 focus:ring-opacity-50 dark:hover:bg-green-600 transition duration-300 ease-in-out shadow hover:shadow-lg">
-                    Continue Last Attempt
-                </button>
-            @endif
+            <div class="text-center space-y-4">
+                @if (!$ongoingSession)
+                    <button wire:click="showStartQuizConfirmation"
+                        class="w-full bg-green-700 text-white py-3 px-4 rounded-lg hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-700 focus:ring-opacity-50 dark:hover:bg-green-600 transition duration-300 ease-in-out shadow hover:shadow-lg">
+                        Start Exam
+                    </button>
+                @else
+                    <button wire:click="continueLastAttempt"
+                        class="w-full bg-yellow-500 text-white py-3 px-4 rounded-lg hover:bg-yellow-600 focus:outline-none focus:ring-4 focus:ring-yellow-500 focus:ring-opacity-50 dark:hover:bg-yellow-400 transition duration-300 ease-in-out shadow hover:shadow-lg">
+                        Continue Last Attempt
+                    </button>
+                @endif
+            </div>
         </div>
     </div>
-
-
 
     <div x-data="{ open: @entangle('showConfirmationModal') }" x-cloak>
         <div x-show="open" x-transition:enter="transition ease-in-out duration-500"
@@ -76,5 +75,4 @@
                 </div>
             </div>
         </div>
-    </div>
 </x-filament-panels::page>

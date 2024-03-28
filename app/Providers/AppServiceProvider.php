@@ -5,9 +5,12 @@ namespace App\Providers;
 use App\Models\User;
 use App\Observers\UserObserver;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use Filament\Support\Facades\FilamentView;
 use Filament\Support\Facades\FilamentColor;
 use Filament\Http\Responses\Auth\LoginResponse;
 use App\Http\Controllers\Filament\Auth\EmailVerificationController;
@@ -29,6 +32,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        config(['app.name' => getSiteName()]);
+        
         $this->app->bind(FilamentEmailVerificationController::class, EmailVerificationController::class);
 
         Schema::defaultStringLength(191);
