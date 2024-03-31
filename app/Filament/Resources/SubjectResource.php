@@ -9,8 +9,11 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\ToggleColumn;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\SubjectResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -30,7 +33,8 @@ class SubjectResource extends Resource
             ->schema([
                 TextInput::make('name')->label('Subject'),
                 Select::make('exam_id')
-                    ->relationship(name: 'exam', titleAttribute: 'exam_name')
+                    ->relationship(name: 'exam', titleAttribute: 'exam_name'),
+                Toggle::make('is_visible'),
             ]);
     }
 
@@ -40,6 +44,7 @@ class SubjectResource extends Resource
             ->columns([
                 TextColumn::make('name')->label('Subject'),
                 TextColumn::make('exam.exam_name'),
+                ToggleColumn::make('is_visible')->label('Visibility')
             ])
             ->filters([
                 //

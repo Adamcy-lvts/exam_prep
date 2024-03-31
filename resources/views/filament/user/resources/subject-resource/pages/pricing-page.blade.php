@@ -10,7 +10,7 @@
         </p>
     </div>
     <div class="flex flex-col md:flex-row md:space-x-4">
-
+        {{-- {{ dd($user->latestSubscriptionStatus()) }} --}}
         @foreach ($pricingPlans as $plan)
             <div
                 class="max-w-sm mx-auto my-4 p-6 bg-white rounded-lg shadow-md dark:bg-gray-800 {{ $user->hasActiveSubscription($plan->id) ? 'border-2 border-green-500' : '' }}">
@@ -29,8 +29,7 @@
                         Active Plan
                     </div>
                 @elseif ($plan->title === 'Explorer Access Plan')
-                    <div
-                        class="text-center p-2 rounded border  font-bold text-xl">
+                    <div class="text-center p-2 rounded border  font-bold text-xl">
                         {{ $plan->cto }}
                     </div>
                 @else

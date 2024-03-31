@@ -70,7 +70,7 @@ class UserResource extends Resource
             ->columns([
                 TextColumn::make('full_name')->label('Full Name')->searchable('first_name'),
                 TextColumn::make('email')->copyable()->searchable(),
-                TextColumn::make('phone')->copyable()->searchable()->default('NULL'),
+                TextColumn::make('phone')->copyable()->searchable()->default('-'),
                 TextColumn::make('exam.exam_name')->label('Registered Exam')->default('No Registered Exam'),
                 TextColumn::make('subscriptions.status')
                     ->getStateUsing(fn (Model $record) => $record->subscriptions()->latest()->first()?->status ?? 'no subscription')

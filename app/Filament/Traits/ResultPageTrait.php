@@ -104,15 +104,15 @@ trait ResultPageTrait
         // $attempts = QuizAttempt::where('user_id', auth()->user()->id)->where('quiz_id', $this->quizzable->id)
         //     ->where('quiz_session_id', $session->id)
         //     ->count();
-
+       
     
         // Conditional checking for attempts based on quizzable type
         if ($this->quizzableType === 'App\Models\Subject') {
             $attempt = $this->user->subjectAttempts()->where('subject_id', $this->quizzable->quizzable_id)->first();
-            $this->remainingAttempts = $attempt ? $attempt->attempts_left : 0;
+            $this->remainingAttempts = $attempt ? ($attempt->attempts_left === null ? 'Unlimited' : $attempt->attempts_left) : 0;
         } elseif ($this->quizzableType === 'App\Models\Course') {
             $attempt = $this->user->courseAttempts()->where('course_id', $this->quizzable->quizzable_id)->first();
-            $this->remainingAttempts = $attempt ? $attempt->attempts_left : 0;
+            $this->remainingAttempts = $attempt ? ($attempt->attempts_left === null ? 'Unlimited' : $attempt->attempts_left) : 0;
         } else {
             // Handle other quizzable types or default case
             $this->remainingAttempts = 0;

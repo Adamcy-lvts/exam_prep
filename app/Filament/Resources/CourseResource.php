@@ -8,8 +8,11 @@ use App\Models\Course;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Toggle;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\ToggleColumn;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\CourseResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -32,6 +35,7 @@ class CourseResource extends Resource
                 TextInput::make('duration')->numeric(),
                 TextInput::make('total_marks')->numeric()->required(),
                 TextInput::make('max_attempts')->numeric()->required(),
+                Toggle::make('is_visible'),
             ]);
     }
 
@@ -43,7 +47,8 @@ class CourseResource extends Resource
                 TextColumn::make('course_code'),
                 TextColumn::make('duration')->label('Duration (minutes)'),
                 TextColumn::make('max_attempts'),
-                TextColumn::make('total_marks')
+                TextColumn::make('total_marks'),
+                ToggleColumn::make('is_visible')->label('Visibility')
             ])
             ->filters([
                 //

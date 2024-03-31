@@ -140,30 +140,16 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
 
     public function switchToFreePlanIfSubscriptionEnded()
     {
-        // Assuming you have a method 'currentSubscription()' that fetches the current active subscription
-        $currentSubscription = $this->currentSubscription();
+        $currentSubscription = $this->latestSubscriptionStatus();
 
-        if ($currentSubscription->ends_at ?? '') {
-            $end_date = Carbon::parse($currentSubscription->ends_at);
-        }
-
-        if ($currentSubscription && $end_date->isPast()) {
+        if ($currentSubscription && Carbon::parse($currentSubscription->ends_at)->isPast()) {
             // Subscription has ended
-            $freePlan = Plan::where('title', 'Explorer Access Plan')->first(); // Retrieve your default free plan
+            $currentSubscription->update(['status' => 'expired']);
 
-            if ($freePlan) {
-                // Create a new subscription record for the free plan
-                $this->subscriptions()->create([
-                    'plan_id' => $freePlan->id,
-                    'starts_at' => now(),
-                    'ends_at' => now()->addYears(10),
-                    'status' => 'active', // Consider your logic for setting status
-                    'features' => $freePlan->features // Copying features from plan to subscription
-                ]);
+            // Detach the subscription from the user
+            // $this->subscriptions()->detach($currentSubscription->id);
 
-                // Update the current subscription status to inactive if needed
-                $currentSubscription->update(['status' => 'inactive']);
-            }
+           
         }
     }
 

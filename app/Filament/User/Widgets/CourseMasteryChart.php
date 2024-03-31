@@ -2,20 +2,20 @@
 
 namespace App\Filament\User\Widgets;
 
-use App\Models\Subject;
+use App\Models\Course;
 use App\Models\QuizAttempt;
 use Filament\Widgets\ChartWidget;
-use App\Models\CompositeQuizSession;
 use Illuminate\Support\Facades\Auth;
 
-class SubjectMasteryChart extends ChartWidget
+class CourseMasteryChart extends ChartWidget
 {
+    protected static ?string $heading = 'Course Mastery';
 
-    protected static ?string $heading = 'Subject Mastery';
+    protected static ?int $sort = 2;
 
     public static function canView(): bool
     {
-        return Auth::user()->can('view_subject') || Auth::user()->can('view_any_subject');
+        return Auth::user()->can('view_course') || Auth::user()->can('view_any_course');
     }
 
     protected function getData(): array
@@ -23,18 +23,18 @@ class SubjectMasteryChart extends ChartWidget
         $userId = auth()->id(); // Fetches the current user ID
 
         // Fetch subjects registered by the user
-        $registeredSubjects = Subject::whereHas('users', function ($query) use ($userId) {
+        $registeredCourses = Course::whereHas('users', function ($query) use ($userId) {
             $query->where('users.id', $userId);
         })->get();
 
-        $labels = $registeredSubjects->pluck('name'); // Get names of subjects for the chart labels
+        $labels = $registeredCourses->pluck('course_code'); // Get names of subjects for the chart labels
 
         // Prepare the datasets for the chart
-        $data = $registeredSubjects->map(function ($subject) use ($userId) {
-            // Get average score for each registered subject based on quiz attempts
-            $averageScore = QuizAttempt::whereHas('quiz', function ($query) use ($subject) {
-                $query->where('quizzable_id', $subject->id)
-                    ->where('quizzable_type', Subject::class);
+        $data = $registeredCourses->map(function ($course) use ($userId) {
+            // Get average score for each registered course based on quiz attempts
+            $averageScore = QuizAttempt::whereHas('quiz', function ($query) use ($course) {
+                $query->where('quizzable_id', $course->id)
+                    ->where('quizzable_type', Course::class);
             })->where('user_id', $userId)
                 ->average('score');
 
@@ -55,6 +55,6 @@ class SubjectMasteryChart extends ChartWidget
 
     protected function getType(): string
     {
-        return 'bar'; // Use a bar chart to display subject mastery
+        return 'bar';
     }
 }
