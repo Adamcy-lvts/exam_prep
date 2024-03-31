@@ -17,12 +17,12 @@ function sanitizeAnswer($input)
 }
 
 
-function getSiteName(): string
-{
-    return app(AppSettings::class)->site_name;
-}
+// function getSiteName(): string
+// {
+//     return app(AppSettings::class)->site_name;
+// }
 
-function getTimeZone(): string
-{
-    return app(AppSettings::class)->timezone;
-}
+// function getTimeZone(): string
+// {
+//     return app(AppSettings::class)->timezone;
+// }
