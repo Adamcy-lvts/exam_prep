@@ -35,7 +35,7 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
     use HasFactory;
     use Notifiable;
     use HasRoles;
-    use HasPanelShield;
+    // use HasPanelShield;
 
     // Define constants for registration status
     const STATUS_REGISTRATION_COMPLETED = 'registration_completed';
