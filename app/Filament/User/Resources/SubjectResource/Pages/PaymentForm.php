@@ -3,7 +3,6 @@
 namespace App\Filament\User\Resources\SubjectResource\Pages;
 
 use App\Models\Plan;
-use App\Models\Payment;
 use Filament\Forms\Form;
 use Filament\Support\RawJs;
 use Filament\Resources\Pages\Page;
@@ -11,20 +10,16 @@ use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Tabs;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
-// use Unicodeveloper\Paystack\Facades\Paystack;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
-use Filament\Forms\Contracts\HasForms;
+// use Unicodeveloper\Paystack\Facades\Paystack;
 use Filament\Forms\Components\TextInput;
 use Illuminate\Support\Facades\Redirect;
 use Filament\Forms\Components\Actions\Action;
 use Unicodeveloper\Paystack\Facades\Paystack;
-use Filament\Forms\Concerns\InteractsWithForms;
 use App\Filament\User\Resources\SubjectResource;
 
-class PaymentForm extends Page implements HasForms
+class PaymentForm extends Page
 {
-    use InteractsWithForms;
     protected static string $resource = SubjectResource::class;
 
     protected static string $view = 'filament.user.resources.subject-resource.pages.payment-form';
@@ -36,8 +31,6 @@ class PaymentForm extends Page implements HasForms
     public $amount;
     public $reference;
     public $price;
-    public $payment_method;
-    public ?array $data = [];
 
     public function mount($planId)
     {
@@ -53,7 +46,6 @@ class PaymentForm extends Page implements HasForms
             'last_name' => $user->last_name,
             'email' => $user->email,
             'amount' => $this->plan->price,
-            'method' => $this->payment_method,
         ]);
     }
 
@@ -68,10 +60,7 @@ class PaymentForm extends Page implements HasForms
                                 Section::make($this->plan->title)
                                     ->description("You are paying {$this->price} for Jamb exam experience plan")
                                     ->schema([
-                                        Select::make('payment_method')->options([
-                                            'pay_with_card' => 'Pay with Card',
-                                            'bank_transfer' => 'Pay via Bank Transfer',
-                                        ])->default('pay_with_card')->hidden(),
+                                        TextInput::make('method')->default('pay_with_card')->hidden(),
                                         TextInput::make('first_name')->disabled()
                                             ->required(),
                                         TextInput::make('last_name')->disabled()
@@ -99,7 +88,7 @@ class PaymentForm extends Page implements HasForms
                                     <br> After payment, send proof of payment through whatsapp to 07060741999 or email to lv4mj1@gmail.com"
                                     ))
                                     ->schema([
-                                        // TextInput::make('method')->default('bank_transfer')->hidden(),
+                                        TextInput::make('method')->default('bank_transfer')->hidden(),
                                         TextInput::make('first_name')->disabled()
                                             ->required(),
                                         TextInput::make('last_name')->disabled()
@@ -125,40 +114,24 @@ class PaymentForm extends Page implements HasForms
 
     public function redirectToGateway()
     {
-        
-dd($this->payment_method);
-        if ($this->method === 'pay_with_card') {
-            $data = [
-                'amount' => $this->plan->price * 100,
-                'email' => $this->email,
-                'reference' => Paystack::genTranxRef(),
-                'metadata' => ['planId' => $this->plan->id]
-            ];
-            dd($data);
-            try {
-                return Paystack::getAuthorizationUrl($data)->redirectNow();
-            } catch (\Exception $e) {
-                // Log the error
-                Log::error('Payment failed:', [
-                    'message' => $e->getMessage(),
-                    'stack' => $e->getTraceAsString(), // Optional: if you want the stack trace
-                ]);
-                // Redirect back with an error message
-                return Redirect::back()->withErrors('The paystack token has expired or there was an error processing the payment. Please refresh the page and try again.');
-            }
-        } else {
-            // Save payment details in the database
-            dd($this->method);
-            $payment = new Payment();
-            $payment->method = $this->method;
-            $payment->first_name = $this->first_name;
-            $payment->last_name = $this->last_name;
-            $payment->email = $this->email;
-            $payment->amount = $this->amount;
-            $payment->save();
 
-            // Redirect to success page or show a success message
-            return Redirect::to('/success')->with('message', 'Payment details saved successfully.');
+        $data = [
+            'amount' => $this->plan->price * 100,
+            'email' => $this->email,
+            'reference' => Paystack::genTranxRef(),
+            'metadata' => ['planId' => $this->plan->id]
+        ];
+
+        try {
+            return Paystack::getAuthorizationUrl($data)->redirectNow();
+        } catch (\Exception $e) {
+            // Log the error
+            Log::error('Payment failed:', [
+                'message' => $e->getMessage(),
+                'stack' => $e->getTraceAsString(), // Optional: if you want the stack trace
+            ]);
+            // Redirect back with an error message
+            return Redirect::back()->withErrors('The paystack token has expired or there was an error processing the payment. Please refresh the page and try again.');
         }
     }
 
