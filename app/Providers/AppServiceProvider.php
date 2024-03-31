@@ -32,7 +32,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        config(['app.name' => getSiteName()]);
+        // config(['app.name' => getSiteName()]);
         
         $this->app->bind(FilamentEmailVerificationController::class, EmailVerificationController::class);
 
