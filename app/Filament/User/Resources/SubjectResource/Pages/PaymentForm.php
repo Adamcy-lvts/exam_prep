@@ -136,28 +136,4 @@ class PaymentForm extends Page
     }
 
 
-    // public function redirectToGateway()
-    // {
-    //     $response = Http::withHeaders([
-    //             'Authorization' => 'Bearer ' . env('PAYSTACK_SECRET_KEY'),
-    //             'Content-Type' => 'application/json',
-    //             'Accept' => 'application/json',
-    //         ])->post('https://api.paystack.co/transaction/initialize', [
-    //             'amount' => $this->plan->price * 100, // Paystack expects the amount in kobo
-    //             'email' => $this->email,
-    //             'reference' => Paystack::genTranxRef(),
-    //             // other fields like currency, callback_url, etc. can be added here
-    //         ]);
-
-    //     if ($response->successful()) {
-    //         $authorizationUrl = $response->json()['data']['authorization_url'];
-    //         return redirect()->away($authorizationUrl);
-    //     } else {
-    //         // Handle error, log response and show error message to user
-    //         Log::error('Payment initialization failed:', [
-    //             'response' => $response->body(),
-    //         ]);
-    //         return Redirect::back()->withErrors('There was an error processing the payment. Please try again.');
-    //     }
-    // }
 }
