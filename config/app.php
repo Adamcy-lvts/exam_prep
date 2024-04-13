@@ -187,4 +187,7 @@ return [
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
 
+
+    'chrome_path' => env('CHROME_PATH'),
+
 ];

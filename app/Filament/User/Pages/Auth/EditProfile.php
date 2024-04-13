@@ -133,6 +133,12 @@ class EditProfile extends ProfileEdit implements HasTable
                     ->label('Subscription Plan'),
                 TextColumn::make('amount')->label('Amount')->money('NGN'),
                 TextColumn::make('created_at')->label('Paid On')->dateTime('Y-m-d H:i:s A'),
+                TextColumn::make('status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'pending' => 'gray',
+                        'completed' => 'success',
+                    }),
                 TextColumn::make('method')->label('Payment Method'),
 
             ])
@@ -147,13 +153,13 @@ class EditProfile extends ProfileEdit implements HasTable
                             'payment' => $record,
 
                         ])->render();
-// dd($html);
+                        // dd($html);
                         $pdfName = $record->user->first_name . '_' . $record->user->last_name . '-' . '_receipt.pdf';
                         $receiptPath = storage_path("app/{$pdfName}");
 
                         Browsershot::html($html)
                             ->noSandbox()
-                            ->setChromePath('/mnt/c/Users/cassiopea/.cache/puppeteer/chrome/linux-123.0.6312.58/chrome-linux64/')
+                            ->setChromePath(config('app.chrome_path'))
                             ->showBackground()
                             ->format('A4')
                             ->save($receiptPath);

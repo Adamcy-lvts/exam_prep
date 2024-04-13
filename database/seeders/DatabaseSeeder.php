@@ -35,7 +35,7 @@ class DatabaseSeeder extends Seeder
         $this->call(EnglishQuestionSeeder::class);
         $this->call(MathematicsQuestionSeeder::class);
         $this->call(ProgrammeSeeder::class);
-        $this->call(UserRegistrationSeeder::class);
+        // $this->call(UserRegistrationSeeder::class);
         // $this->call(QuizDataSeeder::class);
     }
 }

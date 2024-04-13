@@ -547,22 +547,6 @@ class PhysicsQuestionSeeder extends Seeder
                 'explanation' => '<p>The photoelectric effect is the phenomenon that demonstrates the particle nature of light, where photons are absorbed by electrons, leading to their ejection from a metal surface.</p>'
             ],
 
-            // Question 50
-            [
-                'question' => 'The bond between silicon and germanium is',
-                'marks' => 2,
-                'options' => [
-                    ['option' => 'dative', 'is_correct' => false],
-                    ['option' => 'covalent', 'is_correct' => true],
-                    ['option' => 'trivalent', 'is_correct' => false],
-                    ['option' => 'ionic', 'is_correct' => false],
-                ],
-                'type' => 'mcq',
-                'topic' => ' Structure of Matter and Kinetic Theory',
-
-                'explanation' => '<p>Silicon and germanium are both Group 14 elements and form covalent bonds when they bond with each other due to sharing of electrons.</p>'
-            ],
-
             // Question 21
             [
                 'question' => 'Steam from boiling water causes more damage on the skin than does boiling water because',

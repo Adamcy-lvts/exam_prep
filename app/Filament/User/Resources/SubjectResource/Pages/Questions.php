@@ -133,6 +133,8 @@ class Questions extends Page
         // dd($this->currentAttempt->questions()->pluck('question_id'));
         // Retrieve paginated questions using the IDs from the attempt
         $questions = Question::whereIn('id', $questionIds)->paginate(5);
+
+        
         $allquestions = Question::whereIn('id', $questionIds)->get();
 
         // dd($questions);

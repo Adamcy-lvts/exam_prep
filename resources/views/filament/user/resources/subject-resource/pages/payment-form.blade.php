@@ -1,6 +1,6 @@
 <x-filament-panels::page>
     <div class="max-w-lg mx-auto">
-        <form wire:submit="redirectToGateway">
+        <form wire:submit="processPayment">
             {{ $this->form }}
             <input type="hidden" name="refrence" wire:model="reference" value="{{ Paystack::genTranxRef() }}">
             <button type="submit"

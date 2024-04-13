@@ -3,6 +3,7 @@
 namespace App\Filament\User\Resources\SubjectResource\Pages;
 
 use App\Models\Plan;
+use App\Models\Payment;
 use Filament\Forms\Form;
 use Filament\Support\RawJs;
 use Filament\Resources\Pages\Page;
@@ -10,9 +11,11 @@ use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Tabs;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
-use Filament\Forms\Components\Section;
 // use Unicodeveloper\Paystack\Facades\Paystack;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Redirect;
 use Filament\Forms\Components\Actions\Action;
 use Unicodeveloper\Paystack\Facades\Paystack;
@@ -31,6 +34,7 @@ class PaymentForm extends Page
     public $amount;
     public $reference;
     public $price;
+    public $method;
 
     public function mount($planId)
     {
@@ -60,7 +64,14 @@ class PaymentForm extends Page
                                 Section::make($this->plan->title)
                                     ->description("You are paying {$this->price} for Jamb exam experience plan")
                                     ->schema([
-                                        TextInput::make('method')->default('pay_with_card')->hidden(),
+
+                                        Select::make('method')->label('Select Payment Method')
+                                            ->default('card')->required()
+                                            ->options([
+                                                'card' => 'Pay with Card',
+                                                'bank_transfer' => 'Pay via Bank Transfer',
+                                            ]),
+
                                         TextInput::make('first_name')->disabled()
                                             ->required(),
                                         TextInput::make('last_name')->disabled()
@@ -88,7 +99,13 @@ class PaymentForm extends Page
                                     <br> After payment, send proof of payment through whatsapp to 07060741999 or email to lv4mj1@gmail.com"
                                     ))
                                     ->schema([
-                                        TextInput::make('method')->default('bank_transfer')->hidden(),
+                                        Select::make('method')->label('Select Payment Method')
+                                            ->default('bank_transfer')->required()
+                                            ->options([
+                                                'card' => 'Pay with Card',
+                                                'bank_transfer' => 'Pay via Bank Transfer',
+                                            ]),
+
                                         TextInput::make('first_name')->disabled()
                                             ->required(),
                                         TextInput::make('last_name')->disabled()
@@ -135,5 +152,44 @@ class PaymentForm extends Page
         }
     }
 
+    public function processPayment()
+    {
+        // Check if the 'method' property has been set
+        if (!$this->method) {
+            // Ideally, you should return some error or handle this case
+            return Redirect::back()->withErrors('Please select a payment method.');
+        }
 
+        // dd($this->method);
+        // Handle the card payment
+        if ($this->method === 'card') {
+            // Redirect to Paystack gateway
+            return $this->redirectToGateway();
+        }
+
+        // Handle the bank transfer
+        if ($this->method === 'bank_transfer') {
+            // Record the payment as pending in your payment table
+            // Replace 'Payment' with your actual payment model and set the appropriate fields
+            $payment = Payment::create([
+                'user_id' => auth()->id(),
+                'plan_id' => $this->plan->id,
+                'amount' => $this->plan->price,
+                'status' => 'pending',
+                'method' => $this->method
+                // Add other necessary fields
+            ]);
+
+            Notification::make()
+            ->title('success')
+            ->body('Your bank transfer payment has been recorded, pending confirmation. we will get back to you.')
+            ->success()
+            ->send();
+            // Redirect to a confirmation page or back with a success message
+            return $this->redirectRoute('filament.user.auth.profile');
+        }
+
+        // In case of an unsupported method
+        return Redirect::back()->withErrors('Unsupported payment method selected.');
+    }
 }
