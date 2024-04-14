@@ -159,7 +159,7 @@ class EditProfile extends ProfileEdit implements HasTable
 
                         Browsershot::html($html)
                             ->noSandbox()
-                            ->setChromePath('/usr/bin/google-chrome')
+                            ->setChromePath(config('app.chrome_path'))
                             ->showBackground()
                             ->format('A4')
                             ->save($receiptPath);
