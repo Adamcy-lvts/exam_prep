@@ -4,12 +4,12 @@
            <div class="flex justify-between items-center mb-8">
                <div>
                    <h1 class="font-bold text-xl text-gray-800 dark:text-gray-100 mb-4">Receipt</h1>
-                   <p class="text-gray-600 text-md dark:text-gray-300 mb-2">Receipt number: <span
+                   <p class="text-gray-600 text-sm dark:text-gray-300 mb-2">Receipt number: <span
                            class="font-semibold ">{{ $receipt->receipt_number }}</span></p>
-                   <p class="text-gray-600 text-md dark:text-gray-300 mb-2">Date paid: <span
+                   <p class="text-gray-600 text-sm dark:text-gray-300 mb-2">Date paid: <span
                            class="font-semibold">{{ formatDate($receipt->payment_date) }}</span>
                    </p>
-                   <p class="text-gray-600 text-md dark:text-gray-300 mb-2">Payment method: <span
+                   <p class="text-gray-600 text-sm dark:text-gray-300 mb-2">Payment method: <span
                            class="font-semibold">{{ $payment->method }}</span>
                    </p>
                </div>
@@ -19,7 +19,7 @@
                </div>
            </div>
 
-           <div class="mt-8 text-md">
+           <div class="mt-8 text-sm">
                <div class="flex justify-between mb-6">
                    <div class="text-gray-700 dark:text-gray-200">
                        <p class="font-semibold">Devcentric Studio</p>
