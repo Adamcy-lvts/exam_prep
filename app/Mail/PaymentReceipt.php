@@ -13,7 +13,7 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
-class PaymentReceipt extends Mailable
+class PaymentReceipt extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
