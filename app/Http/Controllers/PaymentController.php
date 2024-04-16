@@ -60,11 +60,11 @@ class PaymentController extends Controller
                 $this->payment->save();
 
                 // Generate and save receipt after payment is successful
-                $this->receipt = $payment->receipt()->create([
-                    'payment_id' => $payment->id,
+                $this->receipt = $this->payment->receipt()->create([
+                    'payment_id' => $this->payment->id,
                     'user_id' => $this->user->id,
                     'payment_date' => now(),
-                    'receipt_for' => $payment->payment_for, // Assuming 'Subscription' is the type for subscription payments
+                    'receipt_for' => $this->payment->payment_for, // Assuming 'Subscription' is the type for subscription payments
                     'amount' => $paymentDetails['data']['amount'] / 100,
                     'receipt_number' => Receipt::generateReceiptNumber(now()),
                     // 'remarks' and 'qr_code' can be set here if needed
@@ -112,7 +112,7 @@ class PaymentController extends Controller
             $receipt = $this->receipt;
 
             $pdf = $payment->user->first_name . '_' . $payment->user->last_name . '-' . '_receipt.pdf';
-            $receiptPath = storage_path("app/{$pdfName}");
+            $receiptPath = storage_path("app/{$pdf}");
 
             // Generate the PDF receipt
             Pdf::view('pdf-receipt-view.payment-receipt', [
