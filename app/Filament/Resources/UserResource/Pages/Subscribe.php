@@ -96,6 +96,7 @@ class Subscribe extends Page
             'plan_id' =>  $this->plan_id,
             'attempts_purchased' => $this->plan->number_of_attempts,
             'status' => 'completed',
+            'payment_for' => 'subscription plan',
             'transaction_ref' => Null,
         ]);
         $payment->save();

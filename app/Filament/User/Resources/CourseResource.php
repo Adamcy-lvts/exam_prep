@@ -109,6 +109,8 @@ class CourseResource extends Resource
             'instruction-page' => Pages\InstructionPage::route('/{record}/{quizzableType}/instructions'),
             'questions' => Pages\Questions::route('/{record}/{quizzableType}/questions'),
             'result' => Pages\ResultPage::route('/{attemptId}/{quizzableId}/{quizzableType}/result'),
+            'payment-form' => Pages\PaymentForm::route('/{planId}/payment'),
+            'view-receipt' => Pages\ViewReceipt::route('/{record}/view-receipt'),
         ];
     }
 }

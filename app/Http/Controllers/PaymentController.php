@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\JambAttempt;
 use Exception;
 use App\Models\Plan;
 use App\Models\User;
 use App\Models\Payment;
+use App\Models\Receipt;
+use App\Models\JambAttempt;
 use Illuminate\Http\Request;
 use App\Models\UserQuizAttempt;
 use Illuminate\Support\Facades\DB;
@@ -44,11 +45,23 @@ class PaymentController extends Controller
                     'bank' => $paymentDetails['data']['authorization']['bank'],
                     'last_4_digits' => $paymentDetails['data']['authorization']['last4'],
                     'status' => 'completed',
+                    'payment_for' => 'subscription plan',
                     'authorization_code' => $paymentDetails['data']['authorization']['authorization_code'],
                     'transaction_ref' => $paymentDetails['data']['reference'],
                 ]);
                 $payment->save();
 
+                // Generate and save receipt after payment is successful
+                $receipt = $payment->receipt()->create([
+                    'payment_id' => $payment->id,
+                    'user_id' => $this->user->id,
+                    'payment_date' => now(),
+                    'receipt_for' => $payment->payment_for, // Assuming 'Subscription' is the type for subscription payments
+                    'amount' => $paymentDetails['data']['amount'] / 100,
+                    'receipt_number' => Receipt::generateReceiptNumber(now()),
+                    // 'remarks' and 'qr_code' can be set here if needed
+                ]);
+                
                 $this->manageSubscription($this->user, $plan);
 
                 DB::commit();

@@ -35,7 +35,7 @@
                     </div>
                 @else
                     <div class="flex flex-col">
-                        <a href="{{ route('filament.user.resources.subjects.payment-form', $plan->id) }}"
+                        <a href="{{ route('filament.user.resources.courses.payment-form', $plan->id) }}"
                             class="flex items-center justify-center bg-green-500 text-white p-2 rounded my-8 hover:bg-green-600 transition duration-300 ease-in-out dark:hover:bg-green-800 dark:hover:bg-opacity-25">
                             {{ $plan->cto }}
                         </a>

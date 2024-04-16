@@ -146,34 +146,38 @@ class EditProfile extends ProfileEdit implements HasTable
                 // ...
             ])
             ->actions([
-                Action::make('Download receipt')
-                    ->label('Download Receipt')
-                    ->action(function (Payment $record, array $data) {
-                        $html = view('pdf-receipt-view.payment-receipt', [
-                            'payment' => $record,
+                Action::make('View Receipt')
+                    ->url(fn (Payment $record): string => route('filament.user.resources.courses.view-receipt', $record))
+                    ->visible(fn (Payment $record): bool => $record->status === 'completed')
+                    ->openUrlInNewTab(),
+                // Action::make('Download receipt')
+                //     ->label('Download Receipt')
+                //     ->action(function (Payment $record, array $data) {
+                //         $html = view('pdf-receipt-view.payment-receipt', [
+                //             'payment' => $record,
 
-                        ])->render();
-                        // dd($html);
-                        $pdfName = $record->user->first_name . '_' . $record->user->last_name . '-' . '_receipt.pdf';
-                        $receiptPath = storage_path("app/{$pdfName}");
+                //         ])->render();
+                //         // dd($html);
+                //         $pdfName = $record->user->first_name . '_' . $record->user->last_name . '-' . '_receipt.pdf';
+                //         $receiptPath = storage_path("app/{$pdfName}");
 
-                        Browsershot::html($html)
-                            ->noSandbox()
-                            ->setChromePath(config('app.chrome_path'))
-                            ->showBackground()
-                            ->format('A4')
-                            ->save($receiptPath);
+                //         Browsershot::html($html)
+                //             ->noSandbox()
+                //             ->setChromePath(config('app.chrome_path'))
+                //             ->showBackground()
+                //             ->format('A4')
+                //             ->save($receiptPath);
 
-                        // Send success notification
-                        Notification::make()
-                            ->title('Receipt downloaded successfully.')
-                            ->success()
-                            ->send();
+                //         // Send success notification
+                //         Notification::make()
+                //             ->title('Receipt downloaded successfully.')
+                //             ->success()
+                //             ->send();
 
-                        return response()->download($receiptPath, $pdfName, [
-                            'Content-Type' => 'application/pdf',
-                        ])->deleteFileAfterSend(true);
-                    })
+                //         return response()->download($receiptPath, $pdfName, [
+                //             'Content-Type' => 'application/pdf',
+                //         ])->deleteFileAfterSend(true);
+                //     })
 
             ])
             ->bulkActions([
