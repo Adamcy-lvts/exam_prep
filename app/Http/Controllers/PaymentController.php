@@ -8,15 +8,23 @@ use App\Models\User;
 use App\Models\Payment;
 use App\Models\Receipt;
 use App\Models\JambAttempt;
+use App\Mail\PaymentReceipt;
 use Illuminate\Http\Request;
 use App\Models\UserQuizAttempt;
 use Illuminate\Support\Facades\DB;
+use Spatie\LaravelPdf\Facades\Pdf;
 use Illuminate\Support\Facades\Log;
+use Spatie\Browsershot\Browsershot;
+use Illuminate\Support\Facades\Mail;
+use Filament\Notifications\Notification;
 use Unicodeveloper\Paystack\Facades\Paystack;
 
 class PaymentController extends Controller
 {
     public $user;
+    public $payment;
+    public $receipt;
+
     public function handleGatewayCallback(Request $request)
     {
         $paymentDetails = Paystack::getPaymentData();
@@ -35,7 +43,7 @@ class PaymentController extends Controller
                 }
 
                 // Record the payment
-                $payment = new Payment([
+                $this->payment = new Payment([
                     'user_id' => $this->user->id,
                     'amount' => $paymentDetails['data']['amount'] / 100, // Paystack amount is in kobo
                     'method' => $paymentDetails['data']['channel'],
@@ -49,10 +57,10 @@ class PaymentController extends Controller
                     'authorization_code' => $paymentDetails['data']['authorization']['authorization_code'],
                     'transaction_ref' => $paymentDetails['data']['reference'],
                 ]);
-                $payment->save();
+                $this->payment->save();
 
                 // Generate and save receipt after payment is successful
-                $receipt = $payment->receipt()->create([
+                $this->receipt = $payment->receipt()->create([
                     'payment_id' => $payment->id,
                     'user_id' => $this->user->id,
                     'payment_date' => now(),
@@ -61,8 +69,12 @@ class PaymentController extends Controller
                     'receipt_number' => Receipt::generateReceiptNumber(now()),
                     // 'remarks' and 'qr_code' can be set here if needed
                 ]);
+
+   
                 
                 $this->manageSubscription($this->user, $plan);
+
+                $this->sendReceiptByEmail();
 
                 DB::commit();
 
@@ -90,6 +102,52 @@ class PaymentController extends Controller
             // Handle failed payment
             Log::error('Payment failed', $paymentDetails);
             return response()->json(['message' => 'Payment failed.'], 500);
+        }
+    }
+
+    private function sendReceiptByEmail(): void
+    {
+        try {
+            $payment = $this->payment;
+            $receipt = $this->receipt;
+
+            $pdf = $payment->user->first_name . '_' . $payment->user->last_name . '-' . '_receipt.pdf';
+            $receiptPath = storage_path("app/{$pdfName}");
+
+            // Generate the PDF receipt
+            Pdf::view('pdf-receipt-view.payment-receipt', [
+                'payment' => $payment,
+                'receipt' => $receipt
+            ])->withBrowsershot(function (Browsershot $browsershot) {
+                $browsershot->setChromePath(config('app.chrome_path'));
+            })->save($receiptPath);
+
+            // Check if the user has an email address
+            if (!empty($payment->user->email)) {
+                // Send the generated receipt to the customer's email
+                Mail::to()->queue(new PaymentReceipt($payment, $receipt, $receiptPath, $pdf));
+
+                // Notify the user that the receipt has been sent successfully
+                Notification::make()
+                    ->title('Receipt sent to the customer\'s email.')
+                    ->success()
+                    ->send();
+            } else {
+                // Notify the user that the customer doesn't have a valid email
+                Notification::make()
+                    ->title('Failed to send deposit receipt! Customer does not have an email address.')
+                    ->warning()
+                    ->send();
+            }
+        } catch (\Exception $e) {
+            // Log any exceptions that may arise during this process
+            Log::error("Error sending receipt: {$e->getMessage()}");
+
+            // Notify the user about the error
+            Notification::make()
+                ->title('Failed to send deposit receipt! Please try again later or send manually.')
+                ->danger()
+                ->send();
         }
     }
 
