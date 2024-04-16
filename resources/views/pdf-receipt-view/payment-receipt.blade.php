@@ -1,5 +1,5 @@
 <x-guest-layout>
-    <div class="bg-gray-50 dark:bg-gray-800 p-8 rounded-lg mt-20">
+    <div class=" dark:bg-gray-800 p-8 rounded-lg mt-20">
         <div class="flex justify-between items-center mb-8">
             <div>
                 <h1 class="font-bold text-xl text-gray-800 dark:text-gray-100 mb-4">Receipt</h1>
