@@ -125,7 +125,7 @@ class PaymentController extends Controller
             // Check if the user has an email address
             if (!empty($payment->user->email)) {
                 // Send the generated receipt to the customer's email
-                Mail::to()->queue(new PaymentReceipt($payment, $receipt, $receiptPath, $pdf));
+                Mail::to($payment->user->email)->queue(new PaymentReceipt($payment, $receipt, $receiptPath, $pdf));
 
                 // Notify the user that the receipt has been sent successfully
                 Notification::make()
