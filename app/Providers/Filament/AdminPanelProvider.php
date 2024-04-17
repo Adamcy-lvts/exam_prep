@@ -42,7 +42,8 @@ class AdminPanelProvider extends PanelProvider
                 Widgets\FilamentInfoWidget::class,
             ])
             ->plugins([
-                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make()
+                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
+                \FilipFonal\FilamentLogManager\FilamentLogManager::make(),
             ])
             ->middleware([
                 EncryptCookies::class,
