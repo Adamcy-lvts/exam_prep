@@ -52,7 +52,7 @@ class PaymentReceipt extends Mailable implements ShouldQueue
         return new Content(
             markdown: 'emails.payment-receipt',
             with: [
-                'urlToReceipt' => route('filament.user.resources.courses.view-receipt', ['record' => $this->receipt->id]),
+                'urlToReceipt' => route('filament.user.resources.courses.view-receipt', ['record' => $this->payment->id]),
                 'subsPlan' => $subsPlan,
             ],
         );
