@@ -31,7 +31,7 @@
                 @elseif ($plan->price == 0)
                     {{-- Assuming free plan has a price of 0 --}}
                     <button
-                        class="flex items-center justify-center bg-gray-500 text-white p-2 rounded my-8 cursor-not-allowed"
+                        class="flex items-center w-full justify-center bg-gray-500 text-white p-2 rounded my-8 cursor-not-allowed"
                         disabled>
                         {{ $plan->cto }}
                     </button>
