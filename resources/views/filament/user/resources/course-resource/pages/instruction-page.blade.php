@@ -34,10 +34,16 @@
         <div class="flex flex-col py-5 items-center space-x-4">
             <label for="numberOfQuestions" class="text-md mb-4 font-medium text-gray-600 dark:text-gray-400">Select
                 number of questions:</label>
-          <div class="flex divide-x divide-gray-200 shadow-sm rounded-lg overflow-hidden">
+            <div class="flex divide-x divide-gray-200 shadow-sm rounded-lg overflow-hidden">
                 @php
                     $allOptions = [20, 50, 70, 100, 150];
-                    $accessibleOptions = $this->user->hasFeature('Flexible quizzes (20-150 questions)') ? [20, 50, 70, 100, 150] : ($this->user->hasFeature('Flexible quizzes (20-70 questions)') ? [20, 50, 70] : ($this->user->hasFeature('20 questions per quiz') ? [20] : []));
+                    $accessibleOptions = $this->user->hasFeature('Flexible quizzes (20-150 questions)')
+                        ? [20, 50, 70, 100, 150]
+                        : ($this->user->hasFeature('Flexible quizzes (20-70 questions)')
+                            ? [20, 50, 70]
+                            : ($this->user->hasFeature('20 questions per quiz')
+                                ? [20]
+                                : []));
                 @endphp
                 @foreach ($allOptions as $number)
                     <button
@@ -48,7 +54,7 @@
                     </button>
                 @endforeach
             </div>
-           
+
             @if ($this->user->hasFeature('20 questions per quiz') || $this->user->subscriptions->isEmpty())
                 <div class="mt-4 text-sm text-red-500">
                     Your current plan allows for a default of 20 questions per quiz. To access more questions, please
@@ -60,19 +66,37 @@
         </div>
 
         <div class="text-center">
-            @if (!$ongoingAttempt)
-                <button wire:click="showStartQuizConfirmation"
-                    class="w-full bg-green-700 text-white py-2 px-3  sm:py-3 sm:px-4 rounded-md sm:rounded-lg hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-700 focus:ring-opacity-50 dark:hover:bg-green-600 transition duration-300 ease-in-out shadow hover:shadow-lg">
+            @if ($this->user->latestSubscriptionStatus() && $this->user->latestSubscriptionStatus()->status != 'expired')
+                @if (!$ongoingAttempt)
+                    <button wire:click="showStartQuizConfirmation"
+                        class="w-full bg-green-700 text-white py-2 px-3  sm:py-3 sm:px-4 rounded-md sm:rounded-lg hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-700 focus:ring-opacity-50 dark:hover:bg-green-600 transition duration-300 ease-in-out shadow hover:shadow-lg">
+                        Start Exam
+                    </button>
+                @else
+                    <button wire:click="continueLastAttempt"
+                        class="w-full bg-amber-500 text-white py-3 px-4 rounded-lg hover:bg-amber-600 focus:outline-none focus:ring-4 focus:ring-amber-500 focus:ring-opacity-50 dark:hover:bg-amber-400 transition duration-300 ease-in-out shadow hover:shadow-lg">
+                        Continue Last Attempt
+                    </button>
+                @endif
+            @else
+                <div class="mt-4 text-sm text-red-500 mb-4">
+                    Your subscription has expired. Please consider renewing your subscription to access the exam.
+                    <a href="{{ route('filament.user.resources.courses.pricing-page') }}"
+                        class="text-blue-500 hover:underline">Renew now</a>.
+                </div>
+                <button disabled
+                    class="w-full bg-green-700 text-white py-2 px-3  sm:py-3 sm:px-4 rounded-md sm:rounded-lg opacity-50 cursor-not-allowed">
                     Start Exam
                 </button>
-            @else
-                <button wire:click="continueLastAttempt"
-                    class="w-full bg-green-700 text-white py-2 px-3  sm:py-3 sm:px-4 rounded-md sm:rounded-lg hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-700 focus:ring-opacity-50 dark:hover:bg-green-600 transition duration-300 ease-in-out shadow hover:shadow-lg">
-                    Continue Last Attempt
-                </button>
+                @if ($ongoingAttempt)
+                    <button disabled
+                        class="w-full bg-amber-500 text-white py-3 px-4 rounded-lg hover:bg-amber-600 focus:outline-none focus:ring-4 focus:ring-amber-500 focus:ring-opacity-50 dark:hover:bg-amber-400 transition duration-300 ease-in-out shadow hover:shadow-lg">
+                        Continue Last Attempt
+                    </button>
+                @endif
             @endif
-
         </div>
+
     </div>
 
 

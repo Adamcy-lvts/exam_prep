@@ -131,13 +131,13 @@ class Questions extends Page
         // $questions = $this->course->questions()->paginate(5);
         // Retrieve question IDs associated with the attempt
         $questionIds = $this->currentAttempt->questions()->pluck('question_id');
-
+        // dd($questionIds);
         // dd($this->currentAttempt->questions()->pluck('question_id'));
         // Retrieve paginated questions using the IDs from the attempt
         $questions = Question::whereIn('id', $questionIds)->paginate(5);
         $allquestions = Question::whereIn('id', $questionIds)->get();
-
-        // dd($questions);
+       
+        dd($questions);
         return view('filament.user.resources.course-resource.pages.questions', [
             'questions' => $questions,
             'allquestions' => $allquestions,

@@ -12,8 +12,8 @@ Thank you for your recent payment to {{ config('app.name') }}. Below are the det
 
 A PDF copy of your receipt has been attached to this email for your records.
 
-@if(isset($urlToOnlineReceipt))
-    <x-mail::button :url="$urlToOnlineReceipt">
+@if(isset($urlToReceipt))
+    <x-mail::button :url="$urlToReceipt">
         View Receipt
     </x-mail::button>
 @endif

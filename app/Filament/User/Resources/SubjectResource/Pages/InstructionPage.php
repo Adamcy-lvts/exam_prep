@@ -95,36 +95,6 @@ class InstructionPage extends Page
         $this->remainingAttempts = $attempt ? ($attempt->attempts_left === null ? 'Unlimited' : $attempt->attempts_left) : 0;
     }
 
-    // public function startQuiz()
-    // {
-    //     // Save the current settings for number of questions and duration to the session.
-    //     session([
-    //         'selectedNumberOfQuestions' => $this->selectedNumberOfQuestions,
-    //         'selectedDuration' => $this->duration,
-    //     ]);
-
-
-    //     // $planAttempts = $this->user->currentPlan()->number_of_attempts;
-
-    //     // If the user has no attempts left, flash a message and send a notification, then redirect.
-    //     if (!$this->user->hasSubjectAttempt($this->quizzable->quizzable_id)) {
-
-    //         Notification::make()->title("You have exhausted your all your attempts, Please Purchase another attempts.")
-    //         ->warning()
-    //             ->send();
-    //         return redirect()->route('filament.user.resources.subjects.pricing-page');
-    //     }
-
-    //     // If checks pass,close any confirmation modal and proceed to the quiz questions page.
-    //     $this->showConfirmationModal = false;
-
-    //     // Redirect to the quiz questions page with the necessary parameters.
-    //     return redirect()->route('filament.user.resources.subjects.questions', [
-    //         'record' => $this->quizzable->quizzable_id,
-    //         'quizzableType' => $this->quizzable->quizzable_type
-    //     ]);
-    // }
-
     public function startQuiz()
     {
         // Save the current settings for number of questions and duration to the session.
@@ -185,59 +155,56 @@ class InstructionPage extends Page
 
     public function continueLastAttempt()
     {
-
-
-        // Redirecting the user based on the last answered question
         if (auth()->check()) {
-            // Determine the total number of questions for the quiz
-            $totalQuestions = $this->quizzable->questions()->count();
-
-            // Assuming 5 questions per page
-            $questionsPerPage = 5;
-            $maxPageNumber = ceil($totalQuestions / $questionsPerPage);
-
             // Check if there's an ongoing attempt for the current user
             $ongoingAttempt = QuizAttempt::where('user_id', auth()->user()->id)
                 ->where('quiz_id', $this->quizzable->id)
-                ->whereNull('end_time') // assuming 'end_time' is set when the quiz is submitted.
+                ->whereNull('end_time')
                 ->first();
 
-            // If there's an ongoing attempt
             if ($ongoingAttempt) {
-                $lastAnsweredQuestion = QuizAnswer::where('user_id', auth()->user()->id)
+                // Get the last answered question's ID
+                $lastAnsweredQuestionId = QuizAnswer::where('user_id', auth()->user()->id)
                     ->where('quiz_attempt_id', $ongoingAttempt->id)
                     ->latest('created_at')
-                    ->first();
+                    ->value('question_id');
 
-                // If the user has answered any questions in the ongoing attempt
-                if ($lastAnsweredQuestion) {
-                    $pageNumber = ceil($lastAnsweredQuestion->question_id / $questionsPerPage);
+                // Get all question IDs for the quiz in the correct order
+                // $questionIds = $this->ongoingAttempt->questions()->orderBy('id')->pluck('id')->toArray();
+                $questionIds = $this->ongoingAttempt->questions()
+                ->orderBy('questions.id') // Specify the table name before the column name
+                ->pluck('questions.id') // Again, specify the table name
+                ->toArray();
 
-                    // Ensure the pageNumber doesn't exceed the maxPageNumber
-                    $pageNumber = min($pageNumber, $maxPageNumber);
+                // Find the index of the last answered question
+                $lastAnsweredIndex = array_search($lastAnsweredQuestionId, $questionIds);
 
-                    // Check if the current page is different from the page the user should be on
-                    if ($this->getPage() != $pageNumber) {
-                        // Redirect to the correct page
-                        return redirect()->route('filament.user.resources.subjects.questions', [
-                            'record' => $this->quizzable->id,
-                            'quizzableType' => $this->quizzable->quizzable_type, 'page' => $pageNumber
-                        ]);
-                    }
-                }
-            } else {
-                // If there's no ongoing attempt, always redirect to the first page
-                if ($this->getPage() != 1) {
-                    return redirect()->route('filament.user.resources.subjects.questions', [
-                        'record' => $this->quizzable->id,
-                        'quizzableType' => $this->quizzable->quizzable_type, 'page' => 1
-                    ]);
-                }
+                // Assuming 5 questions per page
+                $questionsPerPage = 5;
+                // Calculate the page number based on index
+                // $pageNumber = ceil(($lastAnsweredIndex + 1) / $questionsPerPage);
+
+                $pageNumber = ceil(($lastAnsweredIndex + 1) / $questionsPerPage);
+
+                // Ensure the pageNumber is within the valid range of pages
+                $maxPageNumber = ceil(count($questionIds) / $questionsPerPage);
+                $pageNumber = max(1, min($pageNumber, $maxPageNumber));
+
+                // Redirect to the correct page
+                return redirect()->route('filament.user.resources.subjects.questions', [
+                    'record' => $this->quizzable->id,
+                    'quizzableType' => $this->quizzable->quizzable_type,
+                    'page' => $pageNumber
+                ]);
             }
         }
+
+        // If there's no ongoing attempt, redirect to the first page
         return redirect()->route('filament.user.resources.subjects.questions', [
             'record' => $this->quizzable->id,
-            'quizzableType' => $this->quizzable->quizzable_type
+            'quizzableType' => $this->quizzable->quizzable_type,
+            'page' => 1
         ]);
     }
+
 }

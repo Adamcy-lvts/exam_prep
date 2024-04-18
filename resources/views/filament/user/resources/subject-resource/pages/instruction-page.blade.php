@@ -68,7 +68,7 @@
                     </button>
                 @else
                     <button wire:click="continueLastAttempt"
-                        class="w-full bg-green-700 text-white py-2 px-3  sm:py-3 sm:px-4 rounded-md sm:rounded-lg hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-700 focus:ring-opacity-50 dark:hover:bg-green-600 transition duration-300 ease-in-out shadow hover:shadow-lg">
+                        class="w-full bg-amber-500 text-white py-3 px-4 rounded-lg hover:bg-amber-600 focus:outline-none focus:ring-4 focus:ring-amber-500 focus:ring-opacity-50 dark:hover:bg-amber-400 transition duration-300 ease-in-out shadow hover:shadow-lg">
                         Continue Last Attempt
                     </button>
                 @endif
@@ -83,7 +83,7 @@
                 </button>
                 @if ($ongoingAttempt)
                     <button disabled
-                        class="w-full bg-green-700 text-white py-2 px-3  sm:py-3 sm:px-4 rounded-md sm:rounded-lg opacity-50 cursor-not-allowed">
+                        class="w-full bg-amber-500 text-white py-3 px-4 rounded-lg hover:bg-amber-600 focus:outline-none focus:ring-4 focus:ring-amber-500 focus:ring-opacity-50 dark:hover:bg-amber-400 transition duration-300 ease-in-out shadow hover:shadow-lg">
                         Continue Last Attempt
                     </button>
                 @endif

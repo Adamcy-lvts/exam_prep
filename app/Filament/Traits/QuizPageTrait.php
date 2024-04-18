@@ -50,6 +50,8 @@ trait QuizPageTrait
         $this->user = auth()->user();
 
         try {
+
+         
             $this->quizzable = Quiz::with('questions')->where(['quizzable_type' => $quizzableType, 'id' => $record])->firstOrFail();
 
             $this->quizzableType = $this->quizzable->quizzable_type;
@@ -147,7 +149,7 @@ trait QuizPageTrait
                     'start_time' => now(),
                     'score' => 0
                 ]);
-
+               
                 // Retrieve either a random set of questions or all, based on the course's question count
                 if ($this->quizzable->questions->count() > $this->selectedNumberOfQuestions) {
                     $randomQuestions = $this->quizzable->questions()
@@ -165,6 +167,7 @@ trait QuizPageTrait
                 }
             } else {
                 $this->currentAttempt = $this->ongoingAttempt;
+             
             }
 
             // Fetch the saved answers for the user
