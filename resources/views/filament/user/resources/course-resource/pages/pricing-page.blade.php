@@ -28,22 +28,19 @@
                         class="text-center p-2 rounded border border-green-600 bg-green-100 text-green-700 dark:border-green-400 dark:bg-green-700 dark:bg-opacity-25 dark:text-green-200">
                         Active Plan
                     </div>
-                @elseif ($plan->title === 'Explorer Access Plan')
-                    <div
-                        class="text-center p-2 rounded border  font-bold text-xl">
+                @elseif ($plan->price == 0)
+                    {{-- Assuming free plan has a price of 0 --}}
+                    <button
+                        class="flex items-center justify-center bg-gray-500 text-white p-2 rounded my-8 cursor-not-allowed"
+                        disabled>
                         {{ $plan->cto }}
-                    </div>
+                    </button>
                 @else
-                    <div class="flex flex-col">
-                        <a href="{{ route('filament.user.resources.courses.payment-form', $plan->id) }}"
-                            class="flex items-center justify-center bg-green-500 text-white p-2 rounded my-8 hover:bg-green-600 transition duration-300 ease-in-out dark:hover:bg-green-800 dark:hover:bg-opacity-25">
-                            {{ $plan->cto }}
-                        </a>
-                    </div>
+                    <a href="{{ route('filament.user.resources.courses.payment-form', $plan->id) }}"
+                        class="flex items-center justify-center bg-green-500 text-white p-2 rounded my-8 hover:bg-green-600 transition duration-300 ease-in-out dark:hover:bg-green-800 dark:hover:bg-opacity-25">
+                        {{ $plan->cto }}
+                    </a>
                 @endif
-
-
-
 
                 <ul>
                     @foreach (json_decode($plan->features, true) as $feature)
@@ -57,13 +54,6 @@
                         </li>
                     @endforeach
                 </ul>
-
-                <!-- Highlight for active plan -->
-                {{-- @if ($user->hasActiveSubscription($plan->id))
-                    <div class="text-center p-2 rounded bg-blue-100 text-blue-800">
-                        Your Active Plan
-                    </div>
-                @endif --}}
             </div>
         @endforeach
 
