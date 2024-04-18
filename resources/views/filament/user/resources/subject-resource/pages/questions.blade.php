@@ -144,7 +144,6 @@
                     <form id="test-form" wire:submit.prevent="submitTest">
                         @csrf
                         <div class="space-y-8 mb-10">
-                             {{-- {{dd($questions->isNotEmpty())}} --}}
                             @if (!is_null($questions))
                                 @foreach ($questions as $key => $question)
                                     @php
