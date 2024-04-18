@@ -135,7 +135,7 @@ class InstructionPage extends Page
                 $pageNumber = max(1, min($pageNumber, $maxPageNumber));
 
                 // Redirect to the correct page
-                return redirect()->route('filament.user.resources.subjects.questions', [
+                return redirect()->route('filament.user.resources.courses.questions', [
                     'record' => $this->quizzable->id,
                     'quizzableType' => $this->quizzable->quizzable_type,
                     'page' => $pageNumber
@@ -144,7 +144,7 @@ class InstructionPage extends Page
         }
 
         // If there's no ongoing attempt, redirect to the first page
-        return redirect()->route('filament.user.resources.subjects.questions', [
+        return redirect()->route('filament.user.resources.courses.questions', [
             'record' => $this->quizzable->id,
             'quizzableType' => $this->quizzable->quizzable_type,
             'page' => 1
