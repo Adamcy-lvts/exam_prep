@@ -10,6 +10,7 @@ use App\Models\Subscription;
 use Filament\Facades\Filament;
 use Filament\Tables\Actions\Action;
 use Spatie\Browsershot\Browsershot;
+use Illuminate\Support\Facades\Auth;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
 use Illuminate\Database\Eloquent\Model;
@@ -146,10 +147,28 @@ class EditProfile extends ProfileEdit implements HasTable
                 // ...
             ])
             ->actions([
+                // Action::make('View Receipt')
+                //     ->url(fn (Payment $record): string => route('filament.user.resources.courses.view-receipt', $record))
+                //     ->visible(fn (Payment $record): bool => $record->status === 'completed')
+                //     ->openUrlInNewTab(),
                 Action::make('View Receipt')
-                    ->url(fn (Payment $record): string => route('filament.user.resources.courses.view-receipt', $record))
+                    ->url(function (Payment $record): string {
+                        $user = Auth::user(); // Get the authenticated user
+
+                        // Determine the route based on the user's permissions
+                        if ($user->can('view_course')) {
+                            return route('filament.user.resources.courses.view-receipt', $record);
+                        } elseif ($user->can('view_subject')) {
+                            return route('filament.user.resources.subjects.view-receipt', $record);
+                        }
+
+                        // If neither permission applies, return a default or error route
+                        // This can be a route to an error page or simply an empty string if you don't want to provide a link
+                        return '#';
+                    })
                     ->visible(fn (Payment $record): bool => $record->status === 'completed')
-                    ->openUrlInNewTab(),
+                    ->openUrlInNewTab()
+
                 // Action::make('Download receipt')
                 //     ->label('Download Receipt')
                 //     ->action(function (Payment $record, array $data) {

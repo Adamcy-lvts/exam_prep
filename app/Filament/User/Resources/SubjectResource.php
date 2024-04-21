@@ -104,6 +104,7 @@ class SubjectResource extends Resource
             'jamb-quiz-result' => Pages\JambQuizResult::route('/{compositeSessionId}/jamb-quiz/result'),
             'payment-form' => Pages\PaymentForm::route('/{planId}/payment'),
             'lessons' => Pages\SubjectLessonPage::route('/{subjectId}/lessons'),
+            'view-receipt' => Pages\ViewReceipt::route('/{record}/view-receipt'),
             
         ];
     }
