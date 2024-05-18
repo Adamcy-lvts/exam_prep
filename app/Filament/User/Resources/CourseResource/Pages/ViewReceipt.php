@@ -43,21 +43,6 @@ class ViewReceipt extends Page
             $browsershot->setChromePath(config('app.chrome_path'));
         })->save($receiptPath);
         
-        // $html = view('pdf-receipt-view.payment-receipt', [
-        //     'payment' => $this->payment,
-        //     'receipt' => $this->receipt
-
-        // ])->render();
-        // // dd($html);
-  
-        // Browsershot::html($html)
-        //     ->noSandbox()
-        //     ->setChromePath(config('app.chrome_path'))
-        //     ->showBackground()
-        //     ->format('A4')
-        //     ->save($receiptPath);
-
-        // Send success notification
         Notification::make()
             ->title('Receipt downloaded successfully.')
             ->success()

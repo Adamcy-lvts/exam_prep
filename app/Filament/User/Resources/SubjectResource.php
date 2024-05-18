@@ -105,6 +105,7 @@ class SubjectResource extends Resource
             'payment-form' => Pages\PaymentForm::route('/{planId}/payment'),
             'lessons' => Pages\SubjectLessonPage::route('/{subjectId}/lessons'),
             'view-receipt' => Pages\ViewReceipt::route('/{record}/view-receipt'),
+            'topic-quiz' => Pages\TopicQuiz::route('/{record}/toipc-quiz'),
             
         ];
     }

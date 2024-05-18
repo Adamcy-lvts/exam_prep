@@ -1,22 +1,28 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Filament\User\Resources\SubjectResource\Pages;
 
 use App\Models\Topic;
 use App\Models\Option;
-use Livewire\Component;
 use App\Models\Question;
 use App\Models\QuizAnswer;
+use Livewire\Attributes\On;
 use Livewire\WithPagination;
 use App\Models\TopicQuizAttempt;
+use Filament\Resources\Pages\Page;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Models\TopicQuizTimeTracking;
-use Livewire\Attributes\On;
+use Illuminate\Contracts\Support\Htmlable;
+use App\Filament\User\Resources\SubjectResource;
 
-class TopicQuiz extends Component
+class TopicQuiz extends Page
 {
-    use WithPagination;
+    protected static string $resource = SubjectResource::class;
+
+    protected static string $view = 'filament.user.resources.subject-resource.pages.topic-quiz';
 
     public $answers = [];
     public $questionIds = [];
@@ -33,7 +39,6 @@ class TopicQuiz extends Component
     public $showConfirmationModal = false;
 
     public $currentTopicId;
-    public $showQuiz = false;
 
 
     public $currentAttemptId;
@@ -44,26 +49,81 @@ class TopicQuiz extends Component
 
     public $userTopics;
     public $unlockedTopics;
+    public $subject;
+
+    public $showQuiz = true;
+    public $showSuccessMessage = false;
+    public $showFailureMessage = false;
+    public $successMessage = '';
+    public $failureMessage = '';
+
+    public $nextTopicName;
+
 
     public $timeLeftForCurrentQuestion;
 
-    public function mount($topic)
+    use WithPagination;
+
+    public function mount($record)
     {
-        $this->topic = $topic;
-        // dd($topic);
-        $this->topicId = $topic->id;
+
+        $this->topicId = $record;
+        $this->topic = Topic::with(['questions'])->findOrFail($record);
         // Attempt to fetch the latest quiz attempt for the current user
         $this->currentAttempt = $this->fetchLatestQuizAttempt();
         // dd($this->currentAttempt);
         // dd($this->currentAttempt->topic_id);
         if ($this->currentAttempt && !$this->currentAttempt->completed) {
             $this->currentTopicId = $this->currentAttempt->topic_id;
-            $this->showQuiz = true;
             $this->loadQuizStateFromAttempt();
-            // $this->currentQuestionIndex = session()->get("currentQuestionIndex_{$this->currentAttempt->topic_id}", 0);
         } else {
-            $this->showQuiz = false;
+
             $this->currentTopicId = null;
+        }
+
+        // If there is no existing attempt, create a new one
+        if (!$this->currentAttempt) {
+
+            $this->currentAttempt = TopicQuizAttempt::create([
+                'user_id' => Auth::id(),
+                'topic_id' => $this->topicId,
+                'score' => 0, // initial score
+                'passed' => false,
+                'start_time' => now(),
+                'completed' => false,
+            ]);
+        }
+
+        // if ($this->currentAttempt) {
+        //     $this->loadAnswers(); // Load previously saved answers
+        // }
+        if ($this->topic->topicable instanceof \App\Models\Subject) {
+
+            $this->subject = $this->topic->topicable;
+        }
+        // Set up the quiz questions and state
+        $this->questionIds = Question::where('topic_id', $this->topicId)->pluck('id')->toArray();
+
+        if (!empty($this->questionIds)) {
+            $this->loadCurrentQuestion();
+        } else {
+            session()->flash('error', 'Unfortunately, there are no questions for this topic yet, Please check back soon.');
+        }
+
+        $this->setNextTopic();
+    }
+
+    protected function setNextTopic()
+    {
+        $nextTopic = Topic::where('topicable_id', $this->topic->topicable_id)
+            ->where('order', '>', $this->topic->order)
+            ->orderBy('order', 'asc')
+            ->first();
+
+        if ($nextTopic) {
+            $this->nextTopicName = $nextTopic->name;
+        } else {
+            $this->nextTopicName = null; // or handle the end of course scenario
         }
     }
 
@@ -72,7 +132,7 @@ class TopicQuiz extends Component
     {
         // Fetch the latest quiz attempt for the current user that is not completed
         return TopicQuizAttempt::where('user_id', Auth::id())
-            ->where('completed', false)
+            ->where('completed', false)->where('topic_id', $this->topicId)
             ->latest()
             ->first();
     }
@@ -107,46 +167,7 @@ class TopicQuiz extends Component
         $this->showQuiz = true;
     }
 
-    #[On('startQuiz')]
-    public function startQuiz($topicId)
-    {
-        // dd($topicId);
-        // session()->forget("currentQuestionIndex_{$this->topicId}"); // Clear the session value
-        $this->currentTopicId = $topicId;
-        $this->showQuiz = true;
 
-        $existingAttempt = TopicQuizAttempt::where('user_id', Auth::id())
-            ->where('topic_id', $topicId)
-            ->where('completed', false)
-            ->first();
-
-        // If there is no existing attempt, create a new one
-        if (!$existingAttempt) {
-            $this->currentAttempt = TopicQuizAttempt::create([
-                'user_id' => Auth::id(),
-                'topic_id' => $topicId,
-                'score' => 0, // initial score
-                'passed' => false,
-                'start_time' => now(),
-                'completed' => false,
-            ]);
-        }
-        // dd($this->currentAttempt);
-        // Set up the quiz questions and state
-        $this->questionIds = Question::where('topic_id', $topicId)->pluck('id')->toArray();
-
-        if (!empty($this->questionIds)) {
-            $this->loadCurrentQuestion();
-        } else {
-            session()->flash('error', 'Unfortunately, there are no questions for this topic yet, Please check back soon.');
-        }
-
-        // $this->remainingTime = $this->getRemainingTime();
-
-        $this->dispatch('start-timer', remainingTime: $this->getRemainingTime());
-
-        $this->dispatch('close-modal', id: 'quiz-instructions-modal');
-    }
 
 
     public function getRemainingTime()
@@ -204,7 +225,7 @@ class TopicQuiz extends Component
         }
     }
 
-    #[On('timeUp')]
+    #[On('timesUp')]
     public function handleTimeUp()
     {
         // Mark the current question as incorrect or unanswered
@@ -352,23 +373,100 @@ class TopicQuiz extends Component
                 'completed' => true
             ]);
 
+            $this->showQuiz = false;
+
             if ($passed) {
                 // Flash a success message and unlock the next topic
                 $this->unlockNextTopic(auth()->id(), $this->currentAttempt->topic_id);
+                $this->showSuccessMessage = true;
+                $this->successMessage = 'Congratulations! You have passed the quiz and the next topic is now unlocked.';
                 session()->flash('message', 'Congratulations! You have passed the quiz and the next topic is now unlocked.');
             } else {
                 // Flash a failure message and encourage the user to try again
+                $this->showFailureMessage = true;
+                $this->failureMessage = 'Unfortunately, you did not pass. Please review the topic and try the quiz again.';
                 session()->flash('error', 'Unfortunately, you did not pass. Please review the topic and try the quiz again.');
             }
+
+            // return redirect()->route('filament.user.resources.subjects.lessons', ['subjectId' => $this->subject->id]);
             // session()->forget("currentQuestionIndex_{$this->topicId}"); // Clear the session value
             // After the quiz is submitted, hide the quiz and show the message
-            $this->showQuiz = false;
+
         }
     }
 
 
-    public function render()
+    public function unlockNextTopic($userId, $currentTopicId)
     {
-        return view('livewire.topic-quiz');
+
+        $nextTopic = $this->subject->topics
+            ->where('order', '>', $this->currentAttempt->topic->order)
+            ->first();
+
+        if ($nextTopic) {
+            // Update the unlocked status in the database
+            DB::table('topic_users')->updateOrInsert(
+                ['user_id' => $userId, 'topic_id' => $nextTopic->id],
+                ['unlocked' => true]
+            );
+
+            // Update the unlocked status in the component state
+            $nextTopicKey = $this->subject->topics->search(function ($topic) use ($nextTopic) {
+                return $topic->id === $nextTopic->id;
+            });
+
+            if ($nextTopicKey !== false) {
+                $this->subject->topics[$nextTopicKey]->unlocked = true;
+            }
+
+            // Notify the frontend to update the UI
+            $this->dispatch('topicUnlocked', $nextTopic->id);
+        }
     }
+
+
+    #[On('topicUnlocked')]
+    public function updateTopicUnlockedStatus($topicId)
+    {
+
+        $this->unlockedTopics = auth()->user()->topics()->where('unlocked', true)->pluck('topic_id');
+    }
+
+    public function getTitle(): string | Htmlable
+    {
+        return __($this->topic->name);
+    }
+
+    public function getHeading(): string
+    {
+        if ($this->showQuiz) {
+            return __('You are currenlty taking quiz from' . ' ' . $this->subject->name . ' ' . 'on' . ' ' . $this->topic->name);
+        } else {
+            return "";
+        }
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            'lessons' => 'Subjects',
+            $this->subject->name, $this->topic->name
+        ];
+        return [];
+    }
+
+    public function continueReading()
+    {
+        return redirect()->route('filament.user.resources.subjects.lessons', ['subjectId' => $this->subject->id]);
+    }
+
+    public function retakeQuiz()
+    {
+        return redirect()->route('filament.user.resources.subjects.topic-quiz', ['record' => $this->topicId]);
+    }
+
+    // public function getSubheading(): ?string
+    // {
+    //     return __($this->topic->name);
+    // }
 }

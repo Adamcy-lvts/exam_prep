@@ -36,22 +36,11 @@ class UserPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
-        // $user = auth()->user(); // get the authenticated user
-
-        // if (auth()->user()->subjects->count() > 0){
-        //     $pricingPageUrl = SubjectPricingPage::getUrl();
-        // } else {
-        //     $pricingPageUrl = CoursePricingPage::getUrl();
-        // }
-
+       
         return $panel
             ->id('user')
             ->path('user')
             ->login()
-            // ->renderHook(
-            //     PanelsRenderHook::USER_MENU_BEFORE,
-            //     fn (): string => Blade::render('@livewire(\'user-subscription-status\')'),
-            // )
             ->colors([
                 'primary' => Color::Green,
             ])

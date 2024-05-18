@@ -33,6 +33,7 @@
 
         </x-filament::modal>
 
+
         @foreach ($subject->topics as $index => $topic)
             <!-- Determine if the topic is unlocked for the user -->
 
@@ -49,7 +50,7 @@
                         @if ($index > 0 && !$this->isTopicUnlocked($topic->id))
                             <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="20" height="20"
                                 viewBox="0 0 330 330" class="fill-current text-gray-500 hover:text-green-600"
-                                wire:click="handleOpenModal({{ $topic->id }})" {{-- x-on:click="$dispatch('open-modal', { id: 'quiz-instructions-modal', topicId: {{ $topic->id }} })" --}}>
+                                wire:click="handleOpenModal({{ $topic->id }})">
                                 <path
                                     d="M65 330h200c8.284 0 15-6.716 15-15V145c0-8.284-6.716-15-15-15h-15V85c0-46.869-38.131-85-85-85S80 38.131 80 85v45H65c-8.284 0-15 6.716-15 15v170c0 8.284 6.716 15 15 15zm115-95.014V255c0 8.284-6.716 15-15 15s-15-6.716-15-15v-20.014c-6.068-4.565-10-11.824-10-19.986 0-13.785 11.215-25 25-25s25 11.215 25 25c0 8.162-3.932 15.421-10 19.986zM110 85c0-30.327 24.673-55 55-55s55 24.673 55 55v45H110V85z" />
                             </svg>
@@ -73,16 +74,16 @@
                                 <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Learning
                                     Objectives
                                 </h3>
-                                @if ($topic->content)
-                                    @foreach ($topic->content->learning_objectives as $objective)
+                                <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300">
+                                    @if ($topic->content)
                                         <p class="text-sm text-gray-600 dark:text-gray-300">
-                                            {{ $objective }}
+                                            {!! $topic->content->learning_objectives !!}
                                         </p>
-                                    @endforeach
-                                @else
-                                    <!-- Handle the case where there is no content -->
-                                    <p>No learning objectives available.</p>
-                                @endif
+                                    @else
+                                        <!-- Handle the case where there is no content -->
+                                        <p>No learning objectives available.</p>
+                                    @endif
+                                </ul>
 
 
                             </div>
@@ -96,11 +97,9 @@
                                 <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300">
 
                                     @if ($topic->content)
-                                        @foreach ($topic->content->key_concepts as $concept)
-                                            <p class="text-sm text-gray-600 dark:text-gray-300">
-                                                {{ $concept }}
-                                            </p>
-                                        @endforeach
+                                        <p class="text-sm text-gray-600 dark:text-gray-300">
+                                            {!! $topic->content->key_concepts !!}
+                                        </p>
                                     @else
                                         <!-- Handle the case where there is no content -->
                                         <p>No learning objectives available.</p>
@@ -114,17 +113,16 @@
                                 class="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-6 border border-gray-300 dark:border-gray-600">
                                 <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Real-World
                                     Application</h3>
-                                @if ($topic->content)
-                                    @foreach ($topic->content->real_world_application as $application)
+                                <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300">
+                                    @if ($topic->content)
                                         <p class="text-sm text-gray-600 dark:text-gray-300">
-                                            {{ $application }}
+                                            {!! $topic->content->real_world_application !!}
                                         </p>
-                                    @endforeach
-                                @else
-                                    <!-- Handle the case where there is no content -->
-                                    <p>No learning objectives available.</p>
-                                @endif
-
+                                    @else
+                                        <!-- Handle the case where there is no content -->
+                                        <p>No learning objectives available.</p>
+                                    @endif
+                                </ul>
                             </div>
                         </div>
 
@@ -157,22 +155,6 @@
                                             @livewire('chat-component', ['topic' => $topic], key($topic->id))
                                         </div>
                                     </div>
-                                    @if (session('message'))
-                                        <div class="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-200 dark:text-green-800"
-                                            role="alert">
-                                            {{ session('message') }}
-                                        </div>
-                                    @endif
-
-                                    @if (session('error'))
-                                        <div class="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800"
-                                            role="alert">
-                                            {{ session('error') }}
-                                        </div>
-                                    @endif
-
-                                  
-                                    @livewire('topic-quiz', ['topic' => $topic], key($topic->id))
                                 </div>
                             </div>
 
@@ -191,6 +173,10 @@
 
                 </div>
         @endforeach
+
+
     </div>
+
+
 
 </x-filament-panels::page>

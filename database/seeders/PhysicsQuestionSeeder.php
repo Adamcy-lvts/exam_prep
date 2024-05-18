@@ -124,20 +124,6 @@ class PhysicsQuestionSeeder extends Seeder
                 'topic' => 'Liquids at Rest',
                 'explanation' => '<p>The fraction of the cork that will be submerged when it floats is determined by the ratio of the density of the cork to the density of the liquid. This is given by Archimedes\' Principle. The calculation is <em>density of cork / density of liquid = 0.25 * 10<sup>3</sup> kg/m<sup>3</sup> / 1.25 * 10<sup>3</sup> kg/m<sup>3</sup> = 0.2</em>, meaning 20% of the cork will be submerged.</p>'
             ],
-
-            [
-                'question' => 'An object is moving with a velocity of 5m/s. At what height must a similar body be situated to have a potential energy equal in value with kinetic energy of the moving body?',
-                'marks' => 2,
-                'options' => [
-                    ['option' => '1.25m', 'is_correct' => true], // Created option based on calculation.
-                    ['option' => '2.5m', 'is_correct' => false],
-                    ['option' => '5m', 'is_correct' => false],
-                    ['option' => '10m', 'is_correct' => false],
-                ],
-                'type' => 'mcq',
-                'topic' => 'Work, Energy, and Power',
-                'explanation' => '<p>To find the height where potential energy equals kinetic energy, we set the kinetic energy equation <em>1/2 mv²</em> equal to the potential energy equation <em>mgh</em>. Canceling out the mass and solving for <em>h</em>, we get <em>h = v² / (2g)</em>. With <em>v = 5m/s</em> and <em>g = 10m/s²</em>, the height is <em>h = (5m/s)² / (2 * 10m/s²) = 1.25m</em>.</p>'
-            ],
             [
                 'question' => 'If a pump is capable of lifting 5000kg of water through a vertical height of 60 m in 15 min, the power of the pump is',
                 'marks' => 2,
@@ -562,6 +548,34 @@ class PhysicsQuestionSeeder extends Seeder
 
                 'explanation' => '<p>Steam causes more severe burns than boiling water because it contains latent heat of vaporization. When steam comes into contact with the skin, it condenses into water and releases this latent heat, transferring a significant amount of energy to the skin, which can cause severe burns. The latent heat is the energy required for the phase change from liquid to gas without changing temperature.</p>'
             ],
+            [
+                'question' => 'Which of the following is a scalar quantity?',
+                'marks' => 2,
+                'options' => [
+                    ['option' => 'Force', 'is_correct' => false],
+                    ['option' => 'Velocity', 'is_correct' => false],
+                    ['option' => 'Temperature', 'is_correct' => true],
+                    ['option' => 'Acceleration', 'is_correct' => false],
+                ],
+                'type' => 'mcq',
+                'topic' => 'Scalars and Vectors',
+                'explanation' => '<p>Temperature is a scalar quantity because it has magnitude but no specific direction, unlike vector quantities like force, velocity, and acceleration which require both magnitude and direction for their complete description.</p>'
+            ],
+
+            [
+                'question' => 'Which property distinguishes vector quantities from scalar quantities?',
+                'marks' => 2,
+                'options' => [
+                    ['option' => 'They can be negative or positive', 'is_correct' => false],
+                    ['option' => 'They have units', 'is_correct' => false],
+                    ['option' => 'They require direction for a complete description', 'is_correct' => true],
+                    ['option' => 'They are always large quantities', 'is_correct' => false],
+                ],
+                'type' => 'mcq',
+                'topic' => 'Scalars and Vectors',
+                'explanation' => '<p>Vector quantities are distinguished from scalar quantities by the necessity of having both magnitude and direction for a complete description. This is essential for understanding physical phenomena like force and velocity, where direction plays a critical role.</p>'
+            ],
+
             [
                 'question' => 'What is the SI unit of force?',
                 'marks' => 2,
@@ -1371,20 +1385,6 @@ class PhysicsQuestionSeeder extends Seeder
                 ],
                 'explanation' => '<p>Explanation:</p>
             <p>The acceleration \( a \) can be calculated using the formula \( a = \frac{\Delta v}{t} \), where \( \Delta v \) is the change in velocity and \( t \) is the time. The initial velocity \( v_i \) is 25 m/s, the final velocity \( v_f \) is 45 m/s, and the time \( t \) is 10 s. The change in velocity \( \Delta v = v_f - v_i = 45 m/s - 25 m/s = 20 m/s \). Therefore, the acceleration \( a = \frac{20 m/s}{10 s} = 2 m/s² \).</p>',
-            ],
-            [
-                'question' => 'An object is weighed at different locations on the earth. What will be the right observation?',
-                'marks' => 2,
-                'type' => 'mcq',
-                'topic' => 'Gravitational Field',
-                'options' => [
-                    ['option' => 'Both the mass and weight vary', 'is_correct' => false],
-                    ['option' => 'The weight is constant while the mass varies', 'is_correct' => false],
-                    ['option' => 'The mass is constant while the weight varies', 'is_correct' => true],
-                    ['option' => 'Both the mass and weight are constant', 'is_correct' => false],
-                ],
-                'explanation' => '<p>Explanation:</p>
-            <p>The mass of an object is a measure of the amount of matter in it, and it remains constant regardless of its location. Weight, however, is the force exerted on an object due to gravity and can vary depending on the location on Earth because the gravitational field strength varies slightly with altitude and Earth\'s geoid shape. Therefore, when an object is weighed at different locations on Earth, its mass remains constant while its weight varies.</p>',
             ],
             [
                 'question' => 'A machine of velocity ratio 6 requires an effort of 400N to raise a load of 800N through 1m. The efficiency of the machine is:',

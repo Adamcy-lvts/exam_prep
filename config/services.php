@@ -33,6 +33,13 @@ return [
 
     'openai' => [
         'secret' => env('OPENAI_API_KEY'),
-    ]
+    ],
+
+    'paystack' => [
+        'public' => env('PAYSTACK_PUBLIC_KEY'),
+        'secret' => env('PAYSTACK_SECRET_KEY'),
+        'payment_url' => env('PAYSTACK_PAYMENT_URL', 'https://api.paystack.co'),
+        'merchant_email' => env('MERCHANT_EMAIL'),
+    ],
 
 ];

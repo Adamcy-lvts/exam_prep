@@ -76,6 +76,9 @@ class PaymentController extends Controller
 
                 $this->sendReceiptByEmail();
 
+                // Record referral payment
+                $this->recordReferralPayment($this->user, $paymentDetails);
+
                 DB::commit();
 
                 // Depending on the type of plan, redirect to the appropriate page
@@ -150,6 +153,19 @@ class PaymentController extends Controller
                 ->send();
         }
     }
+
+    private function recordReferralPayment(User $user, $paymentDetails)
+    {
+        $referral = $user->referringAgents()->first();
+        if ($referral) {
+            $user->referringAgents()->updateExistingPivot($referral->id, [
+                'payment_amount' => $paymentDetails['data']['amount'] / 100, // Convert from kobo to naira
+                'payment_status' => 'completed',
+                'payment_date' => now(),
+            ]);
+        }
+    }
+
 
     private function manageSubscription(User $user, Plan $newPlan)
     {

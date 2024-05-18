@@ -36,6 +36,7 @@ Route::get('/', function () {
 });
 
 
+
 // Routes requiring authentication, email verification, and step completion
 Route::middleware(['auth', 'steps.completed'])->group(function () {
     
@@ -48,7 +49,7 @@ Route::middleware(['auth', 'steps.completed'])->group(function () {
 });
 
 // Routes requiring authentication and email verification but not step completion
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'prevent-agent'])->group(function () {
     Route::get('/courses/{examId}/', CoursesPage::class)->name('courses.page');
     Route::get('/subjects/{examid}', SubjectsPage::class)->name('subjects.page');
     Route::get('/select-exam-type', Exams::class)->name('choose-exam');

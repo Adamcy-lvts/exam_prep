@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Filament\User\Pages\Auth;
+namespace App\Filament\Agent\Pages\Auth;
 
+use App\Models\User;
 use App\Models\Agent;
 use App\Models\Course;
 use Filament\Pages\Page;
@@ -11,32 +12,30 @@ use Filament\Forms\Components\Select;
 use Illuminate\Auth\Events\Registered;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
-// use App\Http\Responses\RegistrationResponse;
 use Filament\Notifications\Notification;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Contracts\Support\Htmlable;
+use Unicodeveloper\Paystack\Facades\Paystack;
 use Filament\Pages\Auth\Register as AuthRegister;
 use Filament\Http\Responses\Auth\RegistrationResponse;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
+
 
 class Register extends AuthRegister
 {
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
-    protected static string $view = 'filament.user.pages.auth.register';
+    protected static string $view = 'filament.agent.pages.auth.register';
 
     public ?array $data = [];
 
     protected string $userModel;
-    public $referralCode;
 
     public function mount(): void
     {
         if (Filament::auth()->check()) {
             redirect()->intended(Filament::getUrl());
         }
-
-        // Capture referral code from the query string
-        $this->referralCode = request()->query('ref');
 
         $this->form->fill();
     }
@@ -60,33 +59,58 @@ class Register extends AuthRegister
 
             return null;
         }
-
+      
         $data = $this->form->getState();
-     
-        // $courseIds = $data['courses'] ?? [];
-     
-        $user = $this->getUserModel()::create($data);
 
-        $user->assignRole('panel_user');
+        // Create User record
+        $userData = [
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'],
+            'user_type' => 'agent', 
+            'password' => $data['password'], // Ensure password is hashed
+        ];
 
-        // If a referral code is present, link the user to the agent
-        if ($this->referralCode) {
-            $agent = Agent::where('referral_code', $this->referralCode)->first();
-            if ($agent) {
-                // Attach the agent to the user using the pivot table
-                $user->referringAgents()->attach($agent->id, [
-                    'referred_at' => now(),
-                ]);
-            }
-        }
+        $subaccountData = [
+            'business_name' => $data['business_name'],
+            'settlement_bank' => $data['bank'],
+            'account_number' => $data['account_number'],
+            'percentage_charge' => 10, // Percentage charge the agent will take
+        ];
 
+        $subaccount = Paystack::createSubAccount($subaccountData);
+        dd($subaccount);
+
+        $user = User::create($userData);
+
+        // Assign role to user if needed
+        // $user->assignRole('agent');
+
+        // Create Agent record
+        // $agentData = [
+        //     'user_id' => $user->id,
+        //     'business_name' => $data['business_name'],
+        //     'account_number' => $data['account_number'],
+        //     'account_name' => $data['account_name'],
+        //     'bank' => $data['bank'],
+        // ];
+        // Agent::create($agentData);
+
+ 
+        $user->agent()->create([
+            'business_name' => $data['business_name'],
+            'account_number' => $data['account_number'],
+            'account_name' => $data['account_name'],
+            'bank' => $data['bank'],
+            'paystack_subaccount_id' => $subaccount['data']['subaccount_code'],
+        ]);
         // $this->sendEmailVerificationNotification($user);
 
         Filament::auth()->login($user);
 
         session()->regenerate();
 
-        // return new RegistrationResponse('choose-exam');
         return app(RegistrationResponse::class);
     }
 
@@ -96,18 +120,30 @@ class Register extends AuthRegister
             'form' => $this->form(
                 $this->makeForm()
                     ->schema([
+                        $this->getBusinessNameFormComponent()->columnSpan('full'),
                         $this->getFirstNameFormComponent(),
                         $this->getLastNameFormComponent(),
                         $this->getEmailFormComponent(),
                         $this->getPhoneFormComponent(),
+                        $this->getAccountNumberFormComponent(),
+                        $this->getAccountNameFormComponent(),
+                        $this->getBankFormComponent()->columnSpan('full'),
                         $this->getPasswordFormComponent(),
                         $this->getPasswordConfirmationFormComponent(),
-                    ])
+                    ])->columns(2)
                     ->statePath('data'),
             ),
         ];
     }
 
+    protected function getBusinessNameFormComponent(): Component
+    {
+        return TextInput::make('business_name')
+            ->helperText('Business, Organisation, Company name etc. If any.')
+            ->label(__('Business Name'))
+            ->maxLength(255)
+            ->autofocus();
+    }
 
     protected function getFirstNameFormComponent(): Component
     {
@@ -146,6 +182,34 @@ class Register extends AuthRegister
             ->autofocus();
     }
 
+    protected function getAccountNumberFormComponent(): Component
+    {
+        return TextInput::make('account_number')
+            ->label(__('Account Number'))
+            ->numeric()
+            ->inputMode('decimal')
+            ->required()
+            ->maxLength(255)
+            ->autofocus();
+    }
+
+    protected function getAccountNameFormComponent(): Component
+    {
+        return TextInput::make('account_name')
+            ->label(__('Account Name'))
+            ->required()
+            ->maxLength(255)
+            ->autofocus();
+    }
+
+    protected function getBankFormComponent(): Component
+    {
+        return TextInput::make('bank')
+            ->label(__('Bank'))
+            ->required()
+            ->maxLength(255)
+            ->autofocus();
+    }
 
 
     protected function getPasswordFormComponent(): Component
@@ -167,5 +231,15 @@ class Register extends AuthRegister
             ->password()
             ->required()
             ->dehydrated(false);
+    }
+
+    public function getTitle(): string | Htmlable
+    {
+        return __('Agent Registrations');
+    }
+
+    public function getHeading(): string | Htmlable
+    {
+        return __('Agent Registration');
     }
 }

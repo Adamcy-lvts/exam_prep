@@ -31,6 +31,10 @@ class Authenticate extends Middleware
             return route('filament.user.auth.login'); // Return the named route for user login
         }
 
+        if ($request->is('agent/*')) {
+            return route('filament.agent.auth.login'); // Return the named route for user login
+        }
+
         // Default redirect
         return route('filament.user.auth.login');
     }

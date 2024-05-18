@@ -26,6 +26,7 @@ return new class extends Migration
             $table->timestamp('subject_attempts_initialized_at')->nullable();
             $table->timestamp('course_attempts_initialized_at')->nullable();
             $table->foreignId('exam_id')->nullable();
+            $table->string('user_type')->nullable();
             $table->rememberToken();
             $table->foreignId('current_team_id')->nullable();
             $table->string('profile_photo_path', 2048)->nullable();

@@ -33,10 +33,10 @@ class TopicContentResource extends Resource
 
                 Select::make('subject_id')->relationship(name: 'subject', titleAttribute: 'name')->preload(),
                 Select::make('topic_id')->relationship(name: 'topic', titleAttribute: 'name')->preload(),
-                Textarea::make('description'),
-                Textarea::make('learning_objectives'),
-                Textarea::make('key_concepts'),
-                Textarea::make('real_world_application'),
+                RichEditor::make('description'),
+                RichEditor::make('learning_objectives'),
+                RichEditor::make('key_concepts'),
+                RichEditor::make('real_world_application'),
                 RichEditor::make('content')->columnSpan(2)
             ]);
     }

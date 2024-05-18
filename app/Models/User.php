@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Filament\Panel;
 use App\Models\Exam;
 use App\Models\Plan;
+use App\Models\Agent;
 use App\Models\Topic;
 use App\Models\Course;
 use App\Models\Payment;
@@ -43,7 +44,18 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
     public function canAccessPanel(Panel $panel): bool
     {
         if ($panel->getId() === 'admin') {
+
             return ($this->email === 'lv4mj1@gmail.com');
+        }
+
+        if ($panel->getId() === 'user') {
+
+            return $this->hasRole('panel_user');
+        }
+
+        if ($panel->getId() === 'agent') {
+
+            return $this->user_type = 'agent';
         }
 
         return true;
@@ -64,6 +76,7 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
         'subject_attempts_initialized_at',
         'course_attempts_initialized_at',
         'exam_id',
+        'user_type',
         'is_on_trial',
         'trial_ends_at'
     ];
@@ -94,6 +107,17 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
      *
      * @var array<int, string>
      */
+    public function agent()
+    {
+        return $this->hasOne(Agent::class);
+    }
+
+    public function referringAgents()
+    {
+        return $this->belongsToMany(Agent::class, 'agent_user')
+        ->withPivot('referred_at')
+        ->withTimestamps();
+    }
 
     public function payments()
     {
@@ -149,7 +173,7 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
             // Detach the subscription from the user
             // $this->subscriptions()->detach($currentSubscription->id);
 
-           
+
         }
     }
 

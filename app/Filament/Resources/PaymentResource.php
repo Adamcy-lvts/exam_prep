@@ -7,19 +7,26 @@ use Filament\Forms;
 use App\Models\Plan;
 use Filament\Tables;
 use App\Models\Payment;
-use Filament\Forms\Form;
+use App\Models\Receipt;
 
+use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Support\RawJs;
+use App\Mail\PaymentReceipt;
 use Faker\Provider\ar_EG\Text;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\DB;
+use Spatie\LaravelPdf\Facades\Pdf;
 use Filament\Tables\Actions\Action;
+use Illuminate\Support\Facades\Log;
+use Spatie\Browsershot\Browsershot;
+use Illuminate\Support\Facades\Mail;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\PaymentResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -177,6 +184,60 @@ class PaymentResource extends Resource
                                         }
                                     }
                                 }
+                            }
+
+                            // Generate and save receipt after payment is successful
+                            $receipt = $record->receipt()->create([
+                                'payment_id' => $record->id,
+                                'user_id' => $record->user->id,
+                                'payment_date' => now(),
+                                'receipt_for' => $record->payment_for, // Assuming 'Subscription' is the type for subscription payments
+                                'amount' => $record->amount,
+                                'receipt_number' => Receipt::generateReceiptNumber(now()),
+                                // 'remarks' and 'qr_code' can be set here if needed
+                            ]);
+
+
+                            try {
+                           
+
+                                $pdf = $record->user->first_name . '_' . $record->user->last_name . '-' . '_receipt.pdf';
+                                $receiptPath = storage_path("app/{$pdf}");
+
+                                // Generate the PDF receipt
+                                Pdf::view('pdf-receipt-view.payment-receipt', [
+                                    'payment' => $record,
+                                    'receipt' => $receipt
+                                ])->withBrowsershot(function (Browsershot $browsershot) {
+                                    $browsershot->setChromePath(config('app.chrome_path'));
+                                })->save($receiptPath);
+
+                                // Check if the user has an email address
+                                if (!empty($record->user->email)) {
+                                    // Send the generated receipt to the customer's email
+                                    Mail::to($record->user->email)->queue(new PaymentReceipt($record, $receipt, $receiptPath, $pdf));
+
+                                    // Notify the user that the receipt has been sent successfully
+                                    Notification::make()
+                                        ->title('Receipt sent to the customer\'s email.')
+                                        ->success()
+                                        ->send();
+                                } else {
+                                    // Notify the user that the customer doesn't have a valid email
+                                    Notification::make()
+                                        ->title('Failed to send deposit receipt! Customer does not have an email address.')
+                                        ->warning()
+                                        ->send();
+                                }
+                            } catch (\Exception $e) {
+                                // Log any exceptions that may arise during this process
+                                Log::error("Error sending receipt: {$e->getMessage()}");
+
+                                // Notify the user about the error
+                                Notification::make()
+                                    ->title('Failed to send deposit receipt! Please try again later or send manually.')
+                                    ->danger()
+                                    ->send();
                             }
                         });
                     })

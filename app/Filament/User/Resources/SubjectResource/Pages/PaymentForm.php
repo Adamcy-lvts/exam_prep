@@ -4,14 +4,19 @@ namespace App\Filament\User\Resources\SubjectResource\Pages;
 
 use App\Models\Plan;
 use App\Models\Payment;
+use App\Models\Receipt;
 use Filament\Forms\Form;
 use Filament\Support\RawJs;
+use App\Mail\PaymentReceipt;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\HtmlString;
+use Spatie\LaravelPdf\Facades\Pdf;
+// use Unicodeveloper\Paystack\Facades\Paystack;
 use Filament\Forms\Components\Tabs;
 use Illuminate\Support\Facades\Log;
+use Spatie\Browsershot\Browsershot;
 use Illuminate\Support\Facades\Http;
-// use Unicodeveloper\Paystack\Facades\Paystack;
+use Illuminate\Support\Facades\Mail;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
@@ -35,6 +40,9 @@ class PaymentForm extends Page
     public $reference;
     public $price;
     public $method;
+    public $payment;
+    public $receipt;
+    public $user;
 
     public function mount($planId)
     {
@@ -43,12 +51,12 @@ class PaymentForm extends Page
 
         $this->price = formatNaira($this->plan->price);
 
-        $user = auth()->user();
+        $this->user = auth()->user();
 
         $this->form->fill([
-            'first_name' => $user->first_name,
-            'last_name' => $user->last_name,
-            'email' => $user->email,
+            'first_name' => $this->user->first_name,
+            'last_name' => $this->user->last_name,
+            'email' => $this->user->email,
             'amount' => $this->plan->price,
         ]);
     }
@@ -171,7 +179,7 @@ class PaymentForm extends Page
         if ($this->method === 'bank_transfer') {
             // Record the payment as pending in your payment table
             // Replace 'Payment' with your actual payment model and set the appropriate fields
-            $payment = Payment::create([
+            $this->payment = Payment::create([
                 'user_id' => auth()->id(),
                 'plan_id' => $this->plan->id,
                 'amount' => $this->plan->price,
@@ -180,6 +188,7 @@ class PaymentForm extends Page
                 'payment_for' => 'subscription plan',
                 // Add other necessary fields
             ]);
+
 
             Notification::make()
             ->title('success')
@@ -193,4 +202,5 @@ class PaymentForm extends Page
         // In case of an unsupported method
         return Redirect::back()->withErrors('Unsupported payment method selected.');
     }
+
 }

@@ -16,9 +16,9 @@ return new class extends Migration
             $table->foreignId('subject_id')->constrained()->onDelete('cascade');
             $table->foreignId('topic_id')->constrained('topics')->onDelete('cascade');
             $table->text('description')->nullable();
-            $table->json('learning_objectives')->nullable();
-            $table->json('key_concepts')->nullable();
-            $table->json('real_world_application')->nullable();
+            $table->text('learning_objectives')->nullable();
+            $table->text('key_concepts')->nullable();
+            $table->text('real_world_application')->nullable();
             $table->longText('content')->nullable();
             $table->timestamps();
         });

@@ -18,6 +18,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Models\TopicQuizTimeTracking;
+use Filament\Notifications\Notification;
 use App\Filament\User\Resources\SubjectResource;
 
 class SubjectLessonPage extends Page
@@ -83,7 +84,7 @@ class SubjectLessonPage extends Page
     }
 
 
-  
+
 
     public function isTopicUnlocked($topicId)
     {
@@ -109,29 +110,50 @@ class SubjectLessonPage extends Page
 
 
 
+    // public function handleOpenModal($topicId)
+    // {
 
-    // #[On('open-modal')]
+    //     $currentSubjectId = $this->subject->id; // The ID of the current subject
+
+    //     $this->clickedTopic = Topic::where('topicable_id', $currentSubjectId)
+    //         ->findOrFail($topicId);
+
+    //     $previousTopic = Topic::where('topicable_id', $currentSubjectId)
+    //         ->where('order', '<', $this->clickedTopic->order)
+    //         ->orderBy('order', 'desc')
+    //         ->first();
+
+    //     $this->previousTopicId = $previousTopic ? $previousTopic->id : null;
+    //     $this->previousTopicName = $previousTopic ? $previousTopic->name : null;
+
+    //     $this->dispatch('open-modal', id: 'quiz-instructions-modal');
+    // }
+
     public function handleOpenModal($topicId)
     {
-
-
-        $this->clickedTopic = Topic::findOrFail($topicId);
-        $previousTopic = Topic::where('order', '<', $this->clickedTopic->order)
+        $currentSubjectId = $this->subject->id;
+        $this->clickedTopic = Topic::where('topicable_id', $currentSubjectId)->findOrFail($topicId);
+        $previousTopic = Topic::where('topicable_id', $currentSubjectId)
+            ->where('order', '<', $this->clickedTopic->order)
             ->orderBy('order', 'desc')
             ->first();
 
-        // If there's a previous topic, update the property that holds its name.
-        // Otherwise, set it to null or a default message.
-        $this->previousTopicId = $previousTopic ? $previousTopic->id : null;
-        $this->previousTopicName = $previousTopic ? $previousTopic->name : null;
-
-        $this->dispatch('open-modal', id: 'quiz-instructions-modal');
+        if ($previousTopic && $this->isTopicUnlocked($previousTopic->id)) {
+            $this->previousTopicId = $previousTopic->id;
+            $this->previousTopicName = $previousTopic->name;
+            $this->dispatch('open-modal', id: 'quiz-instructions-modal');
+        } else {
+            // Use Filament's notification system to display a warning
+            Notification::make()
+                ->title('Access Denied')
+                ->body('You must complete the previous topic before attempting this quiz.')
+                ->warning()
+                ->send();
+        }
     }
 
-    public function startQuiz($topicId)
-    {
-        $this->dispatch('startQuiz', $topicId);
-    }
+
+
 
     public function unlockNextTopic($userId, $currentTopicId)
     {
@@ -165,7 +187,14 @@ class SubjectLessonPage extends Page
     #[On('topicUnlocked')]
     public function updateTopicUnlockedStatus($topicId)
     {
-       
+
         $this->unlockedTopics = auth()->user()->topics()->where('unlocked', true)->pluck('topic_id');
+    }
+
+    public function startQuiz($topicId)
+    {
+
+        $this->dispatch('close-modal', id: 'quiz-instructions-modal');
+        return redirect()->route('filament.user.resources.subjects.topic-quiz', ['record' => $topicId]);
     }
 }
