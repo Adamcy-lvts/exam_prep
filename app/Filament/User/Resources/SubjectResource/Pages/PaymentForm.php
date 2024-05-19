@@ -155,7 +155,7 @@ class PaymentForm extends Page
         if ($agent && $agent->subaccount_code) {
             $data['subaccount'] = $agent->subaccount_code;
         }
-dd($data);
+// dd($data);
         try {
             // Attempt to get the authorization URL from Paystack and redirect
             return Paystack::getAuthorizationUrl($data)->redirectNow();
