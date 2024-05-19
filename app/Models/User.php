@@ -107,6 +107,11 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
      *
      * @var array<int, string>
      */
+    public function bank()
+    {
+        return $this->belongsTo(Bank::class);
+    }
+    
     public function agent()
     {
         return $this->hasOne(Agent::class);
@@ -115,8 +120,8 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
     public function referringAgents()
     {
         return $this->belongsToMany(Agent::class, 'agent_user')
-        ->withPivot('referred_at')
-        ->withTimestamps();
+            ->withPivot('referred_at')
+            ->withTimestamps();
     }
 
     public function payments()

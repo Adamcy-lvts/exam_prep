@@ -139,26 +139,34 @@ class PaymentForm extends Page
 
     public function redirectToGateway()
     {
-
+        // Basic data for the transaction
         $data = [
-            'amount' => $this->plan->price * 100,
+            'amount' => $this->plan->price * 100, // Converting to kobo for Paystack
             'email' => $this->email,
             'reference' => Paystack::genTranxRef(),
-            'metadata' => ['planId' => $this->plan->id]
+            'metadata' => ['planId' => $this->plan->id, 'userId' => auth()->id()], // Including user ID in metadata for tracking
         ];
 
+        // Check if user has an associated agent and if that agent has a subaccount code
+        $user = auth()->user();
+        if ($user->agent && $user->agent->subaccount_code) {
+            $data['subaccount'] = $user->agent->subaccount_code;
+        }
+
         try {
+            // Attempt to get the authorization URL from Paystack and redirect
             return Paystack::getAuthorizationUrl($data)->redirectNow();
         } catch (\Exception $e) {
-            // Log the error
+            // Log the error and provide feedback to the user
             Log::error('Payment failed:', [
                 'message' => $e->getMessage(),
-                'stack' => $e->getTraceAsString(), // Optional: if you want the stack trace
+                'stack' => $e->getTraceAsString(), // Optionally log the stack trace for deep debugging
             ]);
             // Redirect back with an error message
             return Redirect::back()->withErrors('The paystack token has expired or there was an error processing the payment. Please refresh the page and try again.');
         }
     }
+
 
     public function processPayment()
     {
@@ -191,10 +199,10 @@ class PaymentForm extends Page
 
 
             Notification::make()
-            ->title('success')
-            ->body('Your bank transfer payment has been recorded, pending confirmation. we will get back to you.')
-            ->success()
-            ->send();
+                ->title('success')
+                ->body('Your bank transfer payment has been recorded, pending confirmation. we will get back to you.')
+                ->success()
+                ->send();
             // Redirect to a confirmation page or back with a success message
             return $this->redirectRoute('filament.user.auth.profile');
         }
@@ -202,5 +210,4 @@ class PaymentForm extends Page
         // In case of an unsupported method
         return Redirect::back()->withErrors('Unsupported payment method selected.');
     }
-
 }

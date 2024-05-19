@@ -17,8 +17,9 @@ return new class extends Migration
             $table->string('business_name');
             $table->string('account_number');
             $table->string('account_name');
-            $table->string('bank');
+            $table->string('bank_id')->constrained('bank')->onDelete('cascade');
             $table->string('referral_code')->unique()->nullable();
+            $table->string('subaccount_code')->nullable();
             $table->timestamps();
         });
     }

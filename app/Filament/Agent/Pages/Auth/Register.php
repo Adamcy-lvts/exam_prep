@@ -2,6 +2,7 @@
 
 namespace App\Filament\Agent\Pages\Auth;
 
+use App\Models\Bank;
 use App\Models\User;
 use App\Models\Agent;
 use App\Models\Course;
@@ -59,7 +60,7 @@ class Register extends AuthRegister
 
             return null;
         }
-      
+
         $data = $this->form->getState();
 
         // Create User record
@@ -68,7 +69,7 @@ class Register extends AuthRegister
             'last_name' => $data['last_name'],
             'email' => $data['email'],
             'phone' => $data['phone'],
-            'user_type' => 'agent', 
+            'user_type' => 'agent',
             'password' => $data['password'], // Ensure password is hashed
         ];
 
@@ -79,8 +80,8 @@ class Register extends AuthRegister
             'percentage_charge' => 10, // Percentage charge the agent will take
         ];
 
-        $subaccount = Paystack::createSubAccount($subaccountData);
-        dd($subaccount);
+        // $subaccount = Paystack::createSubAccount($subaccountData);
+        // dd($subaccount);
 
         $user = User::create($userData);
 
@@ -97,13 +98,14 @@ class Register extends AuthRegister
         // ];
         // Agent::create($agentData);
 
- 
+        $bank = Bank::find($data['bank']);
+
         $user->agent()->create([
             'business_name' => $data['business_name'],
             'account_number' => $data['account_number'],
             'account_name' => $data['account_name'],
-            'bank' => $data['bank'],
-            'paystack_subaccount_id' => $subaccount['data']['subaccount_code'],
+            'bank_id' => $bank->id,
+            // 'subaccount_code' => $subaccount['data']['subaccount_code'],
         ]);
         // $this->sendEmailVerificationNotification($user);
 
@@ -204,11 +206,11 @@ class Register extends AuthRegister
 
     protected function getBankFormComponent(): Component
     {
-        return TextInput::make('bank')
-            ->label(__('Bank'))
+        return Select::make('bank')
+            ->label('Bank')
             ->required()
-            ->maxLength(255)
-            ->autofocus();
+            ->options(Bank::all()->pluck('name', 'code')) // This will make the bank code the value and bank name the label
+            ->searchable();
     }
 
 
