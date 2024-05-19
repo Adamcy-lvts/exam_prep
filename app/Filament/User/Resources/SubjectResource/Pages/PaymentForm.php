@@ -154,6 +154,7 @@ class PaymentForm extends Page
         // Add subaccount to the data if it exists
         if ($agent && $agent->subaccount_code) {
             $data['subaccount'] = $agent->subaccount_code;
+            $data['transaction_charge'] = 500;
         }
 // dd($data);
         try {
