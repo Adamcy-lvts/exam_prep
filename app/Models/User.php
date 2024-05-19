@@ -77,6 +77,7 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
         'course_attempts_initialized_at',
         'exam_id',
         'user_type',
+        'agent_id',
         'is_on_trial',
         'trial_ends_at'
     ];
@@ -111,7 +112,7 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
     {
         return $this->belongsTo(Bank::class);
     }
-    
+
     public function agent()
     {
         return $this->hasOne(Agent::class);

@@ -149,8 +149,11 @@ class PaymentForm extends Page
 
         // Check if user has an associated agent and if that agent has a subaccount code
         $user = auth()->user();
-        if ($user->agent && $user->agent->subaccount_code) {
-            $data['subaccount'] = $user->agent->subaccount_code;
+        $agent = $user->referringAgents()->first();  // Get the first (or only) agent
+
+        // Add subaccount to the data if it exists
+        if ($agent && $agent->subaccount_code) {
+            $data['subaccount'] = $agent->subaccount_code;
         }
 
         try {
