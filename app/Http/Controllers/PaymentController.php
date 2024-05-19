@@ -159,8 +159,8 @@ class PaymentController extends Controller
         $referral = $user->referringAgents()->first();
         if ($referral) {
             $user->referringAgents()->updateExistingPivot($referral->id, [
-                'payment_amount' => $paymentDetails['data']['amount'] / 100, // Convert from kobo to naira
-                'payment_status' => 'completed',
+                'amount' => $paymentDetails['data']['amount'] / 100, // Convert from kobo to naira
+                'status' => 'completed',
                 'payment_date' => now(),
             ]);
         }
