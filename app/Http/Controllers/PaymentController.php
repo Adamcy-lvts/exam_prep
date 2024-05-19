@@ -10,6 +10,7 @@ use App\Models\Receipt;
 use App\Models\JambAttempt;
 use App\Mail\PaymentReceipt;
 use Illuminate\Http\Request;
+use App\Models\ReferralPayment;
 use App\Models\UserQuizAttempt;
 use Illuminate\Support\Facades\DB;
 use Spatie\LaravelPdf\Facades\Pdf;
@@ -28,7 +29,7 @@ class PaymentController extends Controller
     public function handleGatewayCallback(Request $request)
     {
         $paymentDetails = Paystack::getPaymentData();
-
+dd($paymentDetails);
         // Verify payment status
         if ($paymentDetails['status'] === true && $paymentDetails['data']['status'] === 'success') {
             DB::beginTransaction();
@@ -156,15 +157,19 @@ class PaymentController extends Controller
 
     private function recordReferralPayment(User $user, $paymentDetails)
     {
+        // Assuming each user has one referring agent and there's a referral record already.
         $referral = $user->referringAgents()->first();
+
         if ($referral) {
-            $user->referringAgents()->updateExistingPivot($referral->id, [
+            ReferralPayment::create([
+                'referral_id' => $referral->id, // Assuming 'referral_id' links to a record in the agent_user table
                 'amount' => $paymentDetails['data']['amount'] / 100, // Convert from kobo to naira
-                'status' => 'completed',
-                'payment_date' => now(),
+                'status' => 'completed', // Assuming the payment is completed at this point
+                'payment_date' => now(), // The current date and time of the payment
             ]);
         }
     }
+
 
 
     private function manageSubscription(User $user, Plan $newPlan)
