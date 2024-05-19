@@ -51,17 +51,12 @@ HTML;
             'topic_id' => $motionTopicId,
             'description' => 'The study of movement and the forces that result in or change motion.',
             // Assuming 'order' should be in 'topics' or handled differently as 'topic_contents' doesn't have 'order' field
-            'learning_objectives' => json_encode([
-                'Understand the different types of motion',
-                'Explore the causes and equations of motion',
-            ]),
-            'key_concepts' => json_encode([
-                'Newton\'s Laws of Motion',
-                'Kinematics and Dynamics',
-            ]),
-            'real_world_application' => json_encode([
-                'The principles of motion are applied in designing vehicles, predicting planetary movements, and analyzing mechanical systems.',
-            ]),
+            'learning_objectives' =>
+            'Understand the different types of motion Explore the causes and equations of motion',
+            'key_concepts' =>
+            'Newton\'s Laws of Motion Kinematics and Dynamics',
+            'real_world_application' =>
+            'The principles of motion are applied in designing vehicles, predicting planetary movements, and analyzing mechanical systems.',
             'content' => $subTopicContentMotion, // Your HTML content
         ]);
 
@@ -97,21 +92,18 @@ HTML;
             'subject_id' => $physicsId,
             'topic_id' => $gravitationalFieldTopicId,
             'description' => 'Exploration of gravitational fields and their effects.',
-            'learning_objectives' => json_encode([
-                'Explain the concept of a gravitational field and its characteristics',
-                'Calculate gravitational field strength using the universal law of gravitation',
-                'Describe gravitational potential energy and its significance',
-            ]),
-            'key_concepts' => json_encode([
-                'Gravitational Field Strength',
-                'Inverse-Square Law',
-                'Gravitational Potential Energy',
-            ]),
-            'real_world_application' => json_encode([
-                'Satellite technology',
-                'Astronomical observations',
-                'Theoretical physics',
-            ]),
+            
+            'learning_objectives' =>
+            'Explain the concept of a gravitational field and its characteristics
+                Calculate gravitational field strength using the universal law of gravitation
+                Describe gravitational potential energy and its significance',
+
+            'key_concepts' =>
+            'Gravitational Field Strength Inverse-Square Law Gravitational Potential Energy',
+
+            'real_world_application' =>
+            'Satellite technology Astronomical observations Theoretical physics',
+
             'content' => $subTopicContentGravitationalField, // Your HTML content
         ]);
     }
