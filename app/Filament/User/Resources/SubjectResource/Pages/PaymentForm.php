@@ -148,7 +148,7 @@ class PaymentForm extends Page
                 "type" => "percentage",
                 "currency" => "NGN", // Assuming your application deals in NGN
                 "subaccounts" => [
-                    ["subaccount" => $agent->subaccount_code, "share" => 10], // Agent gets 10%
+                    ["subaccount" => $agent->subaccount_code, "share" => 20], // Agent gets 10%
                 ],
                 "bearer_type" => "all", // Main account bears the transaction charges
                 "main_account_share" => 90 // Main account gets 90%
