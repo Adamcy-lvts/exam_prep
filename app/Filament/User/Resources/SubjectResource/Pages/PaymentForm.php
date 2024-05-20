@@ -141,34 +141,22 @@ class PaymentForm extends Page
     {
         // Basic data for the transaction
         $data = [
+            'amount' => $this->plan->price * 100, // Converting to kobo for Paystack
             'email' => $this->email,
-            'amount' => $this->plan->price * 100, // Amount in kobo
             'reference' => Paystack::genTranxRef(),
             'metadata' => ['planId' => $this->plan->id, 'userId' => auth()->id()], // Including user ID in metadata for tracking
         ];
 
         // Check if user has an associated agent and if that agent has a subaccount code
         $user = auth()->user();
-        $agent = $user->referringAgents()->first(); // Get the first (or only) agent
+        $agent = $user->referringAgents()->first();  // Get the first (or only) agent
 
+        // Add subaccount to the data if it exists
         if ($agent && $agent->subaccount_code) {
-            // Define the split data for dynamic split configuration
-            $splitData = [
-                'type' => 'percentage',
-                'currency' => 'NGN',
-                'subaccounts' => [
-                    [
-                        'subaccount' => $agent->subaccount_code,
-                        'share' => 20 // Define the percentage share for the agent
-                    ]
-                ],
-                'bearer_type' => 'subaccount', // Who bears the transaction charges
-                'main_account_share' => 80 // The percentage that goes to your main account
-            ];
-
-            $data['split'] = json_encode($splitData);
+            $data['subaccount'] = $agent->subaccount_code;
+            $data['transaction_charge'] = 500;
         }
-
+// dd($data);
         try {
             // Attempt to get the authorization URL from Paystack and redirect
             return Paystack::getAuthorizationUrl($data)->redirectNow();
@@ -176,13 +164,12 @@ class PaymentForm extends Page
             // Log the error and provide feedback to the user
             Log::error('Payment failed:', [
                 'message' => $e->getMessage(),
-                'stack' => $e->getTraceAsString(),
+                'stack' => $e->getTraceAsString(), // Optionally log the stack trace for deep debugging
             ]);
             // Redirect back with an error message
-            return Redirect::back()->withErrors('The Paystack token has expired or there was an error processing the payment. Please refresh the page and try again.');
+            return Redirect::back()->withErrors('The paystack token has expired or there was an error processing the payment. Please refresh the page and try again.');
         }
     }
-
 
 
     public function processPayment()
