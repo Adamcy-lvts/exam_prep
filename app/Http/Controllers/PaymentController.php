@@ -29,7 +29,7 @@ class PaymentController extends Controller
     public function handleGatewayCallback(Request $request)
     {
         $paymentDetails = Paystack::getPaymentData();
-dd($paymentDetails);
+// dd($paymentDetails);
         // Verify payment status
         if ($paymentDetails['status'] === true && $paymentDetails['data']['status'] === 'success') {
             DB::beginTransaction();
@@ -37,6 +37,7 @@ dd($paymentDetails);
                 $userEmail = $paymentDetails['data']['customer']['email'];
                 $this->user = User::where('email', $userEmail)->firstOrFail();
                 $planId = $paymentDetails['data']['metadata']['planId'] ?? null;
+                $agentId = $paymentDetails['data']['metadata']['agent_id'] ?? null;
 
                 // Check if planId is provided and valid
                 if (!$planId || !$plan = Plan::find($planId)) {
@@ -71,14 +72,17 @@ dd($paymentDetails);
                     // 'remarks' and 'qr_code' can be set here if needed
                 ]);
 
-   
+              
                 
                 $this->manageSubscription($this->user, $plan);
 
                 $this->sendReceiptByEmail();
 
                 // Record referral payment
-                $this->recordReferralPayment($this->user, $paymentDetails);
+                // Record referral payment if applicable
+                if ($agentId) {
+                    $this->recordReferralPayment($this->user, $agentId, $paymentDetails);
+                }
 
                 DB::commit();
 
@@ -155,20 +159,43 @@ dd($paymentDetails);
         }
     }
 
+    // private function recordReferralPayment(User $user, $paymentDetails)
+    // {
+    //     // Assuming each user has one referring agent and there's a referral record already.
+    //     $referral = $user->referringAgents()->first();
+
+    //     if ($referral) {
+    //         ReferralPayment::create([
+    //             'referral_id' => $referral->id, // Assuming 'referral_id' links to a record in the agent_user table
+    //             'amount' => $paymentDetails['data']['amount'] / 100, // Convert from kobo to naira
+    //             'status' => 'completed', // Assuming the payment is completed at this point
+    //             'payment_date' => now(), // The current date and time of the payment
+    //         ]);
+    //     }
+    // }
+
     private function recordReferralPayment(User $user, $paymentDetails)
     {
         // Assuming each user has one referring agent and there's a referral record already.
         $referral = $user->referringAgents()->first();
 
         if ($referral) {
-            ReferralPayment::create([
-                'referral_id' => $referral->id, // Assuming 'referral_id' links to a record in the agent_user table
-                'amount' => $paymentDetails['data']['amount'] / 100, // Convert from kobo to naira
-                'status' => 'completed', // Assuming the payment is completed at this point
-                'payment_date' => now(), // The current date and time of the payment
-            ]);
+            // Navigate through the nested arrays to the specific subaccount details
+            $subaccounts = collect($paymentDetails['data']['split']['shares']['subaccounts']);
+            $subaccountDetails = $subaccounts->firstWhere('subaccount_code', $referral->subaccount_code);
+
+            if ($subaccountDetails) {
+                ReferralPayment::create([
+                    'referral_id' => $referral->id, // Link to agent_user table
+                    'amount' => $subaccountDetails['amount'] / 100, // Convert from kobo to naira
+                    'split_code' => $paymentDetails['data']['split']['split_code'], // Saving the split code
+                    'status' => 'completed', // Payment status
+                    'payment_date' => now(), // Current date and time
+                ]);
+            }
         }
     }
+
 
 
 

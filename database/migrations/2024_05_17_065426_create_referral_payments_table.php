@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('referral_id')->constrained('agent_user');
             $table->decimal('amount', 10, 2);
+            $table->string('split_code')->nullable();
             $table->string('status')->default('completed');
             $table->dateTime('payment_date');
             $table->timestamps();
