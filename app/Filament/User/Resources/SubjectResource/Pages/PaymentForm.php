@@ -159,7 +159,7 @@ class PaymentForm extends Page
             'amount' => $this->plan->price * 100, // Convert to kobo
             'email' => $user->email,
             'reference' => Paystack::genTranxRef(),
-            'metadata' => ['planId' => $this->plan->id, 'userId' => $user->id],
+            'metadata' => ['planId' => $this->plan->id, 'userId' => $user->id, 'agent_id' => $agent->id],
             'split' => $splitData ? json_encode($splitData) : null
         ];
 
