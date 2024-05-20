@@ -17,6 +17,7 @@ use App\Models\QuizAttempt;
 use App\Models\Subscription;
 use App\Models\CourseAttempt;
 use App\Models\SubjectAttempt;
+use App\Models\ReferralPayment;
 use App\Models\UserQuizAttempt;
 use Laravel\Sanctum\HasApiTokens;
 use Filament\Models\Contracts\HasName;
@@ -123,6 +124,11 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
         return $this->belongsToMany(Agent::class, 'agent_user')
             ->withPivot('referred_at')
             ->withTimestamps();
+    }
+
+    public function referralPayments()
+    {
+        return $this->hasMany(ReferralPayment::class);
     }
 
     public function payments()

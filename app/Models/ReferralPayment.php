@@ -9,5 +9,15 @@ class ReferralPayment extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['referral_id','amount','status','payment_date'];
+    protected $fillable = ['agent_id','user_id','amount','split_code','status','payment_date'];
+
+    public function agent()
+    {
+        return $this->belongsTo(Agent::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

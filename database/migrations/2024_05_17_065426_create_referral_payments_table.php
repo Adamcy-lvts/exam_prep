@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('referral_payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('referral_id')->constrained('agent_user');
+            $table->foreignId('agent_id')->constrained('agents')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->decimal('amount', 10, 2);
             $table->string('split_code')->nullable();
             $table->string('status')->default('completed');

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Exception;
 use App\Models\Plan;
 use App\Models\User;
+use App\Models\Agent;
 use App\Models\Payment;
 use App\Models\Receipt;
 use App\Models\JambAttempt;
@@ -174,8 +175,9 @@ class PaymentController extends Controller
     //     }
     // }
 
-    private function recordReferralPayment(User $user, $paymentDetails)
+    private function recordReferralPayment(User $user, $agentId, $paymentDetails)
     {
+        $agent = Agent::find($agentId);
         // Assuming each user has one referring agent and there's a referral record already.
         $referral = $user->referringAgents()->first();
 
@@ -186,11 +188,12 @@ class PaymentController extends Controller
 
             if ($subaccountDetails) {
                 ReferralPayment::create([
-                    'referral_id' => $referral->id, // Link to agent_user table
+                    'agent_id' => $agent->id,  // Directly use agent_id
+                    'user_id' => $user->id,   // Directly use user_id
                     'amount' => $subaccountDetails['amount'] / 100, // Convert from kobo to naira
                     'split_code' => $paymentDetails['data']['split']['split_code'], // Saving the split code
-                    'status' => 'completed', // Payment status
-                    'payment_date' => now(), // Current date and time
+                    'status' => 'completed', // Assume payment is completed at this point
+                    'payment_date' => now(), // Use the current date and time
                 ]);
             }
         }
