@@ -139,49 +139,39 @@ class PaymentForm extends Page
 
     public function redirectToGateway()
     {
-        // Basic data for the transaction
+        $user = auth()->user();
+        $agent = $user->referringAgents()->first(); // Assume this returns the agent that referred the user
+
+        $splitData = null;
+        if ($agent && $agent->subaccount_code) {
+            $splitData = [
+                "type" => "percentage",
+                "currency" => "NGN", // Assuming your application deals in NGN
+                "subaccounts" => [
+                    ["subaccount" => $agent->subaccount_code, "share" => 10], // Agent gets 10%
+                ],
+                "bearer_type" => "all", // Main account bears the transaction charges
+                "main_account_share" => 90 // Main account gets 90%
+            ];
+        }
+
         $data = [
-            'email' => $this->email,
-            'amount' => $this->plan->price * 100, // Amount in kobo
+            'amount' => $this->plan->price * 100, // Convert to kobo
+            'email' => $user->email,
             'reference' => Paystack::genTranxRef(),
-            'metadata' => ['planId' => $this->plan->id, 'userId' => auth()->id()], // Including user ID in metadata for tracking
+            'metadata' => ['planId' => $this->plan->id, 'userId' => $user->id],
+            'split' => $splitData ? json_encode($splitData) : null
         ];
 
-        // Check if user has an associated agent and if that agent has a subaccount code
-        $user = auth()->user();
-        $agent = $user->referringAgents()->first(); // Get the first (or only) agent
-
-        if ($agent && $agent->subaccount_code) {
-            // Define the split data for dynamic split configuration
-            $splitData = [
-                'type' => 'percentage',
-                'currency' => 'NGN',
-                'subaccounts' => [
-                    [
-                        'subaccount' => $agent->subaccount_code,
-                        'share' => 20 // Define the percentage share for the agent
-                    ]
-                ],
-                'bearer_type' => 'subaccount', // Who bears the transaction charges
-                'main_account_share' => 80 // The percentage that goes to your main account
-            ];
-
-            $data['split'] = json_encode($splitData);
-        }
-
         try {
-            // Attempt to get the authorization URL from Paystack and redirect
-            return Paystack::getAuthorizationUrl($data)->redirectNow();
+            $response = Paystack::getAuthorizationUrl($data)->redirectNow();
+            return $response;
         } catch (\Exception $e) {
-            // Log the error and provide feedback to the user
-            Log::error('Payment failed:', [
-                'message' => $e->getMessage(),
-                'stack' => $e->getTraceAsString(),
-            ]);
-            // Redirect back with an error message
-            return Redirect::back()->withErrors('The Paystack token has expired or there was an error processing the payment. Please refresh the page and try again.');
+            Log::error('Payment initialization failed:', ['message' => $e->getMessage(), 'stack' => $e->getTraceAsString()]);
+            return Redirect::back()->withErrors('Failed to initiate payment. Please try again.');
         }
     }
+
 
 
 
