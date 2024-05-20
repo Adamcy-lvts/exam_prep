@@ -20,12 +20,8 @@ class StatsOverview extends BaseWidget
             $query->where('plan_id', '!=', 1);
         }])->get()->sum('subscriptions_count');
 
-        // Total commission earned (assuming you have a method to calculate it)
-        $totalCommission = $agent->referredUsers()->with(['subscriptions' => function ($query) {
-            $query->where('plan_id', '!=', 1);
-        }])->get()->reduce(function ($carry, $user) {
-            return $carry + $user->subscriptions->sum('commission_amount'); // Adjust based on your commission calculation logic
-        }, 0);
+        // Total commission earned from referral payments
+        $totalCommission = $agent->referralPayments()->sum('amount');
 
         return [
             Stat::make('Total Referred Users', $totalReferredUsers)
