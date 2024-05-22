@@ -10,6 +10,7 @@ use Filament\Pages\Page;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Select;
+use App\Jobs\CreatePaystackSubaccount;
 use Illuminate\Auth\Events\Registered;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
@@ -63,50 +64,36 @@ class Register extends AuthRegister
 
         $data = $this->form->getState();
 
-        // Create User record
-        $userData = [
+        $user = User::create([
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
             'email' => $data['email'],
             'phone' => $data['phone'],
             'user_type' => 'agent',
-            'password' => $data['password'], // Ensure password is hashed
-        ];
-
-        $subaccountData = [
-            'business_name' => $data['business_name'],
-            'settlement_bank' => $data['bank'],
-            'account_number' => $data['account_number'],
-            'percentage_charge' => 10, // Percentage charge the agent will take
-        ];
-
-        // $subaccount = Paystack::createSubAccount($subaccountData);
-        // dd($subaccount);
-
-        $user = User::create($userData);
-
-        // Assign role to user if needed
-        // $user->assignRole('agent');
-
-        // Create Agent record
-        // $agentData = [
-        //     'user_id' => $user->id,
-        //     'business_name' => $data['business_name'],
-        //     'account_number' => $data['account_number'],
-        //     'account_name' => $data['account_name'],
-        //     'bank' => $data['bank'],
-        // ];
-        // Agent::create($agentData);
+            'password' => Hash::make($data['password']),
+        ]);
 
         $bank = Bank::find($data['bank']);
 
-        $user->agent()->create([
+        $agent = Agent::create([
+            'user_id' => $user->id,
             'business_name' => $data['business_name'],
             'account_number' => $data['account_number'],
             'account_name' => $data['account_name'],
             'bank_id' => $bank->id,
-            // 'subaccount_code' => $subaccount['data']['subaccount_code'],
         ]);
+
+        // Prepare data for the subaccount
+        $subaccountData = [
+            'business_name' => $data['business_name'],
+            'settlement_bank' => $data['bank'],
+            'account_number' => $data['account_number'],
+            'primary_contact_email' => $data['email'],
+        ];
+
+        // Dispatch the job to create the subaccount
+        dispatch(new CreatePaystackSubaccount($agent, $subaccountData));
+
         // $this->sendEmailVerificationNotification($user);
 
         Filament::auth()->login($user);

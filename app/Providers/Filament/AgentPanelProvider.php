@@ -42,6 +42,7 @@ class AgentPanelProvider extends PanelProvider
                 Widgets\AccountWidget::class,
                 FilamentInfoWidget::class,
             ])
+            ->viteTheme('resources/css/filament/agent/theme.css')
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

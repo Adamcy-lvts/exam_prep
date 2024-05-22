@@ -20,6 +20,8 @@ return new class extends Migration
             $table->string('bank_id')->constrained('bank')->onDelete('cascade');
             $table->string('referral_code')->unique()->nullable();
             $table->string('subaccount_code')->nullable();
+            $table->decimal('percentage', 5, 2)->nullable()->default(20); // e.g., 10.00 for 10%
+            $table->decimal('fixed_rate', 10, 2)->nullable()->default(500);
             $table->timestamps();
         });
     }
