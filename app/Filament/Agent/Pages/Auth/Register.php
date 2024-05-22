@@ -88,6 +88,7 @@ class Register extends AuthRegister
             'business_name' => $data['business_name'],
             'settlement_bank' => $data['bank'],
             'account_number' => $data['account_number'],
+            'percentage_charge' => 80,
             'primary_contact_email' => $data['email'],
         ];
 
