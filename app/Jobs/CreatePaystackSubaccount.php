@@ -35,7 +35,7 @@ class CreatePaystackSubaccount implements ShouldQueue
            
             $subaccount = PaystackHelper::createSubAccount($this->subaccountData);
             // Paystack::createSubAccount($this->subaccountData);
-            dd($subaccount);
+            // dd($subaccount);
             $this->agent->update(['subaccount_code' => $subaccount['data']['subaccount_code']]);
             
         } catch (\Exception $e) {
