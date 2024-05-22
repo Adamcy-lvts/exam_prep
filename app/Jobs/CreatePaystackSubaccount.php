@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Agent;
 use Illuminate\Bus\Queueable;
+use App\Helpers\PaystackHelper;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
@@ -30,7 +31,8 @@ class CreatePaystackSubaccount implements ShouldQueue
     public function handle()
     {
         try {
-            $subaccount = Paystack::createSubAccount($this->subaccountData);
+            $subaccount = PaystackHelper::createSubAccount($this->subaccountData);
+            // Paystack::createSubAccount($this->subaccountData);
             $this->agent->update(['subaccount_code' => $subaccount['data']['subaccount_code']]);
         } catch (\Exception $e) {
             Log::error('Failed to create Paystack subaccount: ' . $e->getMessage());

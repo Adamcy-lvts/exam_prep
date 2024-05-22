@@ -7,6 +7,7 @@ use Filament\Tables;
 use App\Models\Agent;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use App\Helpers\PaystackHelper;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
 use Illuminate\Support\Facades\Log;
@@ -118,7 +119,7 @@ class AgentResource extends Resource
                     ->label('Create Subaccount')
                     ->action(function ($record) {
                         try {
-// dd($record->business_name);
+                            // dd($record->business_name);
                             // Prepare subaccount data
                             $subaccountData = [
                                 'business_name' => $record->business_name,
@@ -127,10 +128,11 @@ class AgentResource extends Resource
                                 'percentage_charge' => $record->percentage, // Ensure this field exists on your model
                                 'primary_contact_email' => $record->user->email,
                             ];
-// dd($subaccountData);
+                            // dd($subaccountData);
                             // Attempt to create a subaccount on Paystack
-                            $subaccount = Paystack::createSubAccount($subaccountData);
-// dd($subaccount);
+                            $subaccount = PaystackHelper::createSubAccount($subaccountData);
+                            // Paystack::createSubAccount($subaccountData);
+
                             // Check if the creation was successful
                             if (isset($subaccount['status']) && $subaccount['status']) {
                                 // Update the agent's subaccount code
@@ -164,6 +166,10 @@ class AgentResource extends Resource
                     ->visible(fn ($record) => empty($record->subaccount_code))
                     ->icon('heroicon-o-plus')
                     ->color('success'),
+                Tables\Actions\DeleteAction::make(),
+                // Action::make('delete')
+                //     ->requiresConfirmation()
+                //     ->action(fn (Agent $record) => $record->delete())
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

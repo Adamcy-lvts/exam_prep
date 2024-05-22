@@ -41,7 +41,8 @@
     "autoload": {
         "files": [
             "app/Helpers/helpers.php",
-            "app/Helpers/NairaFormat.php"
+            "app/Helpers/NairaFormat.php",
+            "app/Helpers/PaystackHelper.php"
         ],
         "psr-4": {
             "App\\": "app/",
