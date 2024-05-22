@@ -45,8 +45,6 @@ class PaymentController extends Controller
                     throw new Exception('Invalid plan ID or plan not found.');
                 }
 
-                // Total payment amount converted from kobo to Naira
-                $totalAmount = $paymentDetails['data']['amount'] / 100;
 
                 // Total payment amount converted from kobo to Naira
                 $totalAmount = $paymentDetails['data']['amount'] / 100;
@@ -55,7 +53,7 @@ class PaymentController extends Controller
 
                 $agentAmount = 0;
                 $splitCode = null;
-
+dd($paymentDetails['data']['split']['shares']['subaccounts']['amount']);
                 // Check for split payment details
                 if (isset($paymentDetails['data']['split'])) {
                     $agentAmount = $paymentDetails['data']['split']['shares']['subaccounts']['amount'];
