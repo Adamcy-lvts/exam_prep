@@ -130,7 +130,7 @@ class AgentResource extends Resource
 // dd($subaccountData);
                             // Attempt to create a subaccount on Paystack
                             $subaccount = Paystack::createSubAccount($subaccountData);
-dd($subaccount);
+// dd($subaccount);
                             // Check if the creation was successful
                             if (isset($subaccount['status']) && $subaccount['status']) {
                                 // Update the agent's subaccount code
