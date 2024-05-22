@@ -45,6 +45,10 @@ class PaymentController extends Controller
                     throw new Exception('Invalid plan ID or plan not found.');
                 }
 
+                $user = auth()->user();
+                $referral = $user->referringAgents()->first();
+                $subaccounts = collect($paymentDetails['data']['split']['shares']['subaccounts']);
+                $subaccountDetails = $subaccounts->firstWhere('subaccount_code', $referral->subaccount_code);
 
                 // Total payment amount converted from kobo to Naira
                 $totalAmount = $paymentDetails['data']['amount'] / 100;
@@ -53,10 +57,10 @@ class PaymentController extends Controller
 
                 $agentAmount = 0;
                 $splitCode = null;
-dd($paymentDetails['data']['split']['shares']['subaccounts']);
+
                 // Check for split payment details
                 if (isset($paymentDetails['data']['split'])) {
-                    $agentAmount = $paymentDetails['data']['split']['shares']['subaccounts']['amount'];
+                    $agentAmount = $subaccountDetails['amount'] / 100;
                     $splitCode = $paymentDetails['data']['split']['split_code'] ?? null;
                     $netAmount -= $agentAmount; // Deduct agent's share from net amount
                 }
