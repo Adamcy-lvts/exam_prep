@@ -30,7 +30,7 @@ class PaymentController extends Controller
     public function handleGatewayCallback(Request $request)
     {
         $paymentDetails = Paystack::getPaymentData();
-// dd($paymentDetails['data']['split']['shares']['subaccounts']);
+
         // Verify payment status
         if ($paymentDetails['status'] === true && $paymentDetails['data']['status'] === 'success') {
             DB::beginTransaction();
@@ -45,10 +45,31 @@ class PaymentController extends Controller
                     throw new Exception('Invalid plan ID or plan not found.');
                 }
 
+                // Total payment amount converted from kobo to Naira
+                $totalAmount = $paymentDetails['data']['amount'] / 100;
+
+                // Total payment amount converted from kobo to Naira
+                $totalAmount = $paymentDetails['data']['amount'] / 100;
+                $transactionFee = $totalAmount * 0.015; // 1.5% transaction fee
+                $netAmount = $totalAmount - $transactionFee;
+
+                $agentAmount = 0;
+                $splitCode = null;
+
+                // Check for split payment details
+                if (isset($paymentDetails['data']['split'])) {
+                    $agentAmount = $paymentDetails['data']['split']['shares']['subaccounts']['amount'];
+                    $splitCode = $paymentDetails['data']['split']['split_code'] ?? null;
+                    $netAmount -= $agentAmount; // Deduct agent's share from net amount
+                }
+
                 // Record the payment
                 $this->payment = new Payment([
                     'user_id' => $this->user->id,
-                    'amount' => $paymentDetails['data']['amount'] / 100, // Paystack amount is in kobo
+                    'amount' => $totalAmount, // Paystack amount is in kobo
+                    'net_amount' => $netAmount,
+                    'split_amount_agent' => $agentAmount,
+                    'split_code' => $splitCode,
                     'method' => $paymentDetails['data']['channel'],
                     'plan_id' =>  $planId, // This should be dynamic based on your logic
                     'attempts_purchased' => $plan->number_of_attempts,
