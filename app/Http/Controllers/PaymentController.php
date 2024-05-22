@@ -53,7 +53,7 @@ class PaymentController extends Controller
 
                 $agentAmount = 0;
                 $splitCode = null;
-dd($paymentDetails['data']['split']['shares']['subaccounts']['amount']);
+dd($paymentDetails['data']['split']['shares']['subaccounts']);
                 // Check for split payment details
                 if (isset($paymentDetails['data']['split'])) {
                     $agentAmount = $paymentDetails['data']['split']['shares']['subaccounts']['amount'];
