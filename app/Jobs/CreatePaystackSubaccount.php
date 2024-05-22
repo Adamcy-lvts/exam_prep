@@ -32,10 +32,10 @@ class CreatePaystackSubaccount implements ShouldQueue
     {
         
         try {
-            dd($this->subaccountData);
+           
             $subaccount = PaystackHelper::createSubAccount($this->subaccountData);
             // Paystack::createSubAccount($this->subaccountData);
-           
+            dd($subaccount);
             $this->agent->update(['subaccount_code' => $subaccount['data']['subaccount_code']]);
             
         } catch (\Exception $e) {
