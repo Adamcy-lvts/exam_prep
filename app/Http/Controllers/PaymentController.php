@@ -59,7 +59,7 @@ class PaymentController extends Controller
                 }
 
                 // Total payment amount converted from kobo to Naira
-                $totalAmount = $paymentDetails['data']['amount'] / 100;
+                $totalAmount = ($paymentDetails['data']['amount'] ?? 0) / 100;
                 $transactionFee = $totalAmount * 0.015; // 1.5% transaction fee
                 $netAmount = $totalAmount - $transactionFee;
 
@@ -68,7 +68,7 @@ class PaymentController extends Controller
 
                 // Check for split payment details
                 if (isset($paymentDetails['data']['split'])) {
-                    $agentAmount = $subaccountDetails['amount'] / 100;
+                    $agentAmount = $subaccountDetails ? ($subaccountDetails['amount'] ?? 0) / 100 : 0;
                     $splitCode = $paymentDetails['data']['split']['split_code'] ?? null;
                     $netAmount -= $agentAmount; // Deduct agent's share from net amount
                 }
