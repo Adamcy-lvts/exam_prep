@@ -110,29 +110,18 @@ class SubjectLessonPage extends Page
 
 
 
-    // public function handleOpenModal($topicId)
-    // {
-
-    //     $currentSubjectId = $this->subject->id; // The ID of the current subject
-
-    //     $this->clickedTopic = Topic::where('topicable_id', $currentSubjectId)
-    //         ->findOrFail($topicId);
-
-    //     $previousTopic = Topic::where('topicable_id', $currentSubjectId)
-    //         ->where('order', '<', $this->clickedTopic->order)
-    //         ->orderBy('order', 'desc')
-    //         ->first();
-
-    //     $this->previousTopicId = $previousTopic ? $previousTopic->id : null;
-    //     $this->previousTopicName = $previousTopic ? $previousTopic->name : null;
-
-    //     $this->dispatch('open-modal', id: 'quiz-instructions-modal');
-    // }
-
     public function handleOpenModal($topicId)
     {
         $currentSubjectId = $this->subject->id;
         $this->clickedTopic = Topic::where('topicable_id', $currentSubjectId)->findOrFail($topicId);
+
+       
+        // Check if the clicked topic is the first one and bypass the previous topic check
+        if ($this->clickedTopic->order == 1) {
+            $this->dispatch('open-modal', id: 'quiz-instructions-modal');
+            return;
+        }
+
         $previousTopic = Topic::where('topicable_id', $currentSubjectId)
             ->where('order', '<', $this->clickedTopic->order)
             ->orderBy('order', 'desc')

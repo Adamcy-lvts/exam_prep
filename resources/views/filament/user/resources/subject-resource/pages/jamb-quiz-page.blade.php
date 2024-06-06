@@ -83,66 +83,57 @@
     </div>
 
     <script>
-        // function tabsComponent() {
-        //     return {
-        //         activeTab: {{ $sortedSubjects->first()->id ?? 'null' }},
-        //         activeTabPosition: 0,
-        //         tabWidth: 0,
-        //         setActiveTab(tabElement, subjectId) {
-        //             this.activeTab = subjectId;
-        //             this.updateTabIndicator(tabElement);
-        //         },
-        //         updateTabIndicator(tabElement) {
-        //             this.tabWidth = tabElement.offsetWidth;
-        //             this.activeTabPosition = tabElement.offsetLeft;
-        //         },
-        //         handleResize() {
-        //             const activeTabElement = this.$refs[`tab-${this.activeTab}`];
-        //             if (activeTabElement) {
-        //                 this.updateTabIndicator(activeTabElement);
-        //             }
-        //         },
-        //         init() {
-        //             this.$nextTick(() => {
-        //                 this.handleResize();
-        //             });
-        //             window.addEventListener('resize', () => this.handleResize());
-        //         }
-        //     };
-        // }
         function tabsComponent() {
             return {
-                // Initialize activeTab with the ID stored in the session or default to the first subject's ID
+                // Initializes the `activeTab` property with the ID stored in the session or defaults to the ID of the first subject if no session data is found.
                 activeTab: {{ session('lastSubjectId', $sortedSubjects->first()->id ?? 'null') }},
-                activeTabPosition: 0,
-                tabWidth: 0,
-                setActiveTab(tabElement, subjectId) {
-                    this.activeTab = subjectId;
-                    this.updateTabIndicator(tabElement);
 
-                    // Additional code to load the questions for the newly activated subject
-                    // and possibly jump to the last question answered within that subject
-                    // You would have to trigger a Livewire event or similar here to refresh the questions component
+                // Initializes the `activeTabPosition` property to zero. This is used to manage the position of the active tab indicator.
+                activeTabPosition: 0,
+
+                // Initializes the `tabWidth` property to zero. This will be used to set the width of the active tab indicator.
+                tabWidth: 0,
+
+                // Function to set the active tab. It updates the `activeTab` state and the visual indicator.
+                setActiveTab(tabElement, subjectId) {
+                    this.activeTab = subjectId; // Updates the currently active tab to the new one.
+                    // console.log(subjectId);
+                    // Dispatch an event to Livewire to update the session
+                    window.Livewire.dispatch('updateActiveTab', { subjectId });
+                    this.updateTabIndicator(tabElement); // Calls `updateTabIndicator` to adjust the UI accordingly.
                 },
+
+                // Function to update the position and width of the tab indicator based on the currently active tab.
                 updateTabIndicator(tabElement) {
-                    this.tabWidth = tabElement.offsetWidth;
-                    this.activeTabPosition = tabElement.offsetLeft;
+                    this.tabWidth = tabElement.offsetWidth; // Sets the width of the tab indicator to match the current tab.
+                    this.activeTabPosition = tabElement
+                        .offsetLeft; // Sets the left position of the tab indicator to align with the current tab.
                 },
+
+                // Function to handle window resize events. Ensures the tab indicator aligns correctly with the active tab.
                 handleResize() {
-                    const activeTabElement = this.$refs[`tab-${this.activeTab}`];
+                    const activeTabElement = this.$refs[
+                        `tab-${this.activeTab}`]; // Finds the element of the currently active tab.
                     if (activeTabElement) {
-                        this.updateTabIndicator(activeTabElement);
+                        this.updateTabIndicator(
+                            activeTabElement); // Updates the tab indicator to remain aligned with the active tab.
                     }
                 },
+
+                // Initialization function that sets up the component after Alpine has finished its initializations.
                 init() {
-                    this.$nextTick(() => {
-                        const activeTabElement = this.$refs[`tab-${this.activeTab}`];
+                    this.$nextTick(() => { // Waits for the next DOM update cycle to ensure all elements are in place.
+                        const activeTabElement = this.$refs[
+                            `tab-${this.activeTab}`]; // Gets a reference to the currently active tab element.
                         if (activeTabElement) {
-                            this.setActiveTab(activeTabElement, this.activeTab);
+                            this.setActiveTab(activeTabElement, this
+                                .activeTab); // Sets the active tab using the element reference.
                         }
-                        this.handleResize();
+                        this
+                            .handleResize(); // Ensures the tab indicator is correctly positioned after initialization.
                     });
-                    window.addEventListener('resize', () => this.handleResize());
+                    window.addEventListener('resize', () => this
+                        .handleResize()); // Adds a listener for window resize events to adjust the tab indicator.
                 }
             };
         }

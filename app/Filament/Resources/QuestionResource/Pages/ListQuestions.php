@@ -37,7 +37,9 @@ class ListQuestions extends ListRecords
                     $quizzableId = $data['quizzable_id'];
 
                     // Adjust the import class to handle the quizzable type and ID
-                    Excel::import(new QuestionImport($quizzableType, $quizzableId), $file);
+                    // Excel::import(new QuestionImport($quizzableType, $quizzableId), $file);
+                    $import = new QuestionImport($quizzableType, $quizzableId);
+                    Excel::import($import, $file);
 
                     $filename = $data['attachment'];
                     $pathToFile = $filename;
@@ -124,7 +126,14 @@ class ListQuestions extends ListRecords
                         // Delete the original ZIP file.
                         Storage::disk('public')->delete($zipFile);
                     }
+                if (!empty($import->getErrors())) {
+                    Notification::make()
+                    ->title('Duplicate Questions Found')
+                    ->warning()
+                    ->send();
+                } else {
                     Notification::make()->title('Record Imported')->success()->send();
+                }
 
                     redirect()->route('filament.admin.resources.questions.index');
                 })

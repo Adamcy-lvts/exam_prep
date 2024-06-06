@@ -46,7 +46,7 @@ trait ResultPageTrait
 
     
         $this->testAnswers = QuizAnswer::where('quiz_attempt_id', $attemptId)->where('completed', true)->get(); // Assuming you have a "TestAnswer" model for test answers
-
+        // dd($attemptId); 
         $this->answeredCorrectQuestions = $this->testAnswers->where('correct', 1)->count();
 
         $wronglyAnsweredMcq = $this->testAnswers->where('correct', 0)->where('option_id', true)->count();
@@ -60,6 +60,8 @@ trait ResultPageTrait
         // dd($unansweredQuestions);
 
         $this->currentAttempt = QuizAttempt::find($attemptId);
+
+        
 
         $this->totalScore = $this->currentAttempt->score;
         // dd($this->totalScore);

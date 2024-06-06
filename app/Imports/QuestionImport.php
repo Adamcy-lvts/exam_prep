@@ -11,6 +11,7 @@ use App\Models\Subject;
 use App\Models\Question;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToModel;
+use Filament\Notifications\Notification;
 use Maatwebsite\Excel\Concerns\ToCollection;
 
 class QuestionImport implements ToCollection
@@ -26,6 +27,8 @@ class QuestionImport implements ToCollection
     protected $shortAnswerColumnIndex = 8;
     public $quizId;
     public $quizzable;
+    public $errors;
+    private $newEntriesCount = 0;  // Initialize the counter
 
 
 
@@ -74,7 +77,7 @@ class QuestionImport implements ToCollection
 
         // Create or find a quiz
         $quiz = Quiz::firstOrCreate([
-            'title' => $this->quizzable->name ?? $this->quizzable->title.' '. $this->quizzable->course_code,
+            'title' => $this->quizzable->name ?? $this->quizzable->title . ' ' . $this->quizzable->course_code,
             'quizzable_type' => $this->quizzable->getMorphClass(),
             'quizzable_id' => $this->quizzableId,
             'total_marks' => $totalMarks, // Use the calculated total marks
@@ -102,8 +105,19 @@ class QuestionImport implements ToCollection
         // Extract module, unit, and topic from the row
         $moduleUnitTopic = $this->findOrCreateModuleUnitTopic($row);
 
-        // Create the question with the associated topic ID
-        $questionData = [
+        // Check if the question already exists to avoid duplicates
+        $existingQuestion = Question::where([
+            'question' => $row[0],
+            'quiz_id' => $this->quizId,
+        ])->exists();
+
+        if ($existingQuestion) {
+            $this->errors[] = "Skipped existing question: " . $row[0];
+            return; // Skip this question
+        }
+
+        // Since the question does not exist, create a new one
+        $question = Question::create([
             'question' => $row[0],
             'marks' => $row[1],
             'quizzable_id' => $this->quizzableId,
@@ -111,21 +125,45 @@ class QuestionImport implements ToCollection
             'quiz_id' => $this->quizId,
             'type' => $row[7],
             'topic_id' => $moduleUnitTopic['topic'] ? $moduleUnitTopic['topic']->id : null,
-        ];
-        $question = Question::create($questionData);
+            'explanation' => $row[12] ? $row[12] : null
+        ]);
 
-        // Get the correct option's content from the 'Is. Correct' column
-        $correctOptionContent = $row[6];
+        // Use firstOrCreate to handle duplicates and new entries efficiently
+        // $question = Question::firstOrCreate(
+        //     [
+        //         'question' => $row[0],  // Check if the question text already exists for this quiz
+        //         'quiz_id' => $this->quizId,
+        //         'type' => $row[7],
+        //     ],
+        //     [
+        //         'marks' => $row[1],
+        //         'quizzable_id' => $this->quizzableId,
+        //         'quizzable_type' => $this->quizzable->getMorphClass(),
+
+        //         'topic_id' => $moduleUnitTopic['topic'] ? $moduleUnitTopic['topic']->id : null,
+        //         'explanation' => $row[12] ? $row[12] : null
+        //     ]
+        // );
+
+        // Only process options if the question was newly created
+        if ($question->wasRecentlyCreated) {
+            $this->handleOptions($question, $row);
+            $this->newEntriesCount++;  // Increment if new question was added
+        } else {
+            $this->errors[] = "A question with the same text already exists and was not imported: " . $row[0];
+        }
+    }
+
+    protected function handleOptions($question, $row)
+    {
+        $correctOptionContent = $row[6];  // Get the correct option's content
 
         // Loop through options (Columns C through F)
         for ($i = 2; $i <= 5; $i++) {
             $optionValue = $row[$i];
+            $isCorrect = ($correctOptionContent === $optionValue) ? 1 : 0;  // Determine if this option is correct
 
-            // Determine if this option is the correct one based on its content
-            $isCorrect = ($correctOptionContent === $optionValue) ? 1 : 0;
-
-            // Store the option. Assuming you have a related Option model.
-            // Make sure to adjust with the actual relation method you have
+            // Store the option
             $question->options()->create([
                 'option' => $optionValue,
                 'is_correct' => $isCorrect,
@@ -133,81 +171,119 @@ class QuestionImport implements ToCollection
         }
     }
 
+
     protected function importTrueOrFalseQuestion($row)
     {
-        // Determine the topic for the question
-        $moduleUnitTopic  = $this->findOrCreateModuleUnitTopic($row);
+        $moduleUnitTopic = $this->findOrCreateModuleUnitTopic($row);
 
-        // Create the question with the associated topic ID
-        $question = Question::create([
+        // Check if the question already exists to avoid duplicates
+        $existingQuestion = Question::where([
             'question' => $row[0],
             'quiz_id' => $this->quizId,
-            'quizzable_id' => $this->quizzableId,
-            'quizzable_type' => $this->quizzable->getMorphClass(),
-            'type' => $row[7],
-            'answer_text' => $row[8], // Store the correct answer as 'True' or 'False'
-            'topic_id' => $moduleUnitTopic['topic'] ? $moduleUnitTopic['topic']->id : null,
-        ]);
-    }
+        ])->exists();
 
-    protected function importShortAnswerQuestion($row)
-    {
-        // Determine the topic for the question
-        $moduleUnitTopic  = $this->findOrCreateModuleUnitTopic($row);
+        if ($existingQuestion) {
+            $this->errors[] = "Skipped existing question: " . $row[0];
+            return; // Skip this question
+        }
 
-        // Create the question
+        // Since the question does not exist, create a new one
         $question = Question::create([
             'question' => $row[0],
-            'quiz_id' => $this->quizId,
             'marks' => $row[1],
             'quizzable_id' => $this->quizzableId,
             'quizzable_type' => $this->quizzable->getMorphClass(),
+            'quiz_id' => $this->quizId,
             'type' => $row[7],
-            'answer_text' => $row[8],
             'topic_id' => $moduleUnitTopic['topic'] ? $moduleUnitTopic['topic']->id : null,
+            'explanation' => $row[12] ? $row[12] : null
         ]);
+
+        // $question = Question::firstOrCreate(
+        //     [
+        //         'question' => $row[0], // Criteria to check existence
+        //         'quiz_id' => $this->quizId,
+        //         'type' => $row[7],
+        //     ],
+        //     [
+        //         'quizzable_id' => $this->quizzableId,
+        //         'quizzable_type' => $this->quizzable->getMorphClass(),
+
+        //         'answer_text' => $row[8], // Store the correct answer
+        //         'topic_id' => $moduleUnitTopic['topic'] ? $moduleUnitTopic['topic']->id : null,
+        //         'explanation' => $row[12] ? $row[12] : null
+        //     ]
+        // );
+
+        if ($question->wasRecentlyCreated) {
+            $this->newEntriesCount++;
+        } else {
+            $this->errors[] = "A question with the same text already exists and was not imported: " . $row[0];
+        }
     }
 
 
-    // Method to find or create the module, unit, and topic
-    // protected function findOrCreateModuleUnitTopic($row)
-    // {
-    //     // Assume module name is in column K and unit name is in column L
-    //     $moduleName = isset($row[10]) && trim($row[10]) !== '' ? $row[10] : null;
-    //     $unitName = isset($row[11]) && trim($row[11]) !== '' ? $row[11] : null;
-    //     $topicName = isset($row[9]) && trim($row[9]) !== '' ? $row[9] : null;
+    protected function importShortAnswerQuestion($row)
+    {
+        $moduleUnitTopic = $this->findOrCreateModuleUnitTopic($row);
 
-    //     $module = null;
-    //     $unit = null;
-    //     $topic = null;
+        // Check if the question already exists to avoid duplicates
+        $existingQuestion = Question::where([
+            'question' => $row[0],
+            'quiz_id' => $this->quizId,
+        ])->exists();
 
-    //     // Find or create the module
-    //     if ($moduleName) {
-    //         $module = Module::firstOrCreate([
-    //             'name' => $moduleName,
-    //             'course_id' => $this->quizzableId,
-    //         ]);
-    //     }
+        if ($existingQuestion) {
+            $this->errors[] = "Skipped existing question: " . $row[0];
+            return; // Skip this question
+        }
 
-    //     // Find or create the unit
-    //     if ($module && $unitName) {
-    //         $unit = Unit::firstOrCreate([
-    //             'name' => $unitName,
-    //             'module_id' => $module->id
-    //         ]);
-    //     }
+        // Since the question does not exist, create a new one
+        $question = Question::create([
+            'question' => $row[0],
+            'marks' => $row[1],
+            'quizzable_id' => $this->quizzableId,
+            'quizzable_type' => $this->quizzable->getMorphClass(),
+            'quiz_id' => $this->quizId,
+            'type' => $row[7],
+            'topic_id' => $moduleUnitTopic['topic'] ? $moduleUnitTopic['topic']->id : null,
+            'explanation' => $row[12] ? $row[12] : null
+        ]);
 
-    //     // Find or create the topic
-    //     if ($unit && $topicName) {
-    //         $topic = Topic::firstOrCreate([
-    //             'name' => $topicName,
-    //             'unit_id' => $unit->id,
-    //             'course_id' => $this->quizzableId,
-    //         ]);
-    //     }
+        // $question = Question::firstOrCreate(
+        //     [
+        //         'question' => $row[0], // Criteria to check existence
+        //         'quiz_id' => $this->quizId,
+        //         'type' => $row[7],
+        //     ],
+        //     [
+        //         'marks' => $row[1],
+        //         'quizzable_id' => $this->quizzableId,
+        //         'quizzable_type' => $this->quizzable->getMorphClass(),
 
-    //     return ['module' => $module, 'unit' => $unit, 'topic' => $topic];
-    // }
+        //         'answer_text' => $row[8], // Store the correct answer
+        //         'topic_id' => $moduleUnitTopic['topic'] ? $moduleUnitTopic['topic']->id : null,
+        //         'explanation' => $row[12] ? $row[12] : null
+        //     ]
+        // );
+
+        if ($question->wasRecentlyCreated) {
+            $this->newEntriesCount++;
+        } else {
+            $this->errors[] = "A question with the same text already exists and was not imported: " . $row[0];
+        }
+    }
+
+    // Method to return the count of new entries
+    public function getNewEntriesCount()
+    {
+        return $this->newEntriesCount;
+    }
+
+    public function getErrors()
+    {
+        return $this->errors;
+    }
 
     protected function findOrCreateModuleUnitTopic($row)
     {
@@ -220,25 +296,28 @@ class QuestionImport implements ToCollection
 
         // Adjusting for polymorphic relationships
         if ($moduleName) {
-            // Assuming Course and Subject models have a 'modules' relationship
-            $module =  Module::firstOrCreate(['name' => $moduleName]);
+            $module = Module::firstOrCreate(['name' => $moduleName]);
         }
-       
+
         if ($module && $unitName) {
             $unit = $module->units()->firstOrCreate(['name' => $unitName]);
         }
 
         if ($topicName) {
-            // Directly associate topics with quizzable entities if no unit is specified
-            $topic = Topic::firstOrCreate([
+            // Use firstOrNew to avoid duplicate entries and provide a way to handle existing topics
+            $topic = Topic::firstOrNew([
                 'name' => $topicName,
                 'topicable_id' => $this->quizzableId,
-                'topicable_type' => get_class($this->quizzable),
-                'unit_id' => $unit ? $unit->id : null, // Associate with a unit if specified
+                'topicable_type' => get_class($this->quizzable)
             ]);
+
+            // Set additional details if the topic is new
+            if (!$topic->exists) {
+                $topic->unit_id = $unit ? $unit->id : null; // Associate with a unit if specified
+                $topic->save(); // Save only if it's new
+            }
         }
 
         return ['module' => $module, 'unit' => $unit, 'topic' => $topic];
     }
-
 }

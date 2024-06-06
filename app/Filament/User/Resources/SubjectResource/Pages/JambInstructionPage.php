@@ -122,16 +122,21 @@ class JambInstructionPage extends Page
                     // Get the associated attempt and question details from the latest answer.
                     $lastAttemptId = $latestAnswer->quiz_attempt_id;
                     $lastQuestionId = $latestAnswer->question_id;
+                    // dd($lastQuestionId);
                     $lastSubjectId = $latestAnswer->question->quizzable_id;
 
                     session()->forget(['lastAttemptId', 'lastQuestionId', 'lastSubjectId', 'ongoingSessionId']);
                     // Store these details in the session.
+                  
                     session([
                         'lastAttemptId' => $lastAttemptId,
                         'lastQuestionId' => $lastQuestionId,
                         'lastSubjectId' => $lastSubjectId,
                         'ongoingSessionId' => $ongoingSession->id
                     ]);
+
+                    // $questionId = session('lastQuestionId');
+                    // dd($questionId);
                 }
             }
         }

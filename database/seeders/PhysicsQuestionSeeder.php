@@ -1568,6 +1568,8 @@ class PhysicsQuestionSeeder extends Seeder
                 'options' => [
                     ['option' => 'density', 'is_correct' => true],
                     ['option' => 'temperature', 'is_correct' => false],
+                    ['option' => 'pressure', 'is_correct' => false],
+                    ['option' => 'Humidity', 'is_correct' => false],
                 ],
                 'explanation' => '<p>Explanation:</p>
             <p>Radiation is a method of heat transfer that does not require a medium; hence, it is not affected by the density of a medium. Temperature, on the other hand, affects the rate of thermal radiation emission.</p>',
@@ -1637,6 +1639,7 @@ class PhysicsQuestionSeeder extends Seeder
                     ['option' => 'Concave lens', 'is_correct' => true],
                     ['option' => 'Concave mirror', 'is_correct' => false],
                     ['option' => 'Convex mirror', 'is_correct' => false],
+                    ['option' => 'Context mirror', 'is_correct' => false],
                 ],
                 'explanation' => '<p>Explanation:</p>
             <p>A concave lens is used to correct short-sightedness (myopia) because it diverges light rays before they reach the eye, effectively extending the focal length to allow the image to form on the retina.</p>',
@@ -1703,48 +1706,7 @@ class PhysicsQuestionSeeder extends Seeder
             <p>Applying Ohm\'s Law, \( I = \frac{V}{R_{total}} \) where \( I \) is the current and \( V \) is the emf of the cell. Plugging in the known values, \( I = \frac{12V}{6 \Omega} \), we find that \( I = 2 A \).</p>
             <p>Therefore, the current that flows through the circuit is 2 A.</p>',
             ],
-            [
-                'question' => 'When a positively charged rod is brought nearer the cap of a positively charged electroscope, the leaves divergence will',
-                'marks' => 2,
-                'type' => 'mcq',
-                'topic' => 'Electrostatics',
-                'options' => [
-                    ['option' => 'converge', 'is_correct' => true],
-                    ['option' => 'remain constant', 'is_correct' => false],
-                    ['option' => 'diverge', 'is_correct' => false],
-                    ['option' => 'be induced', 'is_correct' => false],
-                ],
-                'explanation' => '<p>Explanation:</p>
-            <p>When a positively charged rod is brought close to the cap of a positively charged electroscope, the leaves will converge due to the repulsion of like charges. The charges in the electroscope redistribute, causing the leaves to have less net positive charge and thus to converge.</p>',
-            ],
-            [
-                'question' => 'Three capacitors of capacitance, 2μF, 4μF, and 8μF are connected in parallel and a p.d of 6V is maintained across each capacitor, the total energy stored is',
-                'marks' => 2,
-                'type' => 'mcq',
-                'topic' => 'Capacitors',
-                'options' => [
-                    ['option' => '6.90 x 10−6 J', 'is_correct' => false],
-                    ['option' => '6.90 x 10−4 J', 'is_correct' => false],
-                    ['option' => '2.52 x 10−4 J', 'is_correct' => true],
-                    ['option' => '2.52 x 10−6 J', 'is_correct' => false],
-                ],
-                'explanation' => '<p>Explanation:</p>
-            <p>In a parallel circuit, the voltage across each capacitor is the same. The total energy stored in the capacitors is the sum of the energy stored in each one, calculated by the formula \( E = \frac{1}{2} C V^2 \). Summing the energies stored in each capacitor yields the total energy stored in the system.</p>',
-            ],
-            [
-                'question' => 'A cell of emf 12V and internal resistance 4Ω is connected to an external resistor of resistance 2 Ω. Find the current flow.',
-                'marks' => 2,
-                'type' => 'mcq',
-                'topic' => 'Current Electricity',
-                'options' => [
-                    ['option' => '4 A', 'is_correct' => false],
-                    ['option' => '2 A', 'is_correct' => true],
-                    ['option' => '3 A', 'is_correct' => false],
-                    ['option' => '5 A', 'is_correct' => false],
-                ],
-                'explanation' => '<p>Explanation:</p>
-            <p>The current in the circuit can be found by using Ohm\'s Law. The total voltage provided by the cell is divided by the total resistance in the circuit (the sum of internal and external resistances) to find the current.</p>',
-            ],
+           
             [
                 'question' => 'Transistors are used for the',
                 'marks' => 2,
