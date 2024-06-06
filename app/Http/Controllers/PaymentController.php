@@ -169,7 +169,7 @@ class PaymentController extends Controller
 
                 // Notify the user that the receipt has been sent successfully
                 Notification::make()
-                    ->title('Receipt sent to the customer\'s email.')
+                    ->title('Receipt has been sent to your email.')
                     ->success()
                     ->send();
             } else {
