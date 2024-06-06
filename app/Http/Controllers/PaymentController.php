@@ -47,7 +47,7 @@ class PaymentController extends Controller
 
                 $user = auth()->user();
                 $referral = $user->referringAgents()->first();
-                $subaccounts = collect($paymentDetails['data']['split']['shares']['subaccounts']);
+                $subaccounts = collect($paymentDetails['data']['split']['shares']['subaccounts']) ?? null;
                 $subaccountDetails = $subaccounts->firstWhere('subaccount_code', $referral->subaccount_code);
 
                 // Total payment amount converted from kobo to Naira
