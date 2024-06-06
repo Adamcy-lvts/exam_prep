@@ -47,8 +47,16 @@ class PaymentController extends Controller
 
                 $user = auth()->user();
                 $referral = $user->referringAgents()->first();
-                $subaccounts = collect($paymentDetails['data']['split']['shares']['subaccounts']) ?? null;
-                $subaccountDetails = $subaccounts->firstWhere('subaccount_code', $referral->subaccount_code);
+
+                // Default to an empty collection if 'split' or 'shares' or 'subaccounts' keys are not present
+                $subaccounts = collect($paymentDetails['data']['split']['shares']['subaccounts'] ?? []);
+
+                // Attempt to find the subaccount details using the subaccount code from the referral
+                $subaccountDetails = null;
+                if ($referral && $subaccounts->isNotEmpty()
+                ) {
+                    $subaccountDetails = $subaccounts->firstWhere('subaccount_code', $referral->subaccount_code);
+                }
 
                 // Total payment amount converted from kobo to Naira
                 $totalAmount = $paymentDetails['data']['amount'] / 100;
