@@ -70,7 +70,7 @@ class Register extends AuthRegister
             'email' => $data['email'],
             'phone' => $data['phone'],
             'user_type' => 'agent',
-            'password' => Hash::make($data['password']),
+            'password' => $data['password'],
         ]);
 
         $bank = Bank::find($data['bank']);
@@ -209,7 +209,7 @@ class Register extends AuthRegister
             ->password()
             ->required()
             ->rule(Password::default())
-            ->dehydrateStateUsing(fn ($state) => Hash::make($state))
+            ->dehydrateStateUsing(fn($state) => Hash::make($state))
             ->same('passwordConfirmation')
             ->validationAttribute(__('filament-panels::pages/auth/register.form.password.validation_attribute'));
     }

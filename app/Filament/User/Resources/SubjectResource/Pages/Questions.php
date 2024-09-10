@@ -33,6 +33,10 @@ class Questions extends Page
         $questions = Question::whereIn('id', $questionIds)->get();
 
 
+        $totalQuestions = $questions->count();
+        $scorePerQuestion = 100 / $totalQuestions; // Adjust score per question
+
+
         foreach ($questions as $question) {
             $userAnswer = QuizAnswer::where('user_id', auth()->user()->id)
                 ->where('question_id', $question->id)
@@ -124,16 +128,18 @@ class Questions extends Page
     }
 
 
+
+
     public function render(): View
     {
-        
+
         // Retrieve question IDs associated with the attempt
         $questionIds = $this->currentAttempt->questions()->pluck('question_id');
 
-       
+
         // Retrieve paginated questions using the IDs from the attempt
         $questions = Question::whereIn('id', $questionIds)->paginate(5);
-   
+
         $allquestions = Question::whereIn('id', $questionIds)->get();
 
         // dd($allquestions); 

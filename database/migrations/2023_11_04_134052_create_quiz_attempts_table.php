@@ -20,6 +20,9 @@ return new class extends Migration
             $table->timestamp('start_time');
             $table->timestamp('end_time')->nullable();
             $table->unsignedInteger('score')->default(0);
+            $table->integer('total_questions')->default(50);
+            $table->decimal('total_marks', 8, 2)->default(0);
+            $table->decimal('scored_marks', 8, 2)->default(0);
             $table->enum('status', ['in progress', 'completed'])->default('in progress');
             $table->timestamps();
         });

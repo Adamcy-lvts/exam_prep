@@ -7,13 +7,16 @@ use Filament\Tables;
 use App\Models\Agent;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
 use App\Helpers\PaystackHelper;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Filters\Filter;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Select;
 use App\Jobs\CreatePaystackSubaccount;
+use App\Models\SchoolRegistrationLink;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -69,7 +72,7 @@ class AgentResource extends Resource
                     ->label(__('Password'))
                     ->password()
                     ->rule(Password::default())
-                    ->dehydrateStateUsing(fn ($state) => Hash::make($state))
+                    ->dehydrateStateUsing(fn($state) => Hash::make($state))
                     ->same('passwordConfirmation')
                     ->validationAttribute(__('filament-panels::pages/auth/register.form.password.validation_attribute')),
                 TextInput::make('passwordConfirmation')
@@ -90,6 +93,15 @@ class AgentResource extends Resource
                     ->label('Business Name')
                     ->sortable()
                     ->searchable(),
+                TextColumn::make('is_school')
+                    ->badge()
+                    ->label('Agent Type')
+
+                    ->getStateUsing(fn($record) => $record->is_school ? 'School' : 'Individual')
+                    ->colors([
+                        'primary' => 'Individual',
+                        'success' => 'School',
+                    ]),
                 TextColumn::make('account_number')
                     ->label('Account Number')
                     ->sortable(),
@@ -101,17 +113,52 @@ class AgentResource extends Resource
                     ->label('Subaccount Code'),
                 TextColumn::make('referredUsers')
                     ->label('Referred Users')
-                    ->getStateUsing(fn ($record) => $record->referredUsers()->count()),
+                    ->getStateUsing(fn($record) => $record->referredUsers()->count()),
                 TextColumn::make('percentage')
-                    ->label('Commission Rate (%)'),
+                    ->label('Commission Rate (%)')
+                    ->sortable(),
                 TextColumn::make('fixed_rate')
-                    ->label('Fixed Rate Commission'),
+                    ->label('Fixed Rate Commission')
+                    ->sortable(),
                 TextColumn::make('created_at')
-                    ->label('Joined At')->dateTime('d-m-Y')
-
+                    ->label('Joined At')
+                    ->dateTime('d-m-Y')
+                    ->sortable(),
             ])
             ->filters([
-                //
+                Filter::make('is_school')
+                    ->label('Agent Type')
+                    ->form([
+                        Forms\Components\Select::make('is_school')
+                            ->label('Agent Type')
+                            ->options([
+                                0 => 'Individual',
+                                1 => 'School',
+                            ])
+                            ->placeholder('All Types'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['is_school'] !== null,
+                            fn(Builder $query, $is_school): Builder => $query->where('is_school', $is_school)
+                        );
+                    }),
+                Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from'),
+                        Forms\Components\DatePicker::make('created_until'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn(Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn(Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            );
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -163,9 +210,29 @@ class AgentResource extends Resource
                                 ->send();
                         }
                     })
-                    ->visible(fn ($record) => empty($record->subaccount_code))
+                    ->visible(fn($record) => empty($record->subaccount_code))
                     ->icon('heroicon-o-plus')
                     ->color('success'),
+                Action::make('generateSchoolLink')
+                    ->label('Generate School Link')
+                    ->icon('heroicon-o-link')
+                    ->color('secondary')
+                    ->action(function (Agent $record) {
+                        $link = SchoolRegistrationLink::create([
+                            'agent_id' => $record->id,
+                            'token' => Str::random(32),
+                            'expires_at' => now()->addDays(7), // Link expires in 7 days
+                        ]);
+
+                        $fullLink = route('school.register', ['token' => $link->token]);
+
+                        Notification::make()
+                            ->title('School Registration Link Generated')
+                            ->body("Link: {$fullLink}")
+                            ->success()
+                            ->send();
+                    })
+                    ->requiresConfirmation(),
                 Tables\Actions\DeleteAction::make(),
                 // Action::make('delete')
                 //     ->requiresConfirmation()
