@@ -35,7 +35,7 @@
             <label for="numberOfQuestions" class="text-md mb-4 font-medium text-gray-600 dark:text-gray-400">Select
                 number of questions:</label>
             <div class="flex divide-x divide-gray-200 shadow-sm rounded-lg overflow-hidden">
-                {{-- {{dd($this->user->hasFeature('Flexible quizzes (20-150 questions)'))}} --}}
+             
                 @php
                     $allOptions = [20, 50, 70, 100, 150];
                     $accessibleOptions = $this->user->hasFeature( 'Unlimited attempts') ? [20, 50, 70, 100, 150] : ($this->user->hasFeature('10 attempts per subject') ? [20, 50, 70] : ($this->user->hasFeature('20 questions per quiz') ? [20] : []));
