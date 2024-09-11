@@ -17,6 +17,8 @@ return new class extends Migration
             $table->foreignId('topic_id')->constrained()->onDelete('cascade');
             $table->unsignedInteger('correct_answers_count')->default(0);
             $table->unsignedInteger('questions_count')->default(0);
+            $table->decimal('total_marks', 8, 2)->default(0);
+            $table->decimal('scored_marks', 8, 2)->default(0);
             $table->timestamps();
         });
     }

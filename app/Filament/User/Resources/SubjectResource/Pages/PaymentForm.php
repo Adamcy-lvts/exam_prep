@@ -11,20 +11,20 @@ use App\Mail\PaymentReceipt;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\HtmlString;
 use Spatie\LaravelPdf\Facades\Pdf;
-// use Unicodeveloper\Paystack\Facades\Paystack;
-use Filament\Forms\Components\Tabs;
 use Illuminate\Support\Facades\Log;
 use Spatie\Browsershot\Browsershot;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
-use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Redirect;
 use Filament\Forms\Components\Actions\Action;
 use Unicodeveloper\Paystack\Facades\Paystack;
 use App\Filament\User\Resources\SubjectResource;
+use Filament\Forms\Components\Placeholder;
 
 class PaymentForm extends Page
 {
@@ -39,18 +39,16 @@ class PaymentForm extends Page
     public $amount;
     public $reference;
     public $price;
-    public $method;
     public $payment;
     public $receipt;
     public $user;
+    public $proof_of_payment;
+    public $payment_method = 'card'; // Default to 'card' payment method
 
     public function mount($planId)
     {
-
         $this->plan = Plan::findOrFail($planId);
-
         $this->price = formatNaira($this->plan->price);
-
         $this->user = auth()->user();
 
         $this->form->fill([
@@ -58,6 +56,7 @@ class PaymentForm extends Page
             'last_name' => $this->user->last_name,
             'email' => $this->user->email,
             'amount' => $this->plan->price,
+            'payment_method' => $this->payment_method,
         ]);
     }
 
@@ -65,101 +64,151 @@ class PaymentForm extends Page
     {
         return $form
             ->schema([
-                Tabs::make('Tabs')
-                    ->tabs([
-                        Tabs\Tab::make('Pay with Card')
-                            ->schema([
-                                Section::make($this->plan->title)
-                                    ->description("You are paying {$this->price} for Jamb exam experience plan")
-                                    ->schema([
-
-                                        Select::make('method')->label('Select Payment Method')
-                                            ->default('card')->required()
-                                            ->options([
-                                                'card' => 'Pay with Card',
-                                                'bank_transfer' => 'Pay via Bank Transfer',
-                                            ]),
-
-                                        TextInput::make('first_name')->disabled()
-                                            ->required(),
-                                        TextInput::make('last_name')->disabled()
-                                            ->required(),
-                                        TextInput::make('email')->disabled()
-                                            ->required(),
-                                        TextInput::make('amount')->prefix('₦')
-                                            ->mask(RawJs::make('$money($input)'))
-                                            ->stripCharacters(',')
-                                            ->numeric()->disabled(),
-                                        // TextInput::make('reference')->default(Paystack::genTranxRef()),
-
-                                    ])
-                            ]),
-                        Tabs\Tab::make('Pay via Bank Transfer')
-                            ->schema([
-                                Section::make($this->plan->title)
-                                    ->description(new HtmlString(
-                                        "Use the following bank details to make payment for {$this->price},
-                                    <br>
-                                    <br> Bank: GTBank
-                                    <br> Account Name: Adamu Mohammed
-                                    <br> Account Number: 0172791950
-                                    <br>
-                                    <br> After payment, send proof of payment through whatsapp to 07060741999 or email to lv4mj1@gmail.com"
-                                    ))
-                                    ->schema([
-                                        Select::make('method')->label('Select Payment Method')
-                                            ->default('bank_transfer')->required()
-                                            ->options([
-                                                'card' => 'Pay with Card',
-                                                'bank_transfer' => 'Pay via Bank Transfer',
-                                            ]),
-
-                                        TextInput::make('first_name')->disabled()
-                                            ->required(),
-                                        TextInput::make('last_name')->disabled()
-                                            ->required(),
-                                        TextInput::make('email')->disabled()
-                                            ->required(),
-                                        TextInput::make('amount')->prefix('₦')
-                                            ->mask(RawJs::make('$money($input)'))
-                                            ->stripCharacters(',')
-                                            ->numeric()->disabled(),
-                                        // TextInput::make('reference')->default(Paystack::genTranxRef()),
-
-                                    ])
-                            ]),
-                    ])->persistTab()
-                    ->id('bank-transfer-tab'),
-
-
-
-
+                Section::make($this->plan->title)
+                    ->description("You are paying {$this->price} for Jamb exam experience plan")
+                    ->schema([
+                        Radio::make('payment_method')
+                            ->label('Select Payment Method')
+                            ->options([
+                                'card' => 'Pay with Card',
+                                'bank_transfer' => 'Pay via Bank Transfer',
+                            ])
+                            ->default('card')
+                            ->reactive()
+                            ->required(),
+                        TextInput::make('first_name')->disabled()->required(),
+                        TextInput::make('last_name')->disabled()->required(),
+                        TextInput::make('email')->disabled()->required(),
+                        TextInput::make('amount')
+                            ->prefix('₦')
+                            ->mask(RawJs::make('$money($input)'))
+                            ->stripCharacters(',')
+                            ->numeric()
+                            ->disabled(),
+                        Placeholder::make('bank_details')
+                            ->label('Bank Transfer Details')
+                            ->content(new HtmlString('
+                                <div class="text-sm">
+                                    <p><strong>Bank:</strong> GTBank</p>
+                                    <p><strong>Account Name:</strong> Adamu Mohammed</p>
+                                    <p><strong>Account Number:</strong> 0172791950</p>
+                                    <p class="mt-2">After payment, please upload your proof of payment below.</p>
+                                </div>
+                            '))
+                            ->visible(fn(callable $get) => $get('payment_method') === 'bank_transfer'),
+                        FileUpload::make('proof_of_payment')
+                            ->label('Proof of Payment')
+                            ->image()
+                            ->acceptedFileTypes(['image/*', 'application/pdf'])
+                            ->directory('payment_proof')
+                            ->required(fn(callable $get) => $get('payment_method') === 'bank_transfer')
+                            ->maxSize(5120) // 5MB max
+                            ->helperText('Upload a screenshot, photo, or PDF of your payment confirmation (max 5MB)')
+                            ->visible(fn(callable $get) => $get('payment_method') === 'bank_transfer')
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                if ($state) {
+                                    $set('upload_complete', true);
+                                }
+                            }),
+                        Placeholder::make('upload_status')
+                            ->content(fn(callable $get) => $get('upload_complete') ? 'Upload complete!' : 'Waiting for file...')
+                            ->visible(fn(callable $get) => $get('payment_method') === 'bank_transfer'),
+                    ])
             ]);
     }
+
+    // public function redirectToGateway()
+    // {
+    //     $user = auth()->user();
+    //     $agent = $user->referringAgents()->first();
+
+    //     $splitData = null;
+    //     if ($agent && $agent->subaccount_code) {
+    //         $splitData = [
+    //             "type" => "percentage",
+    //             "currency" => "NGN",
+    //             "subaccounts" => [
+    //                 ["subaccount" => $agent->subaccount_code, "share" => 20],
+    //             ],
+    //             "bearer_type" => "all",
+    //             "main_account_share" => 90
+    //         ];
+    //     }
+
+    //     $data = [
+    //         'amount' => $this->plan->price * 100,
+    //         'email' => $user->email,
+    //         'reference' => Paystack::genTranxRef(),
+    //         'metadata' => ['planId' => $this->plan->id, 'userId' => $user->id, 'agent_id' => isset($agent) ? $agent->id : null],
+    //         'split' => $splitData ? json_encode($splitData) : null
+    //     ];
+
+    //     try {
+    //         $response = Paystack::getAuthorizationUrl($data)->redirectNow();
+    //         return $response;
+    //     } catch (\Exception $e) {
+    //         Log::error('Payment initialization failed:', ['message' => $e->getMessage(), 'stack' => $e->getTraceAsString()]);
+    //         return Redirect::back()->withErrors('Failed to initiate payment. Please try again.');
+    //     }
+    // }
 
     public function redirectToGateway()
     {
         $user = auth()->user();
-        $agent = $user->referringAgents()->first(); // Assume this returns the agent that referred the user
+        $agent = $user->referringAgents()->first();
+        $school = $user->getReferringSchool();
 
         $splitData = null;
-        if ($agent && $agent->subaccount_code) {
+        $subaccounts = [];
+
+        // Case 1: User referred by an individual agent
+        if ($agent && !$school && $agent->subaccount_code) {
+            $subaccounts[] = [
+                "subaccount" => $agent->subaccount_code,
+                "share" => 20 // 20% to the agent
+            ];
+        }
+        // Case 2: User is a student referred by a school
+        elseif ($school && $school->subaccount_code) {
+            $subaccounts[] = [
+                "subaccount" => $school->subaccount_code,
+                "share" => 20 // 15% to the school
+            ];
+
+            // Check if the school was referred by an agent
+            $schoolAgent = $school->parentAgent()->first();
+            if ($schoolAgent && $schoolAgent->subaccount_code) {
+                $subaccounts[] = [
+                    "subaccount" => $schoolAgent->subaccount_code,
+                    "share" => 10 // 5% to the agent who referred the school
+                ];
+            }
+        }
+
+        // Calculate main account share
+        $totalShare = array_sum(array_column($subaccounts, 'share'));
+        $mainAccountShare = 100 - $totalShare;
+
+        if (!empty($subaccounts)) {
             $splitData = [
                 "type" => "percentage",
-                "currency" => "NGN", // Assuming your application deals in NGN
-                "subaccounts" => [
-                    ["subaccount" => $agent->subaccount_code, "share" => 20], // Agent gets 10%
-                ],
-                "bearer_type" => "all", // Main account bears the transaction charges
-                "main_account_share" => 90 // Main account gets 90%
+                "currency" => "NGN",
+                "subaccounts" => $subaccounts,
+                "bearer_type" => "account",
+                "main_account_share" => $mainAccountShare
             ];
         }
 
         $data = [
-            'amount' => $this->plan->price * 100, // Convert to kobo
+            'amount' => $this->plan->price * 100,
             'email' => $user->email,
             'reference' => Paystack::genTranxRef(),
-            'metadata' => ['planId' => $this->plan->id, 'userId' => $user->id, 'agent_id' => isset($agent) ? $agent->id : null],
+            'metadata' => [
+                'planId' => $this->plan->id,
+                'userId' => $user->id,
+                'agentId' => $agent ? $agent->id : null,
+                'schoolId' => $school ? $school->id : null
+            ],
             'split' => $splitData ? json_encode($splitData) : null
         ];
 
@@ -172,49 +221,35 @@ class PaymentForm extends Page
         }
     }
 
-
-
-
     public function processPayment()
     {
-        // Check if the 'method' property has been set
-        if (!$this->method) {
-            // Ideally, you should return some error or handle this case
-            return Redirect::back()->withErrors('Please select a payment method.');
-        }
+        $data = $this->form->getState();
 
-        // dd($this->method);
-        // Handle the card payment
-        if ($this->method === 'card') {
-            // Redirect to Paystack gateway
+        if ($data['payment_method'] === 'card') {
             return $this->redirectToGateway();
         }
 
-        // Handle the bank transfer
-        if ($this->method === 'bank_transfer') {
-            // Record the payment as pending in your payment table
-            // Replace 'Payment' with your actual payment model and set the appropriate fields
+        if ($data['payment_method'] === 'bank_transfer') {
+
             $this->payment = Payment::create([
                 'user_id' => auth()->id(),
                 'plan_id' => $this->plan->id,
                 'amount' => $this->plan->price,
                 'status' => 'pending',
-                'method' => $this->method,
+                'method' => $data['payment_method'],
                 'payment_for' => 'subscription plan',
-                // Add other necessary fields
+                'proof_of_payment' => $data['proof_of_payment'],
             ]);
 
-
             Notification::make()
-                ->title('success')
-                ->body('Your bank transfer payment has been recorded, pending confirmation. we will get back to you.')
+                ->title('Payment Received')
+                ->body('Your bank transfer payment has been received and is pending confirmation. We will review and activate your subscription shortly.')
                 ->success()
                 ->send();
-            // Redirect to a confirmation page or back with a success message
+
             return $this->redirectRoute('filament.user.auth.profile');
         }
 
-        // In case of an unsupported method
         return Redirect::back()->withErrors('Unsupported payment method selected.');
     }
 }

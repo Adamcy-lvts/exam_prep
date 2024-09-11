@@ -8,6 +8,7 @@ use App\Models\Subject;
 use Livewire\Component;
 use App\Models\Programme;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Filament\Notifications\Notification;
 use Filament\Notifications\Livewire\Notifications;
@@ -17,7 +18,6 @@ class SubjectsPage extends Component
     use WithPagination;
 
     public $programmes;
-    // public $subjects;
     public $selectedProgrammeId = null;
     public $selectedSubjects = [];
     public $user;
@@ -28,14 +28,18 @@ class SubjectsPage extends Component
     {
         $this->user = User::find(auth()->id());
 
+        // Check if user has 4 subjects registered
+        if ($this->user->subjects()->count() >= 4) {
+            $this->user->update(['registration_status' => User::STATUS_REGISTRATION_COMPLETED]);
+            return redirect()->route('filament.user.pages.dashboard');
+        }
+
         if ($this->user->registration_status === User::STATUS_REGISTRATION_COMPLETED) {
             return redirect()->route('filament.user.pages.dashboard');
         }
 
         $this->examId = $examid;
-
         $this->programmes = Programme::with('subjects')->get();
-        
     }
 
     public function toggleProgramme($programmeId)
@@ -49,85 +53,108 @@ class SubjectsPage extends Component
 
     public function toggleSubject($subjectId)
     {
-        if (in_array($subjectId, $this->selectedSubjects)) {
-            $this->selectedSubjects = array_diff($this->selectedSubjects, [$subjectId]);
+        $index = array_search($subjectId, $this->selectedSubjects);
+
+        if ($index !== false) {
+            // Subject is already selected, so remove it
+            unset($this->selectedSubjects[$index]);
+            $this->selectedSubjects = array_values($this->selectedSubjects); // Re-index the array
         } else if (count($this->selectedSubjects) < 4) {
+            // Subject is not selected and we have less than 4 subjects, so add it
             $this->selectedSubjects[] = $subjectId;
         }
     }
 
     public function submitSelection()
     {
+
+        // Check if user already has 4 subjects registered
+        if ($this->user->subjects()->count() >= 4) {
+            $this->user->update(['registration_status' => User::STATUS_REGISTRATION_COMPLETED]);
+            Notification::make()
+                ->title('You have already registered 4 subjects.')
+                ->info()
+                ->send();
+            return redirect()->route('filament.user.pages.dashboard');
+        }
+
         if (count($this->selectedSubjects) < 1) {
-            // let's add filament filament error notification and redirect back subject route subject id
-
-           
-
             Notification::make()
                 ->title('Please select at least one subject')
                 ->info()
                 ->send();
-            return  redirect()->route('subjects.page', ['examid' => $this->examId]);
+            return redirect()->route('subjects.page', ['examid' => $this->examId]);
         }
 
-        $basicPlan = Plan::where('title', 'Explorer Access Plan')->first();
+        $basicPlan = Plan::where('title', 'Free Plan')->firstOrFail();
+
+        // Check for existing subjects
+        $existingSubjects = $this->user->subjects()->pluck('subject_id')->toArray();
+        $newSubjects = array_diff($this->selectedSubjects, $existingSubjects);
+
+        if (empty($newSubjects)) {
+            Log::info('No new subjects to add');
+            Notification::make()
+                ->title('You have already registered these subjects.')
+                ->info()
+                ->send();
+            return;
+        }
 
         $user = auth()->user();
 
-        // Assign the noun_student role to the user
+        // Assign the jamb_student role to the user
         $user->assignRole('jamb_student');
 
         if ($basicPlan) {
-            // Create a subscription for the basic plan. Since it's a free plan, you might not set an expiration date,
-            // or set a very distant future date if you want to enforce checking subscription validity.
             $user->subscriptions()->create([
                 'plan_id' => $basicPlan->id,
                 'starts_at' => now(),
-                'ends_at' => now()->addYears(10), // Optional: for a free plan, you might not need an expiration.
-                'status' => 'active', // Consider your logic for setting status
-                'features' => $basicPlan->features // Copying features from plan to subscription
+                'ends_at' => now()->addYears(10),
+                'status' => 'active',
+                'features' => $basicPlan->features
             ]);
         } else {
-            // Log error or handle the situation where the Explorer Access Plan doesn't exist.
-            Log::error('Explorer Access Plan not found during user registration.', ['user_id' => $user->id]);
-        }
-
-        
-
-        if (!$basicPlan) {
-            // Handle the case where the basic plan is not found
-            // Possibly log an error or set a flash message
-          
-            return redirect()->back()->withErrors('Explorer Access Plan not found.');
+            Log::error('Free Plan not found during user registration.', ['user_id' => $user->id]);
+            return redirect()->back()->withErrors('Free Plan not found.');
         }
 
         // Initialize the user's quiz attempts.
         $this->user->jambAttempts()->create([
-            'attempts_left' => $basicPlan->number_of_attempts ?? 1 // Number of attempts from the plan
+            'attempts_left' => $basicPlan->number_of_attempts ?? 1
         ]);
 
-        $this->user->subjects()->detach();
-        $this->user->subjects()->attach($this->selectedSubjects);
+        // Attach new subjects
+        $this->user->subjects()->syncWithoutDetaching($newSubjects);
         $this->user->exam_id = $this->examId;
-        $this->user->registration_status = User::STATUS_REGISTRATION_COMPLETED;
+
+        // Check if user now has 4 or more subjects
+        if ($this->user->subjects()->count() >= 4) {
+            $this->user->registration_status = User::STATUS_REGISTRATION_COMPLETED;
+        }
+
         $this->user->save();
 
         if (!$this->user->hasInitializedSubjectAttempts()) {
-            foreach ($this->user->subjects as $subject) {
+            foreach ($newSubjects as $subjectId) {
                 $this->user->subjectAttempts()->create([
-                    'subject_id' => $subject->id,
+                    'subject_id' => $subjectId,
                     'attempts_left' => $basicPlan->number_of_attempts ?? 1,
                 ]);
             }
             $this->user->markSubjectAttemptsAsInitialized();
         }
 
-       
         Notification::make()
             ->title('Your subjects have been registered successfully.')
             ->success()
             ->send();
-        return redirect()->route('filament.user.pages.dashboard');
+
+        if ($this->user->registration_status === User::STATUS_REGISTRATION_COMPLETED) {
+            return redirect()->route('filament.user.pages.dashboard');
+        } else {
+            return redirect()->route('subjects.page', ['examid' => $this->examId]);
+        }
     }
 
     public function updatedSearch()
@@ -139,7 +166,6 @@ class SubjectsPage extends Component
 
     public function render()
     {
-        //only subjects that are visible
         $subjects = Subject::where('is_visible', 1);
 
         if (!empty($this->search)) {
@@ -149,7 +175,7 @@ class SubjectsPage extends Component
 
         $subjects = $subjects->paginate(10);
 
-        return view('livewire.subjects-page',[
+        return view('livewire.subjects-page', [
             'subjects' => $subjects,
         ]);
     }

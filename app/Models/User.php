@@ -20,6 +20,7 @@ use App\Models\SubjectAttempt;
 use App\Models\ReferralPayment;
 use App\Models\UserQuizAttempt;
 use Laravel\Sanctum\HasApiTokens;
+use App\Traits\HasRegistrationStatus;
 use Filament\Models\Contracts\HasName;
 use Laravel\Jetstream\HasProfilePhoto;
 use Spatie\Permission\Traits\HasRoles;
@@ -37,10 +38,12 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
     use HasFactory;
     use Notifiable;
     use HasRoles;
-    use HasPanelShield;
+    // use HasPanelShield;
+    use HasRegistrationStatus;
 
     // Define constants for registration status
     const STATUS_REGISTRATION_COMPLETED = 'registration_completed';
+    const STATUS_REGISTRATION_INCOMPLETE = 'registration_incomplete';
 
     public function canAccessPanel(Panel $panel): bool
     {
@@ -119,11 +122,68 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
         return $this->hasOne(Agent::class);
     }
 
+    /**
+     * Get the agent who referred this user.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function referringAgent()
+    {
+        return $this->belongsToMany(Agent::class, 'agent_user')
+            ->withPivot('referred_at')
+            ->withTimestamps()
+            ->take(1);  // Ensure we only get one agent
+    }
+
     public function referringAgents()
     {
         return $this->belongsToMany(Agent::class, 'agent_user')
             ->withPivot('referred_at')
             ->withTimestamps();
+    }
+
+
+    /**
+     * Get the referring agent instance.
+     *
+     * @return \App\Models\Agent|null
+     */
+    public function getReferringAgent()
+    {
+        return $this->referringAgent->first();
+    }
+
+    /**
+     * Determine if the user was referred by a school.
+     *
+     * @return bool
+     */
+    public function wasReferredBySchool()
+    {
+        $agent = $this->getReferringAgent();
+        return $agent ? $agent->is_school : false;
+    }
+
+    /**
+     * Get the school that referred this user (if applicable).
+     *
+     * @return \App\Models\Agent|null
+     */
+    public function getReferringSchool()
+    {
+        $agent = $this->getReferringAgent();
+        return $agent && $agent->is_school ? $agent : null;
+    }
+
+    /**
+     * Get the agent who referred the school that referred this user (if applicable).
+     *
+     * @return \App\Models\Agent|null
+     */
+    public function getSchoolReferringAgent()
+    {
+        $school = $this->getReferringSchool();
+        return $school ? $school->parentAgent : null;
     }
 
     public function referralPayments()
@@ -150,6 +210,11 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
     public function exam()
     {
         return $this->belongsTo(Exam::class);
+    }
+
+    public function latestSubscription()
+    {
+        return $this->hasOne(Subscription::class)->latest();
     }
 
 
@@ -234,8 +299,16 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
         return $this->courseAttempts()->where('attempts_left', '>', 0)->exists();
     }
 
+    // public function getFilamentName(): string
+    // {
+    //     return "{$this->first_name} {$this->last_name}";
+    // }
+
     public function getFilamentName(): string
     {
+        if ($this->user_type === 'agent' && $this->agent) {
+            return $this->agent->business_name ?? "{$this->first_name} {$this->last_name}";
+        }
         return "{$this->first_name} {$this->last_name}";
     }
 
