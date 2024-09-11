@@ -38,7 +38,7 @@ class PaymentReceipt extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: new Address('lv4mj1@gmail.com', 'Exam Pro'),
+            from: new Address('lv4mj1@gmail.com', 'Exam Prep'),
             subject: 'Payment Receipt',
         );
     }

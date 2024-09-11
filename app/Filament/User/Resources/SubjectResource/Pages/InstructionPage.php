@@ -87,10 +87,11 @@ class InstructionPage extends Page
 
         // Update the quiz duration based on the session data.
         $this->updateDuration();
- 
-
+        // dd($this->allowed_attempts);
+        // Calculate the remaining attempts by subtracting the number of attempts made from the allowed attempts.
+        // $this->remainingAttempts = $this->allowed_attempts - $this->attempts;
         $attempt = $this->user->subjectAttempts()->where('subject_id', $this->quizzable->quizzable_id)->first();
-     
+        // $this->remainingAttempts = $attempt ? $attempt->attempts_left : 0;
         $this->remainingAttempts = $attempt ? ($attempt->attempts_left === null ? 'Unlimited' : $attempt->attempts_left) : 0;
     }
 
