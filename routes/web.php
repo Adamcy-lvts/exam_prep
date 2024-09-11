@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\FacultyController;
 use App\Http\Controllers\PaymentController;
-use App\Livewire\SchoolRegistration;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -35,22 +35,17 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard')->middleware(['auth'])->name('dashboard');
-
-
-Route::get('/user-profile', function () {
-    // Your profile logic here
-})->middleware(['auth'])->name('user.profile');
 
 
 // Routes requiring authentication, email verification, and step completion
 Route::middleware(['auth', 'steps.completed'])->group(function () {
-
+    
     Route::get('/subject-lessons/{subject_id}', SubjectsLessons::class)->name('subjects.lessons');
     Route::get('/subject/instructions-page', InstructionPage::class)->name('instructions.page');
     Route::get('/jamb/quiz/{compositeSessionId}', TestPage::class)->name('start.quiz');
     Route::get('/jamb/result/{compositeSessionId}', QuizResult::class)->name('quiz.result');
     Route::get('/pricing', PricingPlans::class)->name('pricing-page');
+    
 });
 
 // Routes requiring authentication and email verification but not step completion
@@ -63,10 +58,12 @@ Route::middleware(['auth', 'prevent-agent'])->group(function () {
 });
 
 
-
-Route::get('/school/register/{token}', SchoolRegistration::class)->name('school.register');
-
 Route::webhooks('webhook/paystack', 'paystack');
+
+Route::get('/test', function () {
+    dd(env('WEBHOOK_CLIENT_SECRET'));
+});
+
 
 Route::post('/update-theme', function (Request $request) {
     // Update the session with the new theme preference

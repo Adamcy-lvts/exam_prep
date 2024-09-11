@@ -44,17 +44,17 @@ class EnsureRegistrationCompletion
             return $next($request);
         }
 
-        // If the user's email has not been verified, redirect them to email verification notice
-        if (!$user->hasVerifiedEmail()) {
-            return redirect()->route('filament.user.auth.email-verification.prompt')
-                ->withErrors('You must verify your email address.');
-        }
+        // // If the user's email has not been verified, redirect them to email verification notice
+        // if (!$user->hasVerifiedEmail()) {
+        //     return redirect()->route('filament.user.auth.email-verification.prompt')
+        //         ->withErrors('You must verify your email address.');
+        // }
 
         // If the user has not completed the registration process, redirect them to choose-exam
-        if (!$user->isRegistrationComplete()) {
-            if (!$request->routeIs(['choose-exam', 'subjects.page', 'filament.user.auth.logout'])) {
-                return redirect()->route('choose-exam')
-                    ->with('warning', 'Please complete your registration to access this page.');
+        if ($user->registration_status !== User::STATUS_REGISTRATION_COMPLETED) {
+            if (!$request->routeIs('choose-exam')) {
+                session()->flash('message', 'Please complete your registration to access this page.');
+                return redirect()->route('choose-exam');
             }
         }
 

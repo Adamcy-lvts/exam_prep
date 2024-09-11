@@ -63,6 +63,8 @@ class Register extends AuthRegister
 
         $data = $this->form->getState();
      
+        // $courseIds = $data['courses'] ?? [];
+     
         $user = $this->getUserModel()::create($data);
 
         $user->assignRole('panel_user');
@@ -78,7 +80,7 @@ class Register extends AuthRegister
             }
         }
 
-        $this->sendEmailVerificationNotification($user);
+        // $this->sendEmailVerificationNotification($user);
 
         Filament::auth()->login($user);
 
