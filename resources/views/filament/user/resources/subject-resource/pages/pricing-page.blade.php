@@ -1,71 +1,42 @@
 <x-filament-panels::page>
-
-    <div class="text-center mb-4 px-4 sm:px-6 lg:px-8">
-        <h2 class="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-4 dark:text-white">
-            Customized Attempt Plans
-        </h2>
-        <p class="text-sm sm:text-md text-gray-600 dark:text-gray-300">
-            Select the perfect plan that fits your study needs. From single subject attempts to comprehensive test
-            sessions, we've got you covered.
-        </p>
-    </div>
-    <div class="flex flex-col md:flex-row md:space-x-4">
-        {{-- {{ dd($user->latestSubscriptionStatus()) }} --}}
-        @foreach ($pricingPlans as $plan)
-            <div
-                class="max-w-sm mx-auto my-4 p-6 bg-white rounded-lg shadow-md dark:bg-gray-800 {{ $user->hasActiveSubscription($plan->id) ? 'border-2 border-green-500' : '' }}">
-                <h2 class="text-lg font-semibold">{{ $plan->title }}</h2>
-                <p class="text-gray-600 dark:text-gray-300 text-sm my-2">
-                    {{ $plan->description }}
-                </p>
-                <div class="my-4">
-                    <span class="text-4xl font-bold">{{ formatNaira($plan->price) }}</span>
-                    <span class="text-gray-600 dark:text-gray-300 text-base">{{ $plan->currency }}</span>
-                </div>
-
-                @if ($user->hasActiveSubscription($plan->id))
-                    <div
-                        class="text-center p-2 rounded border border-green-600 bg-green-100 text-green-700 dark:border-green-400 dark:bg-green-700 dark:bg-opacity-25 dark:text-green-200">
-                        Active Plan
-                    </div>
-                @elseif ($plan->title === 'Explorer Access Plan')
-                    <div class="text-center p-2 rounded border  font-bold text-xl">
-                        {{ $plan->cto }}
-                    </div>
-                @else
-                    <div class="flex flex-col">
+    <div class="container mx-auto px-4">
+        <h2 class="text-3xl font-bold text-center text-gray-900 dark:text-white mb-12">Choose Your Plan</h2>
+        <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            @foreach ($pricingPlans as $plan)
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-lg p-8 shadow-sm {{ $user->hasActiveSubscription($plan->id) ? 'border-2 border-green-500' : '' }}">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">{{ $plan->title }}</h3>
+                    <p class="text-3xl font-bold mb-6">{{ formatNaira($plan->price) }}<span
+                            class="text-base font-normal">/{{ $plan->currency }}</span></p>
+                    <ul class="mb-8 space-y-4">
+                        @foreach (json_decode($plan->features, true) as $feature)
+                            <li class="flex items-center">
+                                <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                                {{ $feature }}
+                            </li>
+                        @endforeach
+                    </ul>
+                    @if ($user->hasActiveSubscription($plan->id))
+                        <div class="text-center bg-green-600 text-white rounded-md py-2 px-4 font-semibold">
+                            Active Plan
+                        </div>
+                    @elseif ($plan->title === 'Explorer Access Plan')
+                        <div
+                            class="text-center bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md py-2 px-4 font-semibold">
+                            {{ $plan->cto }}
+                        </div>
+                    @else
                         <a href="{{ route('filament.user.resources.subjects.payment-form', $plan->id) }}"
-                            class="flex items-center justify-center bg-green-500 text-white p-2 rounded my-8 hover:bg-green-600 transition duration-300 ease-in-out dark:hover:bg-green-800 dark:hover:bg-opacity-25">
+                            class="block text-center bg-green-600 text-white rounded-md py-2 px-4 font-semibold hover:bg-green-700 transition duration-300">
                             {{ $plan->cto }}
                         </a>
-                    </div>
-                @endif
-
-
-
-
-                <ul>
-                    @foreach (json_decode($plan->features, true) as $feature)
-                        <li class="flex items-center my-2 text-sm">
-                            <svg class="h-5 w-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M5 13l4 4L19 7" />
-                            </svg>
-                            <span>{{ $feature }}</span>
-                        </li>
-                    @endforeach
-                </ul>
-
-                <!-- Highlight for active plan -->
-                {{-- @if ($user->hasActiveSubscription($plan->id))
-                    <div class="text-center p-2 rounded bg-blue-100 text-blue-800">
-                        Your Active Plan
-                    </div>
-                @endif --}}
-            </div>
-        @endforeach
-
+                    @endif
+                </div>
+            @endforeach
+        </div>
     </div>
-
 </x-filament-panels::page>
