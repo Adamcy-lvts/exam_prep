@@ -94,7 +94,7 @@ class UserPanelProvider extends PanelProvider
                 EnsureRegistrationCompletion::class
             ])->registration(Register::class)
             ->passwordReset()
-            // ->emailVerification(EmailVerificationPrompt::class)
+            ->emailVerification(EmailVerificationPrompt::class)
             ->profile(EditProfile::class, isSimple: false);
     }
 }
