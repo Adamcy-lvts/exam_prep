@@ -171,7 +171,6 @@ return [
         App\Providers\Filament\UserPanelProvider::class,
         App\Providers\Filament\AgentPanelProvider::class,
         App\Providers\RouteServiceProvider::class,
-        App\Providers\VoltServiceProvider::class,
     ])->toArray(),
 
     /*
@@ -190,7 +189,6 @@ return [
     ])->toArray(),
 
 
-    // 'chrome_path' => env('CHROME_PATH'),
-    'chrome_path' => env('CHROME_PATH', '/usr/bin/google-chrome'),
+    'chrome_path' => env('CHROME_PATH'),
 
 ];

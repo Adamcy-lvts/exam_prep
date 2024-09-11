@@ -147,7 +147,10 @@ class EditProfile extends ProfileEdit implements HasTable
                 // ...
             ])
             ->actions([
-    
+                // Action::make('View Receipt')
+                //     ->url(fn (Payment $record): string => route('filament.user.resources.courses.view-receipt', $record))
+                //     ->visible(fn (Payment $record): bool => $record->status === 'completed')
+                //     ->openUrlInNewTab(),
                 Action::make('View Receipt')
                     ->url(function (Payment $record): string {
                         $user = Auth::user(); // Get the authenticated user
@@ -166,6 +169,34 @@ class EditProfile extends ProfileEdit implements HasTable
                     ->visible(fn (Payment $record): bool => $record->status === 'completed')
                     ->openUrlInNewTab()
 
+                // Action::make('Download receipt')
+                //     ->label('Download Receipt')
+                //     ->action(function (Payment $record, array $data) {
+                //         $html = view('pdf-receipt-view.payment-receipt', [
+                //             'payment' => $record,
+
+                //         ])->render();
+                //         // dd($html);
+                //         $pdfName = $record->user->first_name . '_' . $record->user->last_name . '-' . '_receipt.pdf';
+                //         $receiptPath = storage_path("app/{$pdfName}");
+
+                //         Browsershot::html($html)
+                //             ->noSandbox()
+                //             ->setChromePath(config('app.chrome_path'))
+                //             ->showBackground()
+                //             ->format('A4')
+                //             ->save($receiptPath);
+
+                //         // Send success notification
+                //         Notification::make()
+                //             ->title('Receipt downloaded successfully.')
+                //             ->success()
+                //             ->send();
+
+                //         return response()->download($receiptPath, $pdfName, [
+                //             'Content-Type' => 'application/pdf',
+                //         ])->deleteFileAfterSend(true);
+                //     })
 
             ])
             ->bulkActions([
