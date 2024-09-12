@@ -69,7 +69,8 @@ class UserResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('full_name')->label('Full Name')->searchable('first_name'),
-                TextColumn::make('email')->copyable()->searchable(),
+                TextColumn::make('user_type')->searchable(),
+                TextColumn::make('email')->copyable()->sortable(),
                 TextColumn::make('phone')->copyable()->searchable()->default('-'),
                 TextColumn::make('exam.exam_name')->label('Registered Exam')->default('No Registered Exam'),
                 TextColumn::make('subscriptions.status')
