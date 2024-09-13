@@ -12,7 +12,23 @@ class Payment extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'amount', 'method', 'plan_id', 'payment_for', 'attempts_purchased', 'card_type', 'bank', 'last_4_digits', 'status', 'authorization_code', 'transaction_id'];
+    protected $fillable = [
+        'user_id',
+        'amount',
+        'method',
+        'plan_id',
+        'payment_for',
+        'split_amount_agent',
+        'net_amount',
+        'split_code',
+        'attempts_purchased',
+        'card_type',
+        'bank',
+        'last_4_digits',
+        'status',
+        'authorization_code',
+        'transaction_id'
+    ];
 
     function plan()
     {
