@@ -104,9 +104,9 @@ class SchoolRegistration extends Register
         ]);
 
         // Delete the used registration link
-        $this->parentAgent->schoolRegistrationLinks()
-            ->where('token', $this->token)
-            ->delete();
+        // $this->parentAgent->schoolRegistrationLinks()
+        //     ->where('token', $this->token)
+        //     ->delete();
 
         // Prepare data for the subaccount
         $subaccountData = [
@@ -131,7 +131,17 @@ class SchoolRegistration extends Register
             ->success()
             ->send();
 
-        return app(RegistrationResponse::class);
+            return $this->getRegistrationResponse($agent);
+    }
+
+    protected function getRegistrationResponse(): RegistrationResponse
+    {
+        $response = app(RegistrationResponse::class);
+        
+        // Set the intended URL for redirection after registration
+        session()->put('url.intended', route('filament.agent.pages.dashboard'));
+        
+        return $response;
     }
 
     public function getTitle(): string

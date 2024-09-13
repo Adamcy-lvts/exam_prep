@@ -9,6 +9,7 @@ use App\Models\User;
 use Filament\Tables;
 use App\Models\Course;
 use App\Models\Subject;
+use App\Helpers\Options;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
@@ -43,24 +44,38 @@ class UserResource extends Resource
                 TextInput::make('last_name')->label('Last Name'),
                 TextInput::make('email')->label('Email'),
                 TextInput::make('phone')->label('Phone'),
-                TextInput::make('password')->password()
-                    ->dehydrateStateUsing(fn (string $state): string => Hash::make($state))
-                    ->dehydrated(fn (?string $state): bool => filled($state))
+                TextInput::make('password')
+                    ->password()
+                    ->dehydrateStateUsing(fn(string $state): string => Hash::make($state))
+                    ->dehydrated(fn(?string $state): bool => filled($state))
                     ->revealable(),
-                Select::make('exam_id')->relationship(name: 'exam', titleAttribute: 'exam_name')->label('Exam'),
+                Select::make('exam_id')
+                    ->relationship(name: 'exam', titleAttribute: 'exam_name')
+                    ->label('Exam'),
                 Checkbox::make('is_on_trial'),
                 DatePicker::make('trial_ends_at'),
-                Select::make('subjects')->options(Subject::all()->pluck('name', 'id'))->searchable()->multiple(),
-                Select::make('courses')->options(Course::all()->pluck('title', 'id'))->searchable()->multiple(),
-                Select::make('plan')->label('Plan')->options(Plan::all()->pluck('title', 'id'))->searchable(),
-                // Using Select Component
+                Select::make('subjects')
+                    ->options(Subject::all()->pluck('name', 'id'))
+                    ->searchable()
+                    ->multiple(),
+                Select::make('courses')
+                    ->options(Course::all()->pluck('title', 'id'))
+                    ->searchable()
+                    ->multiple(),
+                Select::make('plan')
+                    ->label('Plan')
+                    ->options(Plan::all()->pluck('title', 'id'))
+                    ->searchable(),
                 Select::make('roles')
                     ->relationship('roles', 'name')
                     ->multiple()
                     ->preload()
                     ->searchable(),
-
-              
+                Select::make('status')
+                    ->label('Status')
+                    ->options(Options::userStatus())
+                    ->required()
+                    ->default('Active'),
             ]);
     }
 
@@ -74,9 +89,9 @@ class UserResource extends Resource
                 TextColumn::make('phone')->copyable()->searchable()->default('-'),
                 TextColumn::make('exam.exam_name')->label('Registered Exam')->default('No Registered Exam'),
                 TextColumn::make('subscriptions.status')
-                    ->getStateUsing(fn (Model $record) => $record->subscriptions()->latest()->first()?->status ?? 'no subscription')
+                    ->getStateUsing(fn(Model $record) => $record->subscriptions()->latest()->first()?->status ?? 'no subscription')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
 
                         'active' => 'success',
                         'expired' => 'danger',
@@ -93,7 +108,7 @@ class UserResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Action::make('subscribe')
-                    ->url(fn (User $record): string => route('filament.admin.resources.users.subscribe', $record))
+                    ->url(fn(User $record): string => route('filament.admin.resources.users.subscribe', $record))
 
             ])
             ->bulkActions([

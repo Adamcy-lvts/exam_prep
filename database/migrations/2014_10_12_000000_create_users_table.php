@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('last_name');
             $table->string('full_name')->virtualAs('concat(first_name, \' \', last_name)');
             $table->string('email')->unique();
+            $table->enum('status', ['Active','Banned', 'Suspended']);
             $table->string('phone')->nullable();
             $table->string('registration_status')->nullable();
             $table->timestamp('email_verified_at')->nullable();

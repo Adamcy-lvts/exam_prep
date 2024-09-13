@@ -27,17 +27,27 @@ class ReferredUsers extends BaseWidget
                     ->label('Full Name')
                     ->searchable(['first_name', 'last_name'])
                     ->sortable(),
-                
+
                 TextColumn::make('email')
                     ->label('Email')
                     ->searchable(),
-                
+
                 TextColumn::make('referred_at')
                     ->label('Referred At')
                     ->date()
                     ->sortable(),
-                
-                    TextColumn::make('subscription_status')
+
+                TextColumn::make('subscription_plan')
+                    ->label('Subscription Plan')
+                    ->getStateUsing(function ($record) {
+                        $activeSubscription = $record->subscriptions()
+                            ->where('status', 'active')
+                            ->where('ends_at', '>', now())
+                            ->first();
+                        return $activeSubscription ? $activeSubscription->plan->title : 'No active plan';
+                    }),
+
+                TextColumn::make('subscription_status')
                     ->label('Subscription Status')
                     ->badge()
                     ->getStateUsing(function ($record) {
@@ -51,12 +61,12 @@ class ReferredUsers extends BaseWidget
                         'success' => 'Active',
                         'danger' => 'Inactive',
                     ]),
-                
+
                 TextColumn::make('subscriptions_count')
                     ->label('Total Subscriptions')
-                    ->counts('subscriptions', fn (Builder $query) => $query->where('plan_id', '!=', 1))
+                    ->counts('subscriptions', fn(Builder $query) => $query->where('plan_id', '!=', 1))
                     ->sortable(),
-                
+
                 TextColumn::make('total_payments')
                     ->label('Total Payments')
                     ->getStateUsing(function ($record) {
@@ -94,11 +104,11 @@ class ReferredUsers extends BaseWidget
                         return $query
                             ->when(
                                 $data['referred_from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('agent_user.referred_at', '>=', $date),
+                                fn(Builder $query, $date): Builder => $query->whereDate('agent_user.referred_at', '>=', $date),
                             )
                             ->when(
                                 $data['referred_until'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('agent_user.referred_at', '<=', $date),
+                                fn(Builder $query, $date): Builder => $query->whereDate('agent_user.referred_at', '<=', $date),
                             );
                     })
             ])
