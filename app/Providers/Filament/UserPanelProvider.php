@@ -16,6 +16,7 @@ use App\Filament\User\Pages\Auth\Register;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Support\Facades\FilamentView;
 use App\Filament\User\Pages\Auth\EditProfile;
+use App\Filament\User\Pages\Auth\Login;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use App\Filament\User\Widgets\FilamentInfoWidget;
@@ -40,7 +41,7 @@ class UserPanelProvider extends PanelProvider
         return $panel
             ->id('user')
             ->path('user')
-            ->login()
+            ->login(Login::class)
             ->colors([
                 'primary' => Color::Green,
             ])

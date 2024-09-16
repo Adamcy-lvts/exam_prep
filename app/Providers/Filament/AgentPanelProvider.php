@@ -10,6 +10,7 @@ use Filament\Support\Colors\Color;
 use Filament\Http\Middleware\Authenticate;
 use App\Filament\Agent\Pages\Auth\Register;
 use App\Filament\Agent\Pages\Auth\EditProfile;
+use App\Filament\Agent\Pages\Auth\Login;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use App\Filament\Agent\Widgets\FilamentInfoWidget;
@@ -31,7 +32,7 @@ class AgentPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Indigo,
             ])
-            ->login()
+            ->login(Login::class)
             ->discoverResources(in: app_path('Filament/Agent/Resources'), for: 'App\\Filament\\Agent\\Resources')
             ->discoverPages(in: app_path('Filament/Agent/Pages'), for: 'App\\Filament\\Agent\\Pages')
             ->pages([
