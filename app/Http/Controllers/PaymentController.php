@@ -11,7 +11,7 @@ class PaymentController extends Controller
     {
         $paymentDetails = Paystack::getPaymentData();
 
-        dd($paymentDetails);
+        // dd($paymentDetails);
         if ($paymentDetails['status'] === true && $paymentDetails['data']['status'] === 'success') {
             $planType = $paymentDetails['data']['metadata']['plan_type'] ?? 'subject';
             

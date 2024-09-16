@@ -71,37 +71,40 @@ class ProcessPaystackWebhookJob extends ProcessWebhookJob implements ShouldQueue
         }
     }
 
+
     private function createPayment($user, $data, $plan)
     {
-        $totalAmount = $data['amount'] / 100;
-        $agentAmount = null;
+        $totalAmount = $data['amount'] / 100; // Convert from kobo to Naira
+        $agentAmount = 0;
         $splitCode = null;
-
-        Log::info('Payment data received:', ['data' => $data]);
+        $netAmount = $totalAmount; // Initialize with total amount, we'll adjust it later
 
         if (isset($data['split'])) {
             Log::info('Split data found:', ['split' => $data['split']]);
-            $subaccounts = $data['split']['shares']['subaccounts'] ?? [];
+            $splitData = $data['split'];
+            $shares = $splitData['shares'] ?? [];
+
+            // Extract platform's share (our net amount)
+            $netAmount = ($shares['integration'] ?? 0) / 100; // Convert from kobo to Naira
+
+            // Extract agent's share
+            $subaccounts = $shares['subaccounts'] ?? [];
             if (!empty($subaccounts)) {
-                $agentAmount = $subaccounts[0]['amount'] / 100;
-                $splitCode = $data['split']['split_code'] ?? null;
-                Log::info('Agent amount and split code set:', [
-                    'agentAmount' => $agentAmount,
-                    'splitCode' => $splitCode
-                ]);
-            } else {
-                Log::info('No subaccounts found in split data');
+                $agentAmount = $subaccounts[0]['amount'] / 100; // Convert from kobo to Naira
+                $splitCode = $splitData['split_code'] ?? null;
             }
-        } else {
-            Log::info('No split data found in payload');
+
+            // Calculate Paystack fee
+            $paystackFee = ($shares['paystack'] ?? 0) / 100; // Convert from kobo to Naira
         }
 
         $paymentData = [
             'user_id' => $user->id,
             'amount' => $totalAmount,
-            'net_amount' => $data['requested_amount'] / 100,
+            'net_amount' => $netAmount,
             'split_amount_agent' => $agentAmount,
             'split_code' => $splitCode,
+            'paystack_fee' => $paystackFee ?? null,
             'method' => $data['channel'],
             'plan_id' => $plan->id,
             'attempts_purchased' => $plan->number_of_attempts,
