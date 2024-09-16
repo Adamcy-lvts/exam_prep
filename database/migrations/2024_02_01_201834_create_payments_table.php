@@ -17,6 +17,7 @@ return new class extends Migration
             $table->decimal('amount', 8, 2);
             $table->decimal('split_amount_agent', 10, 2)->nullable();
             $table->decimal('net_amount', 10, 2)->nullable();
+            $table->decimal('paystack_fee', 8, 2)->nullable();
             $table->string('split_code')->nullable();
             $table->string('method'); // 'bank_transfer', 'card'
             $table->foreignId('plan_id')->nullable()->constrained('plans');

@@ -80,6 +80,7 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
         'subject_attempts_initialized_at',
         'course_attempts_initialized_at',
         'exam_id',
+        'status',
         'user_type',
         'agent_id',
         'is_on_trial',

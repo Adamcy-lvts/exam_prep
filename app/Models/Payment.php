@@ -18,6 +18,7 @@ class Payment extends Model
         'method',
         'plan_id',
         'payment_for',
+        'paystack_fee',
         'split_amount_agent',
         'net_amount',
         'split_code',
