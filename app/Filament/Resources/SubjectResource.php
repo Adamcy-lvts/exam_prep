@@ -43,6 +43,12 @@ class SubjectResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')->label('Subject'),
+                TextColumn::make('questions_count')
+                    ->label('Number of Questions')
+                    ->counts('questions'),
+                TextColumn::make('topics_count')
+                    ->label('Number of Topics')
+                    ->counts('topics'),
                 TextColumn::make('exam.exam_name'),
                 ToggleColumn::make('is_visible')->label('Visibility')
             ])

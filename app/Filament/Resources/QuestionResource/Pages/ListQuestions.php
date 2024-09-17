@@ -32,135 +32,163 @@ class ListQuestions extends ListRecords
             Actions\CreateAction::make(),
             Action::make('Import')
                 ->action(function (array $data): void {
+                    // Extract form data
                     $file = $data['attachment'];
                     $quizzableType = $data['quizzable_type'];
                     $quizzableId = $data['quizzable_id'];
 
-                    // Adjust the import class to handle the quizzable type and ID
-                    // Excel::import(new QuestionImport($quizzableType, $quizzableId), $file);
+                    // Create an instance of QuestionImport and import the Excel file
                     $import = new QuestionImport($quizzableType, $quizzableId);
                     Excel::import($import, $file);
 
-                    $filename = $data['attachment'];
-                    $pathToFile = $filename;
+                    // Delete the uploaded Excel file after processing
+                    $this->deleteUploadFile($data['attachment']);
 
-                    if (Storage::disk('xlsx')->exists($pathToFile)) {
-                        // Delete the file after processing
-                        Storage::disk('xlsx')->delete($pathToFile);
-                        Log::info("File deleted successfully: " . $pathToFile);
-                    } else {
-                        Log::error("Failed to delete the file: " . $pathToFile);
-                    }
-
+                    // Process question images if provided
                     if ($data['question_image']) {
-                        // Starting the process of handling the ZIP file containing question images.
-                        $zipFile = $data['question_image'];
-
-                        // Retrieve the full path of the uploaded ZIP file on the 'public' disk.
-
-                        $zipFilePath = Storage::disk('public')->path($zipFile);
-
-                        // Define a temporary directory for extracting images from the ZIP file.
-                        $tempDirectory = 'temp_questions_images';
-                        // Ensure that the temporary directory exists.
-                        Storage::disk('public')->makeDirectory($tempDirectory);
-
-                        // Create a new ZipArchive instance to work with the ZIP file.
-                        $zip = new ZipArchive;
-
-                        // Try to open the ZIP file.
-                        if ($zip->open($zipFilePath) === TRUE) {
-                            // If successful, extract the contents of the ZIP file to the temporary directory.
-                            $zip->extractTo(storage_path('app/public/' . $tempDirectory));
-                            // Close the ZIP file after extraction.
-                            $zip->close();
-                        } else {
-                            // Log an error if the ZIP file cannot be opened.
-                            Log::error("Failed to extract ZIP file: " . $zipFile);
-                            return;
-                        }
-
-                        // Log the current state of the 'question-images' directory before processing.
-                        Log::info("Before processing: " . json_encode(Storage::disk('public')->files('question-images')));
-
-                        // Retrieve the list of files (images) in the temporary directory.
-                        $files = Storage::disk('public')->files($tempDirectory);
-                        $manager = new ImageManager(new Driver());
-                        // Process each image from the temporary directory.
-                        foreach ($files as $imagePath) {
-                            // Extract the file extension and filename (without extension) from the image path.
-                            $extension = pathinfo($imagePath, PATHINFO_EXTENSION);
-                            $filename = basename($imagePath, '.' . $extension);
-
-                            // Attempt to find a matching question record based on the image filename (assuming it's an phone).
-                            $question = Question::where('question', $filename)->first();
-
-                            // If a matching question is found...
-                            if ($question) {
-                                // Construct the new path for the question image.
-                                $newImagePath = 'questions-images/question_image_' . $question->id . '.' . $extension;
-
-                                Log::warning($newImagePath);
-                                // create new manager instance
-
-                                // Resize and crop the image using Intervention Image:
-                                $img = $manager->read(storage_path('app/public/' . $imagePath));
-                                $img->cover(300, 300);
-                                $img->save(storage_path('app/public/' . $newImagePath));
-
-                                // You don't need this line anymore. The image has already been saved in the right location.
-                                // Storage::disk('public')->move($imagePath, $newImagePath);
-
-                                // Update the question's profile_image attribute with the new image path and save the record.
-                                $question->question_image = $newImagePath;
-                                $question->save();
-                            } else {
-                                // If there's no matching question for the image, log a warning and delete the unassociated image.
-                                Log::warning("No matching question for image: " . $imagePath);
-                                Storage::disk('public')->delete($imagePath);
-                            }
-                        }
-
-                        // Clean up: Delete the temporary directory used for extraction.
-                        Storage::disk('public')->deleteDirectory($tempDirectory);
-                        // Delete the original ZIP file.
-                        Storage::disk('public')->delete($zipFile);
+                        $this->processQuestionImages($data['question_image']);
                     }
-                if (!empty($import->getErrors())) {
-                    Notification::make()
-                    ->title('Duplicate Questions Found')
-                    ->warning()
-                    ->send();
-                } else {
-                    Notification::make()->title('Record Imported')->success()->send();
-                }
 
+                    // Display appropriate notification based on import results
+                    $this->displayImportNotification($import);
+
+                    // Redirect to the questions index page
                     redirect()->route('filament.admin.resources.questions.index');
                 })
                 ->form([
+                    // Form fields for the import action
                     Select::make('quizzable_type')
                         ->options([
                             'course' => 'Course',
                             'subject' => 'Subject',
                         ])
-                        ->reactive() // Make this field reactive
+                        ->reactive()
                         ->required(),
                     Select::make('quizzable_id')
                         ->options(function (callable $get) {
                             $quizzableType = $get('quizzable_type');
-                            if ($quizzableType === 'course') {
-                                return Course::all()->pluck('title', 'id');
-                            } elseif ($quizzableType === 'subject') {
-                                return Subject::all()->pluck('name', 'id');
-                            }
-                            return [];
+                            return $quizzableType === 'course'
+                                ? Course::all()->pluck('title', 'id')
+                                : Subject::all()->pluck('name', 'id');
                         })
                         ->required(),
-                    FileUpload::make('attachment')->label('Questions File')->required()->preserveFilenames()->disk('xlsx')->directory('excel'),
-                    FileUpload::make('question_image')->label('Questions Images'),
-                    // FileUpload::make('attachment')->disk('xlsx')->directory('app'),
+                    FileUpload::make('attachment')
+                        ->label('Questions File')
+                        ->required()
+                        ->preserveFilenames()
+                        ->disk('xlsx')
+                        ->directory('excel'),
+                    FileUpload::make('question_image')
+                        ->label('Questions Images')
+                        ->disk('public')
+                        ->directory('temp_questions_images'),
                 ])
 
+
         ];
+    }
+
+    /**
+     * Delete the uploaded Excel file after processing
+     *
+     * @param string $filename
+     */
+    private function deleteUploadFile($filename)
+    {
+        $pathToFile = $filename;
+        if (Storage::disk('xlsx')->exists($pathToFile)) {
+            Storage::disk('xlsx')->delete($pathToFile);
+            Log::info("File deleted successfully: " . $pathToFile);
+        } else {
+            Log::error("Failed to delete the file: " . $pathToFile);
+        }
+    }
+
+    /**
+     * Process uploaded question images
+     *
+     * @param string $zipFile
+     */
+    private function processQuestionImages($zipFile)
+    {
+        // Retrieve the full path of the uploaded ZIP file
+        $zipFilePath = Storage::disk('public')->path($zipFile);
+
+        // Define a temporary directory for extracting images
+        $tempDirectory = 'temp_questions_images';
+        Storage::disk('public')->makeDirectory($tempDirectory);
+
+        // Extract ZIP file contents
+        $zip = new ZipArchive;
+        if ($zip->open($zipFilePath) === TRUE) {
+            $zip->extractTo(storage_path('app/public/' . $tempDirectory));
+            $zip->close();
+        } else {
+            Log::error("Failed to extract ZIP file: " . $zipFile);
+            return;
+        }
+
+        // Process extracted images
+        $files = Storage::disk('public')->files($tempDirectory);
+        $manager = new ImageManager(new Driver());
+        foreach ($files as $imagePath) {
+            $this->processIndividualImage($imagePath, $manager);
+        }
+
+        // Clean up: Delete temporary directory and ZIP file
+        Storage::disk('public')->deleteDirectory($tempDirectory);
+        Storage::disk('public')->delete($zipFile);
+    }
+
+    /**
+     * Process an individual image file
+     *
+     * @param string $imagePath
+     * @param ImageManager $manager
+     */
+    private function processIndividualImage($imagePath, $manager)
+    {
+        $extension = pathinfo($imagePath, PATHINFO_EXTENSION);
+        $filename = basename($imagePath, '.' . $extension);
+
+        // Find matching question
+        $question = Question::where('question', $filename)->first();
+
+        if ($question) {
+            $newImagePath = 'questions-images/question_image_' . $question->id . '.' . $extension;
+
+            // Resize and crop the image
+            $img = $manager->read(storage_path('app/public/' . $imagePath));
+            $img->cover(300, 300);
+            $img->save(storage_path('app/public/' . $newImagePath));
+
+            // Update question with new image path
+            $question->question_image = $newImagePath;
+            $question->save();
+        } else {
+            Log::warning("No matching question for image: " . $imagePath);
+            Storage::disk('public')->delete($imagePath);
+        }
+    }
+
+    /**
+     * Display appropriate notification based on import results
+     *
+     * @param QuestionImport $import
+     */
+    private function displayImportNotification($import)
+    {
+        if (!empty($import->getErrors())) {
+            \Filament\Notifications\Notification::make()
+                ->title('Some questions were updated')
+                ->warning()
+                ->send();
+        } else {
+            \Filament\Notifications\Notification::make()
+                ->title('Questions Imported Successfully')
+                ->body($import->getNewEntriesCount() . ' new questions added.')
+                ->success()
+                ->send();
+        }
     }
 }

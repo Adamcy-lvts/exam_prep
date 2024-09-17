@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Plan;
+use App\Models\User;
 use App\Models\Course;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -13,30 +14,20 @@ class CoursesPage extends Component
 {
     use WithPagination;
 
-    // public $courses;
     public $selectedCourses = [];
     public $examId;
     public $search = '';
+    public $user;
 
     public function mount($examId = null)
     {
-
-        // check if user is registered
-        // dd($examId);
+        $this->user = User::find(auth()->id());
+        
         $this->examId = $examId;
         $user = auth()->user();
         if ($user->registration_status === \App\Models\User::STATUS_REGISTRATION_COMPLETED) {
             return redirect()->route('filament.user.pages.dashboard');
         }
-
-        // if($faculty_id){
-        //     $this->courses = Course::where('faculty_id', $faculty_id)->get();
-        // }else{
-            // $this->courses = Course::all();
-
-            // dd($this->courses);
-        // }
-        // dd($this->courses);
     }
 
     public function updatingSearch()
@@ -53,67 +44,147 @@ class CoursesPage extends Component
         }
     }
 
+    // public function registerCourses()
+    // {
+    //     if (count($this->selectedCourses) < 1) {
+    //         Notification::make()
+    //             ->title('Please select at least one course')
+    //             ->info()
+    //             ->send();
+    //         return redirect()->route('courses.page', ['examid' => $this->examId]);
+    //     }
+
+    //     $basicPlan = Plan::where('title', 'Free Access Plan')->first();
+
+    //     $user = auth()->user();
+    //     $user->assignRole('noun_student');
+
+    //     if ($basicPlan) {
+    //         $user->subscriptions()->create([
+    //             'plan_id' => $basicPlan->id,
+    //             'starts_at' => now(),
+    //             'ends_at' => now()->addYears(10),
+    //             'status' => 'active',
+    //             'features' => $basicPlan->features
+    //         ]);
+    //     } else {
+    //         Log::error('Free Access Plan not found during user registration.', ['user_id' => $user->id]);
+    //         return redirect()->back()->withErrors('Free Access Plan not found.');
+    //     }
+
+    //     $user->courses()->detach();
+    //     $user->courses()->attach($this->selectedCourses);
+    //     $user->exam_id = $this->examId;
+    //     $user->registration_status = \App\Models\User::STATUS_REGISTRATION_COMPLETED;
+    //     $user->save();
+
+    //     if (!$user->hasInitializedCourseAttempts()) {
+    //         foreach ($user->courses as $course) {
+    //             $user->courseAttempts()->create([
+    //                 'course_id' => $course->id,
+    //                 'attempts_left' => $basicPlan->number_of_attempts ?? 1,
+    //             ]);
+    //         }
+    //         $user->markCourseAttemptsAsInitialized();
+    //     }
+
+    //     Notification::make()
+    //         ->title('Your courses have been registered successfully.')
+    //         ->success()
+    //         ->send();
+
+    //     return redirect()->route('filament.user.pages.dashboard');
+    // }
+
     public function registerCourses()
     {
+        Log::info('Starting registerCourses method');
+
         if (count($this->selectedCourses) < 1) {
+            Log::warning('No courses selected');
             Notification::make()
                 ->title('Please select at least one course')
                 ->info()
                 ->send();
-            return  redirect()->route('courses.page', ['examid' => $this->examId]);
-
-            return redirect()->route('courses.page');
+            return redirect()->route('courses.page', ['examid' => $this->examId]);
         }
 
-        // Retrieve the Basic Access Plan, if it doesn't exist, log an error or handle it accordingly.
+        Log::info('Selected courses count: ' . count($this->selectedCourses));
+
         $basicPlan = Plan::where('title', 'Free Access Plan')->first();
+        Log::info('Basic Plan found: ' . ($basicPlan ? 'Yes' : 'No'));
 
-        $user = auth()->user();
+        
+        Log::info('User ID: ' . $this->user->id);
 
-        // Assign the noun_student role to the user
-        $user->assignRole('noun_student');
+        try {
+            $this->user->assignRole('noun_student');
+            Log::info('Role assigned: noun_student');
+        } catch (\Exception $e) {
+            Log::error('Error assigning role: ' . $e->getMessage());
+        }
 
         if ($basicPlan) {
-            // Create a subscription for the basic plan. Since it's a free plan, you might not set an expiration date,
-            // or set a very distant future date if you want to enforce checking subscription validity.
-            $user->subscriptions()->create([
-                'plan_id' => $basicPlan->id,
-                'starts_at' => now(),
-                'ends_at' => now()->addYears(10), // Optional: for a free plan, you might not need an expiration.
-                'status' => 'active', // Consider your logic for setting status
-                'features' => $basicPlan->features // Copying features from plan to subscription
-            ]);
+            try {
+                $subscription = $this->user->subscriptions()->create([
+                    'plan_id' => $basicPlan->id,
+                    'starts_at' => now(),
+                    'ends_at' => now()->addYears(10),
+                    'status' => 'active',
+                    'features' => $basicPlan->features
+                ]);
+                Log::info('Subscription created: ' . $subscription->id);
+            } catch (\Exception $e) {
+                Log::error('Error creating subscription: ' . $e->getMessage());
+                return redirect()->back()->withErrors('Error creating subscription.');
+            }
         } else {
-            // Log error or handle the situation where the Free Access Plan doesn't exist.
-            Log::error('Free Access Plan not found during user registration.', ['user_id' => $user->id]);
-        }
-
-        if (!$basicPlan) {
+            Log::error('Free Access Plan not found during user registration.', ['user_id' => $this->user->id]);
             return redirect()->back()->withErrors('Free Access Plan not found.');
         }
 
-        $user = auth()->user();
-        $user->courses()->detach();
-        $user->courses()->attach($this->selectedCourses);
-        $user->exam_id = $this->examId;
-        $user->registration_status = \App\Models\User::STATUS_REGISTRATION_COMPLETED;
-        $user->save();
-
-        if (!$user->hasInitializedCourseAttempts()) {
-            foreach ($user->courses as $course) {
-                $user->courseAttempts()->create([
-                    'course_id' => $course->id,
-                    'attempts_left' => $basicPlan->number_of_attempts ?? 1,
-                ]);
-            }
-            $user->markCourseAttemptsAsInitialized();
+        try {
+            $this->user->courses()->detach();
+            $this->user->courses()->attach($this->selectedCourses);
+            
+            Log::info('Courses attached: ' . implode(', ', $this->selectedCourses));
+        } catch (\Exception $e) {
+            Log::error('Error attaching courses: ' . $e->getMessage());
         }
 
-    
+        $this->user->exam_id = $this->examId;
+        // $this->user->registration_status = \App\Models\User::STATUS_REGISTRATION_COMPLETED;
+        $this->user->update(['registration_status' => User::STATUS_REGISTRATION_COMPLETED]);
+
+        try {
+            $this->user->save();
+            Log::info('User updated with exam_id and registration_status');
+        } catch (\Exception $e) {
+            Log::error('Error saving user: ' . $e->getMessage());
+        }
+
+        if (!$this->user->hasInitializedCourseAttempts()) {
+            try {
+                foreach ($this->user->courses as $course) {
+                    $attempt = $this->user->courseAttempts()->create([
+                        'course_id' => $course->id,
+                        'attempts_left' => $basicPlan->number_of_attempts ?? 1,
+                    ]);
+                    Log::info('Course attempt created: ' . $attempt->id . ' for course: ' . $course->id);
+                }
+                $this->user->markCourseAttemptsAsInitialized();
+                Log::info('Course attempts initialized');
+            } catch (\Exception $e) {
+                Log::error('Error initializing course attempts: ' . $e->getMessage());
+            }
+        }
+        $this->user->updateRegistrationStatus();
         Notification::make()
             ->title('Your courses have been registered successfully.')
             ->success()
             ->send();
+
+        Log::info('Registration completed, redirecting to dashboard');
 
         return redirect()->route('filament.user.pages.dashboard');
     }

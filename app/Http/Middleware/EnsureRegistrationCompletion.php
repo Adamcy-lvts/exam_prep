@@ -2,34 +2,18 @@
 
 namespace App\Http\Middleware;
 
-use Log;
 use Closure;
-use App\Models\Exam;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Log;
 
 class EnsureRegistrationCompletion
 {
-    // filament.user.auth.email-verification.prompt
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
-
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next)
     {
         // Bypass middleware for routes where authentication is not expected
-        if ($request->routeIs('filament.user.auth.login') || $request->routeIs('filament.user.auth.register')) {
-            return $next($request);
-        }
-        $user = Auth::user();
-
-        // Bypass middleware for the email verification route
-        if ($request->routeIs('filament.user.auth.email-verification.verify')) {
+        if ($request->routeIs(['filament.user.auth.login', 'filament.user.auth.register', 'filament.user.auth.logout'])) {
             return $next($request);
         }
 
@@ -38,9 +22,10 @@ class EnsureRegistrationCompletion
             return redirect()->route('filament.user.auth.login');
         }
 
-        // Check if the current route is the email verification prompt
-        if ($request->routeIs('filament.user.auth.email-verification.prompt')) {
-            // If it is, simply continue with the request
+        $user = Auth::user();
+
+        // Bypass middleware for the email verification routes
+        if ($request->routeIs(['filament.user.auth.email-verification.verify', 'filament.user.auth.email-verification.prompt'])) {
             return $next($request);
         }
 
@@ -52,7 +37,7 @@ class EnsureRegistrationCompletion
 
         // If the user has not completed the registration process, redirect them to choose-exam
         if (!$user->isRegistrationComplete()) {
-            if (!$request->routeIs(['choose-exam', 'subjects.page', 'filament.user.auth.logout'])) {
+            if (!$request->routeIs(['choose-exam', 'subjects.page', 'courses.page'])) {
                 return redirect()->route('choose-exam')
                     ->with('warning', 'Please complete your registration to access this page.');
             }
@@ -60,7 +45,4 @@ class EnsureRegistrationCompletion
 
         return $next($request);
     }
-
-
-    
 }
