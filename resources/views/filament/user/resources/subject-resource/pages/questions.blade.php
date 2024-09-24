@@ -93,11 +93,7 @@
             <!-- Enhanced Sidebar for Desktop -->
             <div
                 class="bg-gray-100 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 hidden md:block w-64 flex-shrink-0 flex flex-col">
-                <nav class="sticky top-0 p-4 bg-gray-100 dark:bg-gray-800 z-10">
-                    <h2 class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-4">
-                        Questions
-                    </h2>
-                </nav>
+              
                 <div class="flex-1 overflow-y-auto">
                     <div class="space-y-1 px-4 pb-4">
                         @foreach ($allquestions as $key => $q)
