@@ -89,7 +89,7 @@
 
 
         <!-- Main Content and Traditional Sidebar for medium screens and up -->
-        <div class="flex flex-1 overflow-hidden">
+        <div class="">
             <!-- Enhanced Sidebar for Desktop -->
             <div
                 class="bg-gray-100 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 hidden md:block w-64 flex-shrink-0 flex flex-col">
