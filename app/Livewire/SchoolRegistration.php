@@ -32,10 +32,16 @@ class SchoolRegistration extends Register
 
         $this->token = request()->route('token');
 
-        $this->parentAgent = Agent::whereHas('schoolRegistrationLinks', function ($query) {
-            $query->where('token', $this->token)
-                ->where('expires_at', '>', now());
-        })->firstOrFail();
+        if ($this->token) {
+            $this->parentAgent = Agent::whereHas('schoolRegistrationLinks', function ($query) {
+                $query->where('token', $this->token)
+                    ->where('expires_at', '>', now());
+            })->first();
+
+            if (!$this->parentAgent) {
+                abort(404, 'Invalid or expired registration link');
+            }
+        }
     }
 
     protected function getForms(): array
@@ -59,6 +65,7 @@ class SchoolRegistration extends Register
             ),
         ];
     }
+
 
     public function register(): ?RegistrationResponse
     {
@@ -100,13 +107,8 @@ class SchoolRegistration extends Register
             'account_name' => $data['account_name'],
             'bank_id' => $bank->id,
             'is_school' => true,
-            'parent_agent_id' => $this->parentAgent->id,
+            'parent_agent_id' => $this->parentAgent ? $this->parentAgent->id : null,
         ]);
-
-        // Delete the used registration link
-        // $this->parentAgent->schoolRegistrationLinks()
-        //     ->where('token', $this->token)
-        //     ->delete();
 
         // Prepare data for the subaccount
         $subaccountData = [
@@ -120,8 +122,6 @@ class SchoolRegistration extends Register
         // Dispatch the job to create the subaccount
         dispatch(new CreatePaystackSubaccount($agent, $subaccountData));
 
-        // $this->sendEmailVerificationNotification($user);
-
         Filament::auth()->login($user);
 
         session()->regenerate();
@@ -131,16 +131,16 @@ class SchoolRegistration extends Register
             ->success()
             ->send();
 
-            return $this->getRegistrationResponse($agent);
+        return $this->getRegistrationResponse($agent);
     }
 
     protected function getRegistrationResponse(): RegistrationResponse
     {
         $response = app(RegistrationResponse::class);
-        
+
         // Set the intended URL for redirection after registration
         session()->put('url.intended', route('filament.agent.pages.dashboard'));
-        
+
         return $response;
     }
 

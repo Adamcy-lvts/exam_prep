@@ -7,7 +7,7 @@
                     class="bg-white dark:bg-gray-800 rounded-lg p-8 shadow-sm {{ $user->hasActiveSubscription($plan->id) ? 'border-2 border-green-500' : '' }}">
                     <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">{{ $plan->title }}</h3>
                     <p class="text-3xl font-bold mb-6">{{ formatNaira($plan->price) }}<span
-                            class="text-base font-normal">/{{ $plan->currency }}</span></p>
+                            class="text-base font-normal">/month</span></p>
                     <ul class="mb-8 space-y-4">
                         @foreach (json_decode($plan->features, true) as $feature)
                             <li class="flex items-center">

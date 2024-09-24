@@ -65,6 +65,8 @@ class Register extends AuthRegister
      
         $user = $this->getUserModel()::create($data);
 
+        $user->update(['user_type' => 'user']);
+
         $user->assignRole('panel_user');
 
         // If a referral code is present, link the user to the agent

@@ -28,7 +28,7 @@
                     Previous
                 </span>
             @else
-                <button wire:click="previousPage" rel="prev"
+                <button type="button" wire:click="previousPage" rel="prev"
                     class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 leading-5 rounded-md hover:text-gray-500 focus:outline-none focus:ring ring-gray-300 focus:border-blue-300 active:bg-gray-100 active:text-gray-700 transition ease-in-out duration-150 dark:hover:bg-green-600 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white">
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd"
@@ -64,7 +64,7 @@
 
             {{-- Next Page Link --}}
             @if ($paginator->hasMorePages())
-                <button wire:click="nextPage" rel="next"
+                <button wire:click="nextPage" rel="next" type="button"
                     class="relative inline-flex items-center px-4 py-2 ml-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 leading-5 rounded-md hover:text-gray-500 focus:outline-none focus:ring ring-gray-300 focus:border-blue-300 active:bg-gray-100 active:text-gray-700 transition ease-in-out duration-150 dark:hover:bg-green-600 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white">
                     Next
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">

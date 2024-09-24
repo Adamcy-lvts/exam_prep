@@ -9,54 +9,42 @@ use App\Models\Course;
 use App\Models\Module;
 use App\Models\Subject;
 use App\Models\Question;
+use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class QuestionImport implements ToCollection, WithHeadingRow
 {
-    // Properties to store import-related data
     protected $quizzable;
     protected $quizId;
     public $errors = [];
     private $newEntriesCount = 0;
+    private $imageFiles;
+    private $originalFilenames;
 
-    /**
-     * Constructor to initialize the import with quizzable type and ID
-     *
-     * @param string $quizzableType 'course' or 'subject'
-     * @param int $quizzableId ID of the course or subject
-     */
-    public function __construct($quizzableType, $quizzableId)
+    public function __construct($quizzableType, $quizzableId, $imageFiles, $originalFilenames)
     {
-        // Determine the quizzable model based on the type
         $this->quizzable = $quizzableType == 'course'
             ? Course::findOrFail($quizzableId)
             : Subject::findOrFail($quizzableId);
+        $this->imageFiles = $imageFiles;
+        $this->originalFilenames = $originalFilenames;
     }
 
-    /**
-     * Main method to process the imported collection
-     *
-     * @param Collection $rows
-     */
     public function collection(Collection $rows)
     {
-        // Create or update the quiz
         $quiz = $this->createOrUpdateQuiz($rows);
 
-        // Process each row (question) in the collection
         foreach ($rows as $row) {
             $this->processQuestion($row, $quiz);
         }
+
+        $this->processQuestionImages();
     }
 
-    /**
-     * Create or update the quiz based on the imported data
-     *
-     * @param Collection $rows
-     * @return Quiz
-     */
     protected function createOrUpdateQuiz($rows)
     {
         $totalMarks = $rows->sum('mark');
@@ -77,48 +65,40 @@ class QuestionImport implements ToCollection, WithHeadingRow
         );
     }
 
-    /**
-     * Process a single question row
-     *
-     * @param array $row
-     * @param Quiz $quiz
-     */
     protected function processQuestion($row, $quiz)
     {
-        // Find or create module, unit, and topic
         $moduleUnitTopic = $this->findOrCreateModuleUnitTopic($row);
 
-        // Create or update the question
+        $questionData = [
+            'marks' => $row['mark'],
+            'quizzable_id' => $this->quizzable->id,
+            'quizzable_type' => get_class($this->quizzable),
+            'type' => strtolower($row['type']),
+            'topic_id' => $moduleUnitTopic['topic'] ? $moduleUnitTopic['topic']->id : null,
+            'explanation' => $row['explanation'] ?? null,
+            'quiz_id' => $quiz->id,
+        ];
+
+        // Handle the image filename
+        if (isset($row['image_filename']) && !empty($row['image_filename'])) {
+            $questionData['question_image'] = $row['image_filename'];
+        }
+
         $question = Question::updateOrCreate(
-            [
-                'question' => $row['question'],
-                'quiz_id' => $quiz->id,
-            ],
-            [
-                'marks' => $row['mark'],
-                'quizzable_id' => $this->quizzable->id,
-                'quizzable_type' => get_class($this->quizzable),
-                'type' => strtolower($row['type']),
-                'topic_id' => $moduleUnitTopic['topic'] ? $moduleUnitTopic['topic']->id : null,
-                'explanation' => $row['explanation'] ?? null,
-            ]
+            ['question' => $row['question']],
+            $questionData
         );
 
-        // Handle new entries and options
         if ($question->wasRecentlyCreated) {
             $this->newEntriesCount++;
             $this->handleOptions($question, $row);
         } else {
             $this->errors[] = "Question updated (not newly created): " . $row['question'];
         }
+
+        Log::info("Question " . ($question->wasRecentlyCreated ? "created" : "updated") . " with ID {$question->id}. Image filename: " . ($questionData['question_image'] ?? 'Not provided'));
     }
 
-    /**
-     * Handle options for MCQ and True/False questions
-     *
-     * @param Question $question
-     * @param array $row
-     */
     protected function handleOptions($question, $row)
     {
         $optionColumns = ['option_a', 'option_b', 'option_c', 'option_d'];
@@ -141,12 +121,6 @@ class QuestionImport implements ToCollection, WithHeadingRow
         }
     }
 
-    /**
-     * Find or create module, unit, and topic based on the row data
-     *
-     * @param array $row
-     * @return array
-     */
     protected function findOrCreateModuleUnitTopic($row)
     {
         $moduleName = $row['module'] ?? null;
@@ -180,21 +154,52 @@ class QuestionImport implements ToCollection, WithHeadingRow
         return ['module' => $module, 'unit' => $unit, 'topic' => $topic];
     }
 
-    /**
-     * Get the count of new entries
-     *
-     * @return int
-     */
+    private function processQuestionImages()
+    {
+        foreach ($this->imageFiles as $imagePath) {
+            $this->processSingleImage($imagePath);
+        }
+    }
+
+    private function processSingleImage($imagePath)
+    {
+        Log::info("Processing image: " . $imagePath);
+        $originalFilename = $this->getOriginalFilename($imagePath);
+        $filenameWithoutExtension = pathinfo($originalFilename, PATHINFO_FILENAME);
+
+        $question = Question::where('question_image', 'LIKE', $filenameWithoutExtension . '%')
+            ->orWhere('question', 'LIKE', $filenameWithoutExtension . '%')
+            ->first();
+
+        if ($question) {
+            $newImagePath = 'questions-images/' . $originalFilename;
+
+            Log::info("Question found. New image path: " . $newImagePath);
+
+            // Move the file instead of processing it with Intervention Image
+            if (Storage::disk('public')->move($imagePath, $newImagePath)) {
+                $question->question_image = $newImagePath;
+                $question->save();
+
+                Log::info("Question updated with new image path: " . $newImagePath);
+            } else {
+                Log::error("Failed to move image: " . $imagePath);
+            }
+        } else {
+            Log::warning("No matching question for image: " . $originalFilename);
+        }
+    }
+
+    private function getOriginalFilename($uploadedFilename)
+    {
+        return $this->originalFilenames[$uploadedFilename] ?? $uploadedFilename;
+    }
+
     public function getNewEntriesCount()
     {
         return $this->newEntriesCount;
     }
 
-    /**
-     * Get any errors that occurred during import
-     *
-     * @return array
-     */
     public function getErrors()
     {
         return $this->errors;

@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Select;
 use App\Jobs\CreatePaystackSubaccount;
 use App\Models\SchoolRegistrationLink;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -102,6 +103,22 @@ class AgentResource extends Resource
                         'primary' => 'Individual',
                         'success' => 'School',
                     ]),
+                TextColumn::make('parent_agent')
+                    ->label('Parent Agent')
+                    ->getStateUsing(function ($record) {
+                        if (!$record->is_school) {
+                            return 'N/A';
+                        }
+                        return $record->parentAgent ? $record->parentAgent->business_name : 'None';
+                    })
+                    ->description(function ($record) {
+                        if (!$record->is_school) {
+                            return 'Not applicable for individual agents';
+                        }
+                        return $record->parentAgent
+                            ? "Full Name: {$record->parentAgent->user->full_name}"
+                            : 'This school does not have a parent agent';
+                    }),
                 TextColumn::make('account_number')
                     ->label('Account Number')
                     ->sortable(),

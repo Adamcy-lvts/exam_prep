@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('unit_id')->nullable()->constrained()->onDelete('cascade');
             $table->integer('order')->nullable();
             $table->timestamps();
-            $table->unique('name', 'unique_topic_names');
+            $table->unique(['name', 'topicable_id', 'topicable_type'], 'unique_topic_per_quizzable');
         });
     }
 

@@ -64,7 +64,7 @@ Route::middleware(['auth', 'prevent-agent'])->group(function () {
 
 
 
-Route::get('/school/register/{token}', SchoolRegistration::class)->name('school.register');
+Route::get('/school/register/{token?}', SchoolRegistration::class)->name('school.register');
 
 Route::webhooks('webhook/paystack', 'paystack');
 

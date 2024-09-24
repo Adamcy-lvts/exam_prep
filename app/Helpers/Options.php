@@ -34,4 +34,14 @@ class Options
             'Suspended' => 'Suspended',
         ];
     }
+
+    public static function userTypes() {
+        return [
+            'admin' => 'admin',
+            'super_admin' => 'super_admin',
+            'agent' => 'agent',
+            'agent_school' => 'agent_school',
+            'user' => 'user'
+        ];
+    }
 }

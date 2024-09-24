@@ -117,40 +117,6 @@ class PaymentForm extends Page
             ]);
     }
 
-    // public function redirectToGateway()
-    // {
-    //     $user = auth()->user();
-    //     $agent = $user->referringAgents()->first();
-
-    //     $splitData = null;
-    //     if ($agent && $agent->subaccount_code) {
-    //         $splitData = [
-    //             "type" => "percentage",
-    //             "currency" => "NGN",
-    //             "subaccounts" => [
-    //                 ["subaccount" => $agent->subaccount_code, "share" => 20],
-    //             ],
-    //             "bearer_type" => "all",
-    //             "main_account_share" => 90
-    //         ];
-    //     }
-
-    //     $data = [
-    //         'amount' => $this->plan->price * 100,
-    //         'email' => $user->email,
-    //         'reference' => Paystack::genTranxRef(),
-    //         'metadata' => ['planId' => $this->plan->id, 'userId' => $user->id, 'agent_id' => isset($agent) ? $agent->id : null],
-    //         'split' => $splitData ? json_encode($splitData) : null
-    //     ];
-
-    //     try {
-    //         $response = Paystack::getAuthorizationUrl($data)->redirectNow();
-    //         return $response;
-    //     } catch (\Exception $e) {
-    //         Log::error('Payment initialization failed:', ['message' => $e->getMessage(), 'stack' => $e->getTraceAsString()]);
-    //         return Redirect::back()->withErrors('Failed to initiate payment. Please try again.');
-    //     }
-    // }
 
     public function redirectToGateway()
     {
