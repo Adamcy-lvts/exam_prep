@@ -152,7 +152,7 @@
 
                                 @foreach ($questions as $key => $question)
                                     <div id="q{{ ($questions->currentPage() - 1) * 5 + $loop->iteration }}"
-                                        class="bg-white dark:bg-gray-800 shadow sm:rounded-lg overflow-hidden">
+                                        class="bg-white dark:bg-gray-700 shadow sm:rounded-lg overflow-hidden">
                                         <div class="px-4 py-5 sm:p-6">
                                             <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
                                                 Question {{ ($questions->currentPage() - 1) * 5 + $loop->iteration }}:
