@@ -91,15 +91,14 @@
         <!-- Main Content and Traditional Sidebar for medium screens and up -->
         <div class="flex flex-1 overflow-hidden">
             <!-- Enhanced Sidebar for Desktop -->
-            <!-- Enhanced Scrollable Sidebar for Desktop -->
             <div
-                class="bg-gray-100 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 hidden md:block w-64 flex-shrink-0">
-                <div class="h-full overflow-y-auto">
-                    <nav class="sticky top-0 p-4 bg-gray-100 dark:bg-gray-800">
-                        <h2 class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-4">
-                            Questions
-                        </h2>
-                    </nav>
+                class="bg-gray-100 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 hidden md:block w-64 flex-shrink-0 flex flex-col">
+                <nav class="sticky top-0 p-4 bg-gray-100 dark:bg-gray-800 z-10">
+                    <h2 class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-4">
+                        Questions
+                    </h2>
+                </nav>
+                <div class="flex-1 overflow-y-auto">
                     <div class="space-y-1 px-4 pb-4">
                         @foreach ($allquestions as $key => $q)
                             @php
@@ -108,8 +107,8 @@
                             @endphp
                             <a href="{{ route('filament.user.resources.subjects.questions', ['record' => $quizzable->id, 'quizzableType' => $quizzableType, 'page' => $pageNumber]) . '#q' . ($key + 1) }}"
                                 class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 ease-in-out
-                                      {{ $loop->iteration == ($questions->currentPage() - 1) * 5 + 1 ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }}
-                                      {{ $isAnswered ? 'bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200' : '' }}">
+                          {{ $loop->iteration == ($questions->currentPage() - 1) * 5 + 1 ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }}
+                          {{ $isAnswered ? 'bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200' : '' }}">
                                 Q{{ $key + 1 }}
                                 @if ($isAnswered)
                                     <svg class="ml-2 h-4 w-4 text-green-500" fill="none" stroke="currentColor"
