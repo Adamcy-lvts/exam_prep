@@ -101,7 +101,7 @@
                             class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2 px-3">
                             Questions
                         </h2>
-                        <div class="space-y-1">
+                        <div class="space-y-1 overflow-y-auto">
                             @foreach ($allquestions as $key => $q)
                                 @php
                                     $pageNumber = ceil(($key + 1) / 5);
