@@ -107,10 +107,10 @@ class StatsOverview extends BaseWidget
                 ->description('Total commission earned from referrals')
                 ->descriptionIcon('heroicon-o-currency-dollar')
                 ->color('warning'),
-            Stat::make('Referred Schools', $totalReferredSchools)
-                ->description('Number of schools registered through your link')
-                ->descriptionIcon('heroicon-o-academic-cap')
-                ->color('info'),
+            // Stat::make('Referred Schools', $totalReferredSchools)
+            //     ->description('Number of schools registered through your link')
+            //     ->descriptionIcon('heroicon-o-academic-cap')
+            //     ->color('info'),
         ];
     }
 }
