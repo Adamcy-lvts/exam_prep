@@ -3,6 +3,7 @@
 namespace App\Filament\User\Resources\SubjectResource\Pages;
 
 use App\Models\Plan;
+use App\Models\Agent;
 use App\Models\Payment;
 use App\Models\Receipt;
 use Filament\Forms\Form;
@@ -13,18 +14,18 @@ use Illuminate\Support\HtmlString;
 use Spatie\LaravelPdf\Facades\Pdf;
 use Illuminate\Support\Facades\Log;
 use Spatie\Browsershot\Browsershot;
+use Filament\Forms\Components\Radio;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
-use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Redirect;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Actions\Action;
 use Unicodeveloper\Paystack\Facades\Paystack;
 use App\Filament\User\Resources\SubjectResource;
-use Filament\Forms\Components\Placeholder;
 
 class PaymentForm extends Page
 {
@@ -118,51 +119,122 @@ class PaymentForm extends Page
     }
 
 
+    // public function redirectToGateway()
+    // {
+    //     $user = auth()->user();
+    //     $agent = $user->referringAgents()->first();
+    //     $school = $user->getReferringSchool();
+
+    //     $splitData = null;
+    //     $subaccounts = [];
+
+    //     // Case 1: User referred by an individual agent
+    //     if ($agent && !$school && $agent->subaccount_code) {
+    //         $subaccounts[] = [
+    //             "subaccount" => $agent->subaccount_code,
+    //             "share" => 20 // 20% to the agent
+    //         ];
+    //     }
+    //     // Case 2: User is a student referred by a school
+    //     elseif ($school && $school->subaccount_code) {
+    //         $subaccounts[] = [
+    //             "subaccount" => $school->subaccount_code,
+    //             "share" => 20 // 15% to the school
+    //         ];
+
+    //         // Check if the school was referred by an agent
+    //         $schoolAgent = $school->parentAgent()->first();
+    //         if ($schoolAgent && $schoolAgent->subaccount_code) {
+    //             $subaccounts[] = [
+    //                 "subaccount" => $schoolAgent->subaccount_code,
+    //                 "share" => 10 // 5% to the agent who referred the school
+    //             ];
+    //         }
+    //     }
+
+    //     // Calculate main account share
+    //     $totalShare = array_sum(array_column($subaccounts, 'share'));
+    //     $mainAccountShare = 100 - $totalShare;
+
+    //     if (!empty($subaccounts)) {
+    //         $splitData = [
+    //             "type" => "percentage",
+    //             "currency" => "NGN",
+    //             "subaccounts" => $subaccounts,
+    //             "bearer_type" => "account",
+    //             "main_account_share" => $mainAccountShare
+    //         ];
+    //     }
+
+    //     $data = [
+    //         'amount' => $this->plan->price * 100,
+    //         'email' => $user->email,
+    //         'reference' => Paystack::genTranxRef(),
+    //         'metadata' => [
+    //             'planId' => $this->plan->id,
+    //             'userId' => $user->id,
+    //             'agentId' => $agent ? $agent->id : null,
+    //             'schoolId' => $school ? $school->id : null
+    //         ],
+    //         'split' => $splitData ? json_encode($splitData) : null
+    //     ];
+
+    //     try {
+    //         $response = Paystack::getAuthorizationUrl($data)->redirectNow();
+    //         return $response;
+    //     } catch (\Exception $e) {
+    //         Log::error('Payment initialization failed:', ['message' => $e->getMessage(), 'stack' => $e->getTraceAsString()]);
+    //         return Redirect::back()->withErrors('Failed to initiate payment. Please try again.');
+    //     }
+    // }
+
     public function redirectToGateway()
     {
         $user = auth()->user();
-        $agent = $user->referringAgents()->first();
-        $school = $user->getReferringSchool();
-
+        $agent = $user->referringAgent;
         $splitData = null;
-        $subaccounts = [];
 
-        // Case 1: User referred by an individual agent
-        if ($agent && !$school && $agent->subaccount_code) {
-            $subaccounts[] = [
-                "subaccount" => $agent->subaccount_code,
-                "share" => 20 // 20% to the agent
-            ];
-        }
-        // Case 2: User is a student referred by a school
-        elseif ($school && $school->subaccount_code) {
-            $subaccounts[] = [
-                "subaccount" => $school->subaccount_code,
-                "share" => 20 // 15% to the school
-            ];
+        if ($agent) {
+            $subaccounts = [];
+            $mainAccountShare = 100;
 
-            // Check if the school was referred by an agent
-            $schoolAgent = $school->parentAgent()->first();
-            if ($schoolAgent && $schoolAgent->subaccount_code) {
+            // If the agent is a school
+            if ($agent->is_school) {
                 $subaccounts[] = [
-                    "subaccount" => $schoolAgent->subaccount_code,
-                    "share" => 10 // 5% to the agent who referred the school
+                    "subaccount" => $agent->subaccount_code,
+                    "share" => $agent->percentage
+                ];
+                $mainAccountShare -= $agent->percentage;
+
+                // If the school has a parent agent
+                if ($agent->parent_agent_id) {
+                    $parentAgent = Agent::find($agent->parent_agent_id);
+                    if ($parentAgent && $parentAgent->subaccount_code) {
+                        $subaccounts[] = [
+                            "subaccount" => $parentAgent->subaccount_code,
+                            "share" => $parentAgent->percentage
+                        ];
+                        $mainAccountShare -= $parentAgent->percentage;
+                    }
+                }
+            } else {
+                // Regular agent
+                $subaccounts[] = [
+                    "subaccount" => $agent->subaccount_code,
+                    "share" => $agent->percentage
+                ];
+                $mainAccountShare -= $agent->percentage;
+            }
+
+            if (!empty($subaccounts)) {
+                $splitData = [
+                    "type" => "percentage",
+                    "currency" => "NGN",
+                    "subaccounts" => $subaccounts,
+                    "bearer_type" => "account",
+                    "main_account_share" => $mainAccountShare
                 ];
             }
-        }
-
-        // Calculate main account share
-        $totalShare = array_sum(array_column($subaccounts, 'share'));
-        $mainAccountShare = 100 - $totalShare;
-
-        if (!empty($subaccounts)) {
-            $splitData = [
-                "type" => "percentage",
-                "currency" => "NGN",
-                "subaccounts" => $subaccounts,
-                "bearer_type" => "account",
-                "main_account_share" => $mainAccountShare
-            ];
         }
 
         $data = [
@@ -173,7 +245,6 @@ class PaymentForm extends Page
                 'planId' => $this->plan->id,
                 'userId' => $user->id,
                 'agentId' => $agent ? $agent->id : null,
-                'schoolId' => $school ? $school->id : null
             ],
             'split' => $splitData ? json_encode($splitData) : null
         ];
