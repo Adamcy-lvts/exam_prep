@@ -191,14 +191,14 @@ class PaymentForm extends Page
     public function redirectToGateway()
     {
         $user = auth()->user();
-        $agent = $user->referringAgent;
+        $agent = $user->getReferringAgent();
         $splitData = null;
 
         if ($agent) {
             $subaccounts = [];
             $mainAccountShare = 100;
 
-            // If the agent is a school
+            // Check if the agent is a school
             if ($agent->is_school) {
                 $subaccounts[] = [
                     "subaccount" => $agent->subaccount_code,
@@ -232,7 +232,7 @@ class PaymentForm extends Page
                     "currency" => "NGN",
                     "subaccounts" => $subaccounts,
                     "bearer_type" => "account",
-                    "main_account_share" => $mainAccountShare
+                    "main_account_share" => max(0, $mainAccountShare) // Ensure it's not negative
                 ];
             }
         }
