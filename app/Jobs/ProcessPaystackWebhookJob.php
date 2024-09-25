@@ -46,22 +46,15 @@ class ProcessPaystackWebhookJob extends ProcessWebhookJob implements ShouldQueue
     protected function handlePaymentSuccess($data)
     {
         try {
-            $userEmail = $data['customer']['email'];
-            $user = User::where('email', $userEmail)->firstOrFail();
-            $planId = $data['metadata']['planId'] ?? null;
-
-            if (!$planId || !$plan = Plan::find($planId)) {
-                throw new Exception('Invalid plan ID or plan not found.');
-            }
+            $user = User::where('email', $data['customer']['email'])->firstOrFail();
+            $plan = Plan::findOrFail($data['metadata']['planId'] ?? null);
 
             $payment = $this->createPayment($user, $data, $plan);
             $receipt = $this->createReceipt($payment, $data);
 
             $this->manageSubscription($user, $plan);
             $this->sendReceiptByEmail($payment, $receipt);
-
-            // Record all splits
-            $this->recordSplitPayments($user, $data);
+            $this->recordReferralPayments($user, $data);
 
             Log::info('Payment processed successfully', ['payment_id' => $payment->id]);
         } catch (\Throwable $e) {
@@ -77,9 +70,9 @@ class ProcessPaystackWebhookJob extends ProcessWebhookJob implements ShouldQueue
         $paymentData = [
             'user_id' => $user->id,
             'amount' => $totalAmount,
-            'net_amount' => ($splitData['shares']['integration'] ?? $totalAmount),
+            'net_amount' => ($splitData['shares']['integration'] ?? $totalAmount) / 100,
             'split_code' => $splitData['split_code'] ?? null,
-            'paystack_fee' => ($splitData['shares']['paystack'] ?? 0) / 100,
+            'paystack_fee' => ($data['fees'] ?? 0) / 100,
             'method' => $data['channel'],
             'plan_id' => $plan->id,
             'attempts_purchased' => $plan->number_of_attempts,
@@ -92,62 +85,31 @@ class ProcessPaystackWebhookJob extends ProcessWebhookJob implements ShouldQueue
             'transaction_ref' => $data['reference'],
         ];
 
-        // Add split amounts for each subaccount
-        foreach ($splitData['shares']['subaccounts'] ?? [] as $subaccount) {
-            $subaccountCode = $subaccount['subaccount_code'];
-            $paymentData["split_amount_{$subaccountCode}"] = $subaccount['amount'] / 100;
-        }
-
-        Log::info('Creating payment with data:', $paymentData);
-
         return Payment::create($paymentData);
     }
 
-    private function recordSplitPayments($user, $data)
+    private function recordReferralPayments($user, $data)
     {
         $splitData = $data['split'] ?? [];
         if (empty($splitData) || empty($splitData['shares']['subaccounts'])) {
-            Log::info('No split payments to record for this transaction.');
             return;
         }
 
-        $totalAmount = $data['amount'] / 100; // Convert from kobo to Naira
-
         foreach ($splitData['shares']['subaccounts'] as $subaccount) {
-            $amount = $subaccount['amount'] / 100; // Convert from kobo to Naira
-            $subaccountCode = $subaccount['subaccount_code'];
-
-            $agent = Agent::where('subaccount_code', $subaccountCode)->first();
-
+            $agent = Agent::where('subaccount_code', $subaccount['subaccount_code'])->first();
             if ($agent) {
-                $this->recordReferralPayment($user, $agent, $amount, $data);
-
-                // If this agent is a school and has a parent agent, also record a payment for the parent agent
-                if ($agent->is_school && $agent->parent_agent_id) {
-                    $parentAgent = Agent::find($agent->parent_agent_id);
-                    if ($parentAgent) {
-                        // Assuming the parent agent gets a fixed percentage or amount
-                        $parentAgentAmount = $amount * 0.25; // 25% of school's amount, adjust as needed
-                        $this->recordReferralPayment($user, $parentAgent, $parentAgentAmount, $data);
-                    }
-                }
-            } else {
-                Log::warning("No agent found for subaccount code: {$subaccountCode}");
+                ReferralPayment::create([
+                    'agent_id' => $agent->id,
+                    'user_id' => $user->id,
+                    'amount' => $subaccount['amount'] / 100, // Convert from kobo to Naira
+                    'split_code' => $splitData['split_code'] ?? null,
+                    'status' => 'completed',
+                    'payment_date' => now(),
+                ]);
             }
         }
     }
 
-    private function recordReferralPayment($user, $agent, $amount, $data)
-    {
-        ReferralPayment::create([
-            'agent_id' => $agent->id,
-            'user_id' => $user->id,
-            'amount' => $amount,
-            'split_code' => $data['split']['split_code'] ?? null,
-            'status' => 'completed',
-            'payment_date' => now(),
-        ]);
-    }
 
     private function createReceipt($payment, $data)
     {
