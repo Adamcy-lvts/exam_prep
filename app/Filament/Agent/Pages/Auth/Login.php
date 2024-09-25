@@ -64,7 +64,7 @@ class Login extends BaseLogin
 
         $notification = Notification::make()
             ->title("User Logged In")
-            ->body("{$user->staff->full_name} has logged in.")
+            ->body("{$user->full_name} has logged in.")
             ->success();
 
         // Send notification to super admins

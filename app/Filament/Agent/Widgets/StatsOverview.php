@@ -2,6 +2,7 @@
 
 namespace App\Filament\Agent\Widgets;
 
+use App\Models\SchoolRegistrationLink;
 use Illuminate\Support\Facades\Auth;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
@@ -18,7 +19,12 @@ class StatsOverview extends BaseWidget
 
         $agent = $user->agent;
 
-        return $agent->is_school ? $this->getSchoolStats($agent) : $this->getIndividualAgentStats($agent);
+        // Check if the agent has a valid school registration link
+        $hasValidSchoolLink = SchoolRegistrationLink::where('agent_id', $agent->id)
+            ->where('expires_at', '>', now())
+            ->exists();
+
+        return $hasValidSchoolLink ? $this->getSchoolStats($agent) : $this->getIndividualAgentStats($agent);
     }
 
     protected function getNoAgentStats(): array
@@ -54,7 +60,7 @@ class StatsOverview extends BaseWidget
                 ->description('Number of students with active subscriptions')
                 ->descriptionIcon('heroicon-o-bookmark')
                 ->color('success'),
-            Stat::make('Total Revenue Generated', number_format($totalRevenue, 2) . ' NGN')
+            Stat::make('Total Revenue Generated', formatNaira($totalRevenue))
                 ->description('Total revenue generated from student subscriptions')
                 ->descriptionIcon('heroicon-o-banknotes')
                 ->color('info'),
@@ -76,15 +82,6 @@ class StatsOverview extends BaseWidget
         // Total commission earned from referral payments
         $totalCommission = $agent->referralPayments()->sum('amount');
 
-        // Total referred schools
-        $totalReferredSchools = $agent->referredSchools()->count();
-
-        // Total revenue generated from referred schools
-        $totalSchoolRevenue = $agent->referredSchools()
-            ->withSum('referralPayments', 'amount')
-            ->get()
-            ->sum('referral_payments_sum_amount');
-
         return [
             Stat::make('Total Referred Users', $totalReferredUsers)
                 ->description('Number of users referred by you')
@@ -94,18 +91,10 @@ class StatsOverview extends BaseWidget
                 ->description('Number of subscriptions excluding the free plan')
                 ->descriptionIcon('heroicon-o-rectangle-stack')
                 ->color('success'),
-            Stat::make('Total Commission Earned', number_format($totalCommission, 2) . ' NGN')
+            Stat::make('Total Commission Earned', formatNaira($totalCommission))
                 ->description('Total commission earned from referrals')
                 ->descriptionIcon('heroicon-o-currency-dollar')
                 ->color('info'),
-            Stat::make('Referred Schools', $totalReferredSchools)
-                ->description('Number of schools registered through your link')
-                ->descriptionIcon('heroicon-o-academic-cap')
-                ->color('warning'),
-            Stat::make('School-Generated Revenue', number_format($totalSchoolRevenue, 2) . ' NGN')
-                ->description('Total revenue generated from referred schools')
-                ->descriptionIcon('heroicon-o-building-library')
-                ->color('success'),
         ];
     }
 }
