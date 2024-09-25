@@ -24,7 +24,13 @@ class StatsOverview extends BaseWidget
             ->where('expires_at', '>', now())
             ->exists();
 
-        return $hasValidSchoolLink ? $this->getSchoolStats($agent) : $this->getIndividualAgentStats($agent);
+        $stats = $this->getIndividualAgentStats($agent);
+
+        if ($hasValidSchoolLink) {
+            $stats = array_merge($stats, $this->getSchoolStats($agent));
+        }
+
+        return $stats;
     }
 
     protected function getNoAgentStats(): array
@@ -48,21 +54,24 @@ class StatsOverview extends BaseWidget
             })
             ->count();
 
-        // Total revenue generated
-        $totalRevenue = $agent->referralPayments()->sum('amount');
+        // Total revenue generated from schools
+        $totalSchoolRevenue = $agent->referredSchools()
+            ->withSum('referralPayments', 'amount')
+            ->get()
+            ->sum('referral_payments_sum_amount');
 
         return [
             Stat::make('Total Registered Students', $totalRegisteredStudents)
                 ->description('Number of students registered through your link')
                 ->descriptionIcon('heroicon-o-academic-cap')
                 ->color('primary'),
-            Stat::make('Active Subscriptions', $totalActiveSubscriptions)
+            Stat::make('Active Student Subscriptions', $totalActiveSubscriptions)
                 ->description('Number of students with active subscriptions')
                 ->descriptionIcon('heroicon-o-bookmark')
                 ->color('success'),
-            Stat::make('Total Revenue Generated', formatNaira($totalRevenue))
-                ->description('Total revenue generated from student subscriptions')
-                ->descriptionIcon('heroicon-o-banknotes')
+            Stat::make('Total School Revenue', formatNaira($totalSchoolRevenue))
+                ->description('Total revenue generated from referred schools')
+                ->descriptionIcon('heroicon-o-building-library')
                 ->color('info'),
         ];
     }
@@ -82,18 +91,25 @@ class StatsOverview extends BaseWidget
         // Total commission earned from referral payments
         $totalCommission = $agent->referralPayments()->sum('amount');
 
+        // Total referred schools
+        $totalReferredSchools = $agent->referredSchools()->count();
+
         return [
             Stat::make('Total Referred Users', $totalReferredUsers)
                 ->description('Number of users referred by you')
                 ->descriptionIcon('heroicon-o-users')
                 ->color('primary'),
-            Stat::make('Total Subscriptions', $totalSubscriptions)
+            Stat::make('Total User Subscriptions', $totalSubscriptions)
                 ->description('Number of subscriptions excluding the free plan')
                 ->descriptionIcon('heroicon-o-rectangle-stack')
                 ->color('success'),
             Stat::make('Total Commission Earned', formatNaira($totalCommission))
                 ->description('Total commission earned from referrals')
                 ->descriptionIcon('heroicon-o-currency-dollar')
+                ->color('warning'),
+            Stat::make('Referred Schools', $totalReferredSchools)
+                ->description('Number of schools registered through your link')
+                ->descriptionIcon('heroicon-o-academic-cap')
                 ->color('info'),
         ];
     }
