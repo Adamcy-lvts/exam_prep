@@ -14,11 +14,12 @@ use App\Livewire\SubjectsPage;
 use App\Livewire\StudyFieldPage;
 use App\Livewire\InstructionPage;
 use App\Livewire\SubjectsLessons;
+use App\Livewire\SchoolRegistration;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\FacultyController;
 use App\Http\Controllers\PaymentController;
-use App\Livewire\SchoolRegistration;
+use App\Http\Controllers\ProofOfPaymentController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -62,7 +63,7 @@ Route::middleware(['auth', 'prevent-agent'])->group(function () {
     Route::get('/payment/callback', [PaymentController::class, 'handleGatewayCallback']);
 });
 
-
+Route::get('/download-proof/{payment}', [ProofOfPaymentController::class, 'downloadProof'])->name('download.proof');
 
 Route::get('/school/register/{token?}', SchoolRegistration::class)->name('school.register');
 

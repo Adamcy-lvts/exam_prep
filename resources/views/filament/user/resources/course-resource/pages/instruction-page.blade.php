@@ -37,9 +37,9 @@
             <div class="flex divide-x divide-gray-200 shadow-sm rounded-lg overflow-hidden">
                 @php
                     $allOptions = [20, 50, 70, 100, 150];
-                    $accessibleOptions = $this->user->hasFeature('Flexible quizzes (20-150 questions)')
+                    $accessibleOptions = $this->user->hasFeature('Up to 150 questions per quiz')
                         ? [20, 50, 70, 100, 150]
-                        : ($this->user->hasFeature('Flexible quizzes (20-70 questions)')
+                        : ($this->user->hasFeature('70 questions per quiz')
                             ? [20, 50, 70]
                             : ($this->user->hasFeature('20 questions per quiz')
                                 ? [20]

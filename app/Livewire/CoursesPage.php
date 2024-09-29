@@ -54,7 +54,7 @@ class CoursesPage extends Component
     //         return redirect()->route('courses.page', ['examid' => $this->examId]);
     //     }
 
-    //     $basicPlan = Plan::where('title', 'Free Access Plan')->first();
+    //     $basicPlan = Plan::where('title', 'Free Plan')->first();
 
     //     $user = auth()->user();
     //     $user->assignRole('noun_student');
@@ -68,8 +68,8 @@ class CoursesPage extends Component
     //             'features' => $basicPlan->features
     //         ]);
     //     } else {
-    //         Log::error('Free Access Plan not found during user registration.', ['user_id' => $user->id]);
-    //         return redirect()->back()->withErrors('Free Access Plan not found.');
+    //         Log::error('Free Plan not found during user registration.', ['user_id' => $user->id]);
+    //         return redirect()->back()->withErrors('Free Plan not found.');
     //     }
 
     //     $user->courses()->detach();
@@ -111,7 +111,7 @@ class CoursesPage extends Component
 
         Log::info('Selected courses count: ' . count($this->selectedCourses));
 
-        $basicPlan = Plan::where('title', 'Free Access Plan')->first();
+        $basicPlan = Plan::where('title', 'Free Plan')->first();
         Log::info('Basic Plan found: ' . ($basicPlan ? 'Yes' : 'No'));
 
         
@@ -139,8 +139,8 @@ class CoursesPage extends Component
                 return redirect()->back()->withErrors('Error creating subscription.');
             }
         } else {
-            Log::error('Free Access Plan not found during user registration.', ['user_id' => $this->user->id]);
-            return redirect()->back()->withErrors('Free Access Plan not found.');
+            Log::error('Free Plan not found during user registration.', ['user_id' => $this->user->id]);
+            return redirect()->back()->withErrors('Free Plan not found.');
         }
 
         try {

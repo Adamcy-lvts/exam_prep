@@ -224,6 +224,7 @@ trait QuizPageTrait
 
     public function setAnswer($questionId, $optionId = null, $answerText = null)
     {
+        
         $question = Question::find($questionId);
 
         if ($question->type == Question::TYPE_MCQ) {

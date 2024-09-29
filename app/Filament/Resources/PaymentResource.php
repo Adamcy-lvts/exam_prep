@@ -22,11 +22,14 @@ use Illuminate\Support\Facades\Log;
 use Spatie\Browsershot\Browsershot;
 use Illuminate\Support\Facades\Mail;
 use Filament\Forms\Components\Select;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Tables\Columns\ImageColumn;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\PaymentResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -46,9 +49,9 @@ class PaymentResource extends Resource
             ->schema([
                 Select::make('user_id')->relationship(
                     name: 'user',
-                    modifyQueryUsing: fn (Builder $query) => $query->orderBy('first_name')->orderBy('last_name'),
+                    modifyQueryUsing: fn(Builder $query) => $query->orderBy('first_name')->orderBy('last_name'),
                 )
-                    ->getOptionLabelFromRecordUsing(fn (Model $record) => "{$record->first_name} {$record->last_name}")
+                    ->getOptionLabelFromRecordUsing(fn(Model $record) => "{$record->first_name} {$record->last_name}")
                     ->searchable(['first_name', 'last_name']),
                 TextInput::make('amount')
                     ->mask(RawJs::make('$money($input)'))
@@ -56,9 +59,9 @@ class PaymentResource extends Resource
                     ->numeric(),
                 Select::make('plan_id')->relationship(
                     name: 'plan',
-                    modifyQueryUsing: fn (Builder $query) => $query->orderBy('title')->orderBy('price'),
+                    modifyQueryUsing: fn(Builder $query) => $query->orderBy('title')->orderBy('price'),
                 )
-                    ->getOptionLabelFromRecordUsing(fn (Model $record) => "{$record->type} {$record->title} {$record->price}")
+                    ->getOptionLabelFromRecordUsing(fn(Model $record) => "{$record->type} {$record->title} {$record->price}")
                     ->searchable(['type', 'title'])->preload(),
 
                 Select::make('method')->options([
@@ -83,10 +86,34 @@ class PaymentResource extends Resource
                 TextColumn::make('user.email')->label('Email Address')->searchable(),
                 TextColumn::make('status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'pending' => 'gray',
                         'completed' => 'success',
                     }),
+                IconColumn::make('proof_of_payment')
+                    ->label('Proof of Payment')
+                    ->icon('heroicon-o-document-arrow-down')
+                    // ->visible(fn(?Payment $record): bool => $record?->method === 'bank_transfer')
+                    // ->visible(fn($record): bool => $record instanceof Payment && $record->method === 'bank_transfer' && $record->proof_of_payment)
+                    // ->visible(fn (Payment $record): bool => $record->method === 'bank_transfer')
+                    ->action(
+                        Action::make('downloadProof')
+                            ->label('Download Proof of Payment')
+                            ->action(function (Payment $record) {
+                                if (!$record->proof_of_payment || !Storage::disk('public')->exists($record->proof_of_payment)) {
+                                    Notification::make()
+                                        ->title('File not found')
+                                        ->danger()
+                                        ->send();
+                                    return;
+                                }
+
+                                return response()->download(
+                                    Storage::disk('public')->path($record->proof_of_payment),
+                                    basename($record->proof_of_payment)
+                                );
+                            })
+                    ),
                 TextColumn::make('created_at')->label('Payment Date')->dateTime('F j, Y g:i A'),
             ])
             ->filters([
@@ -199,7 +226,7 @@ class PaymentResource extends Resource
 
 
                             try {
-                           
+
 
                                 $pdf = $record->user->first_name . '_' . $record->user->last_name . '-' . '_receipt.pdf';
                                 $receiptPath = storage_path("app/{$pdf}");
@@ -241,7 +268,7 @@ class PaymentResource extends Resource
                             }
                         });
                     })
-                    ->visible(fn (Payment $record): bool => $record->status === 'pending')
+                    ->visible(fn(Payment $record): bool => $record->status === 'pending')
                     ->requiresConfirmation('Are you sure you want to update the payment status?')
             ])
             ->bulkActions([

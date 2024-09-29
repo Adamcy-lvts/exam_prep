@@ -60,6 +60,38 @@
         .dark .custom-radio:checked:after {
             background: #48bb78;
         }
+
+        .sidebar-scroll {
+            height: 100vh;
+            overflow-y: auto;
+            position: sticky;
+            top: 0;
+            padding-bottom: 2rem;
+        }
+
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 2rem;
+        }
+
+        /* Subtle scrollbar style */
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
     </style>
     <div x-data="{ selectedQuestion: null }" class="bg-gray-100 dark:bg-gray-800 min-h-screen flex flex-col">
 
@@ -92,10 +124,9 @@
         <div class="flex flex-1 overflow-hidden">
             <!-- Enhanced Sidebar for Desktop -->
             <div
-                class="bg-gray-100 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 hidden md:block w-64 flex-shrink-0 flex flex-col">
-              
-                <div class="flex-1 overflow-y-auto">
-                    <div class="space-y-1 px-4 pb-4">
+                class="bg-gray-100 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 hidden md:block flex-shrink-0">
+                <div class="sidebar-scroll">
+                    <div class="space-y-1 px-4 py-4">
                         @foreach ($allquestions as $key => $q)
                             @php
                                 $pageNumber = ceil(($key + 1) / 5);
@@ -103,8 +134,8 @@
                             @endphp
                             <a href="{{ route('filament.user.resources.subjects.questions', ['record' => $quizzable->id, 'quizzableType' => $quizzableType, 'page' => $pageNumber]) . '#q' . ($key + 1) }}"
                                 class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 ease-in-out
-                          {{ $loop->iteration == ($questions->currentPage() - 1) * 5 + 1 ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }}
-                          {{ $isAnswered ? 'bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200' : '' }}">
+                                {{ $loop->iteration == ($questions->currentPage() - 1) * 5 + 1 ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }}
+                                {{ $isAnswered ? 'bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200' : '' }}">
                                 Q{{ $key + 1 }}
                                 @if ($isAnswered)
                                     <svg class="ml-2 h-4 w-4 text-green-500" fill="none" stroke="currentColor"
@@ -137,7 +168,7 @@
             </div>
 
             <!-- Main Content -->
-            <div class="w-full px-2 md:px-6  overflow-y-auto pb-16 mt-5">
+            <div class="main-content w-full px-2 md:px-6  overflow-y-auto pb-16 mt-5">
                 <form id="test-form" wire:submit.prevent="submitTest">
                     @csrf
                     <div class="space-y-8 mb-10">

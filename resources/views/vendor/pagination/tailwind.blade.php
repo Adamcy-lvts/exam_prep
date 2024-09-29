@@ -53,7 +53,7 @@
                         </span>
                     @else
                         <button wire:click.prevent="gotoPage({{ $i }})"
-                            class=" relative items-center px-4 py-2 text-sm font-medium text-gray-800 dark:text-white bg-gray-700 border border-gray-600 leading-5 hover:bg-green-600 hover:border-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-700 transition ease-in-out duration-150">
+                            class=" relative items-center px-4 py-2 text-sm font-medium text-gray-800 dark:text-white dark:bg-gray-700 border dark:border-gray-600 leading-5 hover:bg-green-600 hover:border-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-700 transition ease-in-out duration-150">
                             {{ $i }}
                     </button>
                     @endif

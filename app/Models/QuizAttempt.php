@@ -36,6 +36,10 @@ class QuizAttempt extends Model
         return $this->hasMany(QuizAnswer::class);
     }
 
+    public function answers()
+    {
+        return $this->hasMany(QuizAnswer::class);
+    }
 
     public function topicPerformances()
     {

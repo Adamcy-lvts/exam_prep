@@ -29,6 +29,7 @@ return new class extends Migration
             $table->integer('attempts_purchased')->nullable();
             $table->string('status'); // 'pending', 'completed', 'failed'
             $table->string('transaction_ref')->nullable();
+            $table->string('proof_of_payment')->nullable();
             $table->timestamps();
         });
     }

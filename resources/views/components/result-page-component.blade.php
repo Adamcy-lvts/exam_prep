@@ -221,7 +221,7 @@
             <h1 class="text-3xl font-bold mb-6 text-gray-900 dark:text-white">Answers</h1>
             <div>
                 <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Questions:</h2>
-                <ol class="list-decimal pl-8 space-y-4">
+                <ol class="list-decimal pl-4 sm:pl-8 space-y-4">
 
                     @foreach ($questions as $key => $question)
                         <li class="pt-3 border-t border-gray-300 dark:border-gray-700 py-3">

@@ -2,176 +2,159 @@
 
 namespace App\Livewire;
 
-use App\Models\Option;
-use App\Models\Subject;
 use Livewire\Component;
-use App\Models\Question;
-use App\Models\QuizAnswer;
-use App\Models\QuizAttempt;
 use Livewire\WithPagination;
-use App\Models\QuizAttemptQuestion;
-use Illuminate\Pagination\LengthAwarePaginator;
+use App\Models\Subject;
+use App\Models\Question;
+use App\Models\QuizAttempt;
+use App\Models\QuizAnswer;
+use App\Models\Option;
 
 class SubjectsComponent extends Component
 {
     use WithPagination;
 
     public $subject;
-    public $answers = [];
     public $currentAttempt;
-    // public $questions;
-    public $currentPage = 1;
+    public $randomQuestionIds;
+    public $attemptQuestionIds;
+    public $currentQuestionId;
+    public $answers = [];
     public $perPage = 1;
-    public $totalQuestions;
-    public $subjectId;
-    public $questionIds;
-    public $allQuestions;
 
+    protected $listeners = ['questionAnswered' => '$refresh'];
 
     public function mount($subjectId, $attemptId)
     {
-        // $this->reset();
-
-        $this->subjectId = $subjectId;
+        $this->subject = Subject::findOrFail($subjectId);
         $this->currentAttempt = QuizAttempt::findOrFail($attemptId);
 
-        $this->subject = Subject::findOrFail($subjectId);
-
-        // Fetch 50 random question IDs based on the quizzable details
-        $this->questionIds = Question::where('quizzable_id', $this->subject->id)
-        ->where('quizzable_type', $this->subject->getMorphClass())
-        ->inRandomOrder()
-        ->take(50)
-        ->pluck('id')
-        ->toArray();
-
-        // Use the IDs to fetch the actual Question models
-        $this->totalQuestions = Question::whereIn('id', $this->questionIds)->get();
+        // Fetch 50 random question IDs
+        $this->randomQuestionIds = Question::where('quizzable_id', $this->subject->id)
+            ->where('quizzable_type', $this->subject->getMorphClass())
+            ->inRandomOrder()
+            ->take(50)
+            ->pluck('id')
+            ->toArray();
 
         // Attach these questions to the current attempt if they haven't been attached yet
         if ($this->currentAttempt->questions()->count() == 0) {
-            foreach ($this->questionIds as $questionId) {
+            foreach ($this->randomQuestionIds as $questionId) {
                 $this->currentAttempt->questions()->attach($questionId);
             }
         }
 
-        $this->loadAnswers();
-        // Fetching questions directly associated with the attempt
-        $this->allQuestions = $this->currentAttempt->questions()->pluck('questions.id');
+        // Fetch question IDs associated with the current attempt
+        $this->attemptQuestionIds = $this->currentAttempt->questions()
+            ->orderBy('quiz_attempt_questions.id')
+            ->pluck('questions.id')
+            ->toArray();
 
-        // Handling redirection to the last answered question
-        $questionId = session('lastQuestionId');
-        // dd($questionId);
-        if ($questionId) {
-            $questionIndex = $this->allQuestions->search($questionId);
-            // dd($questionIndex);
-            logger($questionIndex);
-            if ($questionIndex !== false) {
-                $this->goToQuestion($questionIndex + 1); // Adjust for zero-based index
-            }
-        }
+        $this->setCurrentQuestionId();
+        $this->loadAnswers();
     }
 
-    public function goToQuestion($pageNumber)
+    private function setCurrentQuestionId()
     {
-        // dd('Hello');
-        $this->setPage($pageNumber);
+        $this->currentQuestionId = $this->getQuestionsProperty()->first()->id ?? null;
     }
 
     private function loadAnswers()
     {
-
-        $answers = QuizAnswer::where('quiz_attempt_id', $this->currentAttempt->id)
-            ->pluck('option_id', 'question_id');
-
-        $this->answers = $answers->all();
-    }
-
-    public function getQuestionsProperty()
-    {
-        $this->loadAnswers();
-
-        // Since questions are already associated with the attempt, retrieve them directly
-        $questions = $this->currentAttempt->questions()
-            ->simplePaginate(1);  // Adjust pagination as needed
-
-        return $questions;
+        $this->answers = QuizAnswer::where('quiz_attempt_id', $this->currentAttempt->id)
+            ->pluck('option_id', 'question_id')
+            ->toArray();
     }
 
     public function setAnswer($questionId, $optionId = null, $answerText = null)
     {
-        // Update the session with the last answered question
-        session()->forget(['lastQuestionId']);
-        session(['lastQuestionId' => $questionId]);
-        // $retrievedQuestionId = session('lastQuestionId');
-        // dd($retrievedQuestionId);
-
         $question = Question::find($questionId);
 
         if ($question->type == Question::TYPE_MCQ) {
-            // Determine if the selected option is correct
             $isCorrect = Option::where('id', $optionId)->where('is_correct', 1)->exists();
 
-            // Find or create the answer
-            $answer = QuizAnswer::firstOrNew([
-                'user_id' => auth()->user()->id,
-                'question_id' => $questionId,
-                'quiz_attempt_id' => $this->currentAttempt->id
-            ]);
-
-            // Set the attributes
-            $answer->option_id = $optionId;
-            $answer->completed = false; // 'completed' => false indicates an ongoing quiz
-            $answer->correct = $isCorrect;
-
-            $this->answers[$questionId] = $optionId ?? $answerText;
-            // Save the answer
-            $answer->save();
-        } elseif ($question->type == Question::TYPE_SAQ) {
-            $answer = QuizAnswer::firstOrCreate([
-                'user_id' => auth()->user()->id,
-                'question_id' => $questionId,
-                'quiz_attempt_id' => $this->currentAttempt->id
-            ]);
-
-            $answer->answer_text = $answerText;
-
-            // Sanitizing and checking correctness for SAQ in a case-insensitive manner
-            $sanitizedUserAnswer = sanitizeAnswer($answerText);
-            $sanitizedCorrectAnswer = sanitizeAnswer($question->answer_text);
-
-            // Checking correctness for SAQ
-            if ($sanitizedUserAnswer == $sanitizedCorrectAnswer) {
-                $answer->correct = true;
-            } else {
-                $answer->correct = false;
-            }
-
-            $this->answers[$questionId] = $optionId ?? $answerText;
-            $answer->save();
-        } elseif ($question->type == Question::TYPE_TF) {
-            $answer = QuizAnswer::firstOrNew([
-                'user_id' => auth()->user()->id,
-                'question_id' => $questionId,
-                'quiz_attempt_id' => $this->currentAttempt->id
-            ]);
-
-            $answer->answer_text = $optionId;
-            // Store either 'true' or 'false' as the answer text
+            $answer = QuizAnswer::updateOrCreate(
+                [
+                    'user_id' => auth()->id(),
+                    'question_id' => $questionId,
+                    'quiz_attempt_id' => $this->currentAttempt->id
+                ],
+                [
+                    'option_id' => $optionId,
+                    'completed' => false,
+                    'correct' => $isCorrect
+                ]
+            );
 
             $this->answers[$questionId] = $optionId;
-            $answer->save();
+        } elseif ($question->type == Question::TYPE_SAQ) {
+            $sanitizedUserAnswer = $this->sanitizeAnswer($answerText);
+            $sanitizedCorrectAnswer = $this->sanitizeAnswer($question->answer_text);
+
+            $answer = QuizAnswer::updateOrCreate(
+                [
+                    'user_id' => auth()->id(),
+                    'question_id' => $questionId,
+                    'quiz_attempt_id' => $this->currentAttempt->id
+                ],
+                [
+                    'answer_text' => $answerText,
+                    'completed' => false,
+                    'correct' => ($sanitizedUserAnswer == $sanitizedCorrectAnswer)
+                ]
+            );
+
+            $this->answers[$questionId] = $answerText;
+        } elseif ($question->type == Question::TYPE_TF) {
+            $answer = QuizAnswer::updateOrCreate(
+                [
+                    'user_id' => auth()->id(),
+                    'question_id' => $questionId,
+                    'quiz_attempt_id' => $this->currentAttempt->id
+                ],
+                [
+                    'answer_text' => $optionId,
+                    'completed' => false,
+                    'correct' => ($optionId == $question->correct_answer)
+                ]
+            );
+
+            $this->answers[$questionId] = $optionId;
         }
-       
+
+        $this->currentQuestionId = $questionId;
+        $this->dispatch('questionAnswered');
     }
 
+    public function getQuestionsProperty()
+    {
+        return $this->currentAttempt->questions()
+            ->orderBy('quiz_attempt_questions.id')
+            ->simplePaginate($this->perPage);
+    }
 
+    public function getAnsweredQuestionsProperty()
+    {
+        return $this->currentAttempt->answers()->pluck('question_id')->toArray();
+    }
+
+    public function goToQuestion($index)
+    {
+        $this->currentQuestionId = $this->attemptQuestionIds[$index - 1] ?? null;
+        $this->setPage($index);
+    }
+
+    private function sanitizeAnswer($answer)
+    {
+        return strtolower(trim($answer));
+    }
 
     public function render()
     {
-
         return view('livewire.subjects-component', [
-            'questions' => $this->questions
+            'questions' => $this->questions,
+            'answeredQuestions' => $this->answeredQuestions,
+            'currentQuestionId' => $this->currentQuestionId,
         ]);
     }
 }

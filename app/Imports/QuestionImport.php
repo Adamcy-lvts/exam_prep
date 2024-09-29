@@ -101,22 +101,33 @@ class QuestionImport implements ToCollection, WithHeadingRow
 
     protected function handleOptions($question, $row)
     {
-        $optionColumns = ['option_a', 'option_b', 'option_c', 'option_d'];
-        $correctAnswer = $row['is_correct'];
+        if ($question->type === 'mcq') {
+            $optionColumns = ['option_a', 'option_b', 'option_c', 'option_d'];
+            $correctAnswer = strtolower(trim($row['is_correct']));
 
-        foreach ($optionColumns as $index => $column) {
-            if (isset($row[$column]) && $row[$column] !== null) {
-                $isCorrect = strtoupper($correctAnswer) === chr(65 + $index); // A, B, C, D
-                $question->options()->create([
-                    'option' => $row[$column],
-                    'is_correct' => $isCorrect,
-                ]);
+            foreach ($optionColumns as $index => $column) {
+                if (isset($row[$column]) && $row[$column] !== null) {
+                    $optionText = strtolower(trim($row[$column]));
+                    $isCorrect = false;
+
+                    // Check if correct answer is a letter (A, B, C, D)
+                    if (in_array($correctAnswer, ['a', 'b', 'c', 'd'])) {
+                        $isCorrect = $correctAnswer === chr(97 + $index); // a, b, c, d
+                    }
+                    // Check if correct answer matches the option text
+                    else {
+                        $isCorrect = $optionText === $correctAnswer;
+                    }
+
+                    $question->options()->create([
+                        'option' => $row[$column],
+                        'is_correct' => $isCorrect,
+                    ]);
+                }
             }
-        }
-
-        // Handle SAQ and T/F answer text
-        if ($question->type === 'saq' || $question->type === 'tf') {
-            $question->answer_text = $correctAnswer;
+        } elseif ($question->type === 'saq' || $question->type === 'tf') {
+            // For both SAQ and TF, use the 'answer_text' column
+            $question->answer_text = $row['answer_text'];
             $question->save();
         }
     }

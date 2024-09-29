@@ -81,27 +81,6 @@ class JambInstructionPage extends Page
                 ->send();
             return redirect()->route('filament.user.resources.subjects.pricing-page');
         }
-        // if ($this->user->hasActiveUnlimitedPlan()) {
-        //     $this->compositeSession = $this->createOrRetrieveCompositeSession();
-        //     // User has an unlimited plan and can proceed with the quiz.
-        //     return redirect()->route('filament.user.resources.subjects.jamb-quiz', ['compositeSessionId' => $this->compositeSession->id]);
-        //     // You can perform any additional logic needed here, such as logging the quiz start
-        // } else {
-        //     // Check for other types of plans or attempts left
-        //     if (auth()->user()->hasJambAttempts()) {
-        //         $this->compositeSession = $this->createOrRetrieveCompositeSession();
-        //         // Continue with the quiz start logic
-        //         return redirect()->route('filament.user.resources.subjects.jamb-quiz', ['compositeSessionId' => $this->compositeSession->id]);
-        //     } else {
-        //         // Redirect to the pricing page.
-        //         Notification::make()
-        //             ->title('No attempts left')
-        //             ->body('You have exhausted your all your attempts, Please Purchase another attempts.')
-        //             ->warning()
-        //             ->send();
-        //         return redirect()->route('filament.user.resources.subjects.pricing-page');
-        //     }
-        // }
     }
 
  

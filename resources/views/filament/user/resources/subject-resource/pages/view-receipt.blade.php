@@ -14,19 +14,16 @@
             </div>
             <div>
                 <!-- Insert high-resolution company logo here -->
-                <img src="/path-to-your-logo.png" alt="Company Logo" class="h-8 w-auto">
+                
+                {{-- <img src="/path-to-your-logo.png" alt="Company Logo" class="h-8 w-auto"> --}}
             </div>
         </div>
 
         <div class="mt-8">
             <div class="flex justify-between mb-6">
                 <div class="text-gray-700 dark:text-gray-200">
-                    <p class="font-semibold">Devcentric Studio</p>
+                    <h1 class="text-2xl font-bold">E-ExamPro</h1>
                     <!-- Replace with your actual address details -->
-                    <p>123 Studio Address</p>
-                    <p>New York, NY, 10001</p>
-                    <p>USA</p>
-                    <a href="mailto:studio@example.com" class="text-blue-500 dark:text-blue-400">studio@example.com</a>
                 </div>
                 <div class="text-gray-700 dark:text-gray-200">
                     <p class="font-semibold">Bill to</p>

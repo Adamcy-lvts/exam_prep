@@ -130,30 +130,7 @@ trait ResultPageTrait
         // Define the threshold for doing well
         $performanceThreshold = 70;
 
-        // // // Organize topics by module and unit
-        // $organizedPerformances = $this->currentAttempt->topicPerformances
-        //     ->groupBy(function ($performance) {
-        //         return optional($performance->topic->unit)->module->id ?? 'no_module';
-        //     })
-        //     ->map(function ($groupedPerformances) use ($performanceThreshold) {
-        //         return $groupedPerformances
-        //             ->groupBy(function ($performance) {
-        //                 return $performance->topic->unit->id ?? 'no_unit';
-        //             })
-        //             ->map(function ($performances) use ($performanceThreshold) {
-        //                 // Separate the performances into 'did well' and 'did not do well'
-        //                 $didWell = $performances->filter(function ($performance) use ($performanceThreshold) {
-        //                     return $performance->correct_answers_count / $performance->questions_count * 100 >= $performanceThreshold;
-        //                 });
-        //                 $didNotDoWell = $performances->reject(function ($performance) use ($performanceThreshold) {
-        //                     return $performance->correct_answers_count / $performance->questions_count * 100 >= $performanceThreshold;
-        //                 });
-        //                 return compact('didWell', 'didNotDoWell');
-        //             });
-        //     });
 
-        // // Now you have a nested collection organized by module and unit
-        // $this->organizedPerformances = $organizedPerformances;
 
         // your logic
         // Start by grouping performances at the highest level available - module, unit, or directly by topic
