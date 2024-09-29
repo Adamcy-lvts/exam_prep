@@ -9,7 +9,7 @@
             <div x-data="{ showSchoolLink: false }" class="">
                 @if ($schoolLink && $schoolLink->expires_at->isFuture())
                     <div class="flex items-center justify-between ">
-                        <h2 class="text-xs font-semibold">Referral Links</h2>
+                        <h2 class="text-xs font-semibold mb-2 sm:mb-0">Referral Links</h2>
                         <div class="flex items-center justify-center space-x-2">
                             <input id="linkSwitch" type="checkbox" name="switch" class="hidden" x-model="showSchoolLink">
                             <button x-ref="switchButton" type="button" @click="showSchoolLink = !showSchoolLink"
@@ -101,12 +101,12 @@
                                 this.copyNotification = true;
                                 setTimeout(() => this.copyNotification = false, 3000);
                             }
-                        }" class="flex flex-wrap items-center space-x-2">
-                            <div class="relative flex-grow">
+                        }" class="flex flex-wrap items-center space-x-2 mb-2 sm:mb-0">
+                            <div class="relative flex-grow ">
                                 <a @mouseenter="showTooltip" @mouseleave="hideTooltip" @focus="showTooltip"
                                     @blur="hideTooltip"
                                     href="{{ route('school.register', ['token' => $schoolLink->token]) }}"
-                                    class="block truncate text-xs text-green-500 hover:underline">
+                                    class="block truncate break-words text-xs text-green-500 hover:underline">
                                     {{ route('school.register', ['token' => $schoolLink->token]) }}
                                 </a>
                                 <div x-show="tooltipVisible" x-transition:enter="transition ease-out duration-200"
