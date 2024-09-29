@@ -101,7 +101,7 @@
                                 this.copyNotification = true;
                                 setTimeout(() => this.copyNotification = false, 3000);
                             }
-                        }" class="flex items-center space-x-2">
+                        }" class="flex flex-wrap items-center space-x-2">
                             <div class="relative flex-grow">
                                 <a @mouseenter="showTooltip" @mouseleave="hideTooltip" @focus="showTooltip"
                                     @blur="hideTooltip"
