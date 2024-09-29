@@ -41,6 +41,11 @@ class Login extends BaseLogin
             $this->throwFailureValidationException();
         }
 
+        // Check user type
+        if (!$this->checkUserType($user)) {
+            return null;
+        }
+
         // Check user status
         if (!$this->checkUserStatus($user)) {
             return null;
@@ -78,6 +83,23 @@ class Login extends BaseLogin
     protected function checkUserStatus(User $user): bool
     {
         if (!$this->isUserStatusActive($user)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    protected function checkUserType(User $user): bool
+    {
+        $allowedTypes = ['user', 'student', 'super_admin'];
+
+        if (!in_array($user->user_type, $allowedTypes)) {
+            Notification::make()
+                ->title('Login Failed')
+                ->body('You are not authorized to access this area. Please contact support.')
+                ->danger()
+                ->send();
+
             return false;
         }
 
