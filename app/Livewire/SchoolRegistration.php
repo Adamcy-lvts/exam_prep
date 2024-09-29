@@ -94,7 +94,7 @@ class SchoolRegistration extends Register
             'last_name' => $data['last_name'],
             'email' => $data['email'],
             'phone' => $data['phone'],
-            'user_type' => 'school_agent',
+            'user_type' => 'agent_school',
             'password' => $data['password'],
         ]);
 

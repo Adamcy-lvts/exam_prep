@@ -91,7 +91,7 @@ class Login extends BaseLogin
 
     protected function checkUserType(User $user): bool
     {
-        $allowedTypes = ['agent', 'school_agent'];
+        $allowedTypes = ['agent', 'agent_school'];
 
         if (!in_array($user->user_type, $allowedTypes)) {
             Notification::make()
