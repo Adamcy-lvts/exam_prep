@@ -44,8 +44,8 @@
                             this.copyNotification = true;
                             setTimeout(() => this.copyNotification = false, 3000);
                         }
-                    }" class="flex items-center space-x-2">
-                        <div class="relative flex-grow">
+                    }" class="flex flex-wrap items-center space-x-2">
+                        <div class="relative flex-grow mb-2 sm:mb-0">
                             <a @mouseenter="showTooltip" @mouseleave="hideTooltip" @focus="showTooltip"
                                 @blur="hideTooltip" href="{{ $normalLink }}"
                                 class="block truncate text-xs text-blue-500 hover:underline">
