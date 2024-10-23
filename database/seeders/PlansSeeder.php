@@ -20,7 +20,7 @@ class PlansSeeder extends Seeder
                 'description' => 'Perfect for new users exploring their prep options.',
                 'price' => 0.00,
                 'currency' => 'NGN',
-                'number_of_attempts' => 5,
+                'number_of_attempts' => 3,
                 'features' => json_encode([
                     '5 free attempts per month',
                     '20 questions per quiz',
@@ -76,7 +76,7 @@ class PlansSeeder extends Seeder
                 'description' => 'Perfect for new users exploring their course prep options.',
                 'price' => 0.00,
                 'currency' => 'NGN',
-                'number_of_attempts' => 5,
+                'number_of_attempts' => 3,
                 'features' => json_encode([
                     '5 free attempts per month',
                     '20 questions per quiz',
